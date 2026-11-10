@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import Navbar from './components/Navbar'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
@@ -24,11 +24,43 @@ import HealthHub from './pages/HealthHub'
 import ChatInbox from './pages/ChatInbox'
 import ChatPage from './pages/ChatPage'
 import DrugChecker from './pages/DrugChecker'
+import PatientOnboardingModal from './components/PatientOnboardingModal'
+import { AppContext } from './context/AppContext'
+import { shouldPromptOnboarding } from './utils/profileCompleteness'
 
 const App = () => {
   const location = useLocation()
+  const { token, userData } = useContext(AppContext)
   const [activeCallId, setActiveCallId] = useState(null)
   const [isCallLive, setIsCallLive] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // Automatically trigger onboarding modal on first registration / first OAuth login
+  useEffect(() => {
+    if (!token || !userData || !userData._id) {
+      setShowOnboarding(false)
+      return
+    }
+    const dismissKey = `vitalsync_onboarding_snoozed_${userData._id}`
+    const wasSnoozed = sessionStorage.getItem(dismissKey) === 'true'
+    if (shouldPromptOnboarding(userData) && !wasSnoozed) {
+      setShowOnboarding(true)
+    }
+  }, [token, userData])
+
+  // Allow any page (e.g. MyProfile, Navbar) to open the guided onboarding modal on demand
+  useEffect(() => {
+    const handleOpenOnboarding = () => setShowOnboarding(true)
+    window.addEventListener('vitalsync:open-onboarding', handleOpenOnboarding)
+    return () => window.removeEventListener('vitalsync:open-onboarding', handleOpenOnboarding)
+  }, [])
+
+  const handleCloseOnboarding = () => {
+    if (userData?._id) {
+      sessionStorage.setItem(`vitalsync_onboarding_snoozed_${userData._id}`, 'true')
+    }
+    setShowOnboarding(false)
+  }
 
   const videoRouteMatch = location.pathname.match(/^\/video-call\/([^/]+)/)
   const routeVideoId = videoRouteMatch ? videoRouteMatch[1] : null
@@ -44,8 +76,8 @@ const App = () => {
   const mountedVideoId = routeVideoId || (isCallLive ? activeCallId : null)
   const isMinimizedCall = Boolean(mountedVideoId && !routeVideoId && isCallLive)
 
-  // Hide Footer and ChatWidget on full-screen video call or chat messenger pages
-  const immersivePaths = ['/video-call', '/chat']
+  // Hide Footer and ChatWidget on full-screen video call, chat messenger, or symptom checker studio
+  const immersivePaths = ['/video-call', '/chat', '/symptom-checker']
   const isImmersive = immersivePaths.some(path => location.pathname.startsWith(path))
 
   return (
@@ -94,6 +126,7 @@ const App = () => {
       </main>
       {!isImmersive && <Footer />}
       {!isImmersive && !isCallLive && <ChatWidget />}
+      <PatientOnboardingModal isOpen={showOnboarding} onClose={handleCloseOnboarding} />
     </div>
   )
 }

@@ -13,7 +13,16 @@ const userSchema = new mongoose.Schema({
     googleId: { type: String, default: '' },
     isGoogleAuth: { type: Boolean, default: false },
     allergies: { type: [String], default: [] },
+    noKnownAllergies: { type: Boolean, default: false },
     currentMedications: { type: Array, default: [] },
+    noCurrentMedications: { type: Boolean, default: false },
+    chronicConditions: { type: [String], default: [] },
+    noChronicConditions: { type: Boolean, default: false },
+    bloodGroup: { type: String, default: '' },
+    heightCm: { type: Number, default: null },
+    weightKg: { type: Number, default: null },
+    emergencyContact: { type: Object, default: { name: '', relation: '', phone: '' } },
+    onboardingCompleted: { type: Boolean, default: false },
 })
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);

@@ -53,6 +53,37 @@ const AppContextProvider = (props) => {
     const [incomingCall, setIncomingCall] = useState(null);
     const socketRef = useRef(null);
 
+    // Unified Clinical Assistant shared state (synced between SymptomChecker & ChatWidget)
+    const initialAssistantMessage = {
+        id: 'welcome-msg',
+        role: 'bot',
+        intent: 'welcome',
+        text: "Hello! I'm your VitalSync Clinical Assistant. Describe your symptoms in your own words (for example: 'pooping right after drinking water daily' or 'throbbing headache for 2 days'), ask if a medicine is safe with your allergies, or ask to find a specialist.",
+        quickOptions: [
+            "I have severe hairfall at the top of my head",
+            "Pooping right after drinking water happens daily",
+            "Throbbing headache on one side for 2 days",
+            "Is Ibuprofen safe with my profile?"
+        ],
+        doctors: [],
+        secondaryDoctors: [],
+        verdict: null,
+        safetyReport: null,
+        canSkipToVerdict: false
+    };
+
+    const [assistantMessages, setAssistantMessages] = useState([initialAssistantMessage]);
+    const [assistantTriageState, setAssistantTriageState] = useState({
+        active: false,
+        questionCount: 0,
+        chiefComplaint: '',
+        organDomain: null,
+        lastSlotName: '',
+        collectedFacts: []
+    });
+    const [assistantLoading, setAssistantLoading] = useState(false);
+    const [latestVerdict, setLatestVerdict] = useState(null);
+
     const getDoctosData = useCallback(async () => {
         try {
             const { data } = await axios.get(backendUrl + '/api/doctor/list');
@@ -270,6 +301,150 @@ const AppContextProvider = (props) => {
 
     const unreadNotifCount = notifications.filter((n) => !n.isRead).length;
 
+    const sendAssistantMessage = useCallback(
+        async (rawText, { forceVerdict = false, overrideProtocolId = null, overrideLabel = '' } = {}) => {
+            const cleanText = String(rawText || '').trim();
+            if ((!cleanText && !forceVerdict && !overrideProtocolId) || assistantLoading) return;
+
+            // Handle special quick-action intents
+            if (cleanText.toLowerCase() === 'start a new symptom check') {
+                setAssistantTriageState({
+                    active: false,
+                    questionCount: 0,
+                    chiefComplaint: '',
+                    organDomain: null,
+                    lastSlotName: '',
+                    collectedFacts: []
+                });
+                setLatestVerdict(null);
+                setAssistantMessages((prev) => [
+                    ...prev,
+                    {
+                        id: `user-${Date.now()}`,
+                        role: 'user',
+                        text: cleanText
+                    },
+                    {
+                        id: `bot-${Date.now() + 1}`,
+                        role: 'bot',
+                        intent: 'welcome',
+                        text: 'Ready for a fresh symptom check! Tell me what symptoms you are experiencing, when they started, and how they feel.',
+                        quickOptions: [
+                            'I have severe hairfall at the top of my head',
+                            'Pooping right after drinking water happens daily',
+                            'Throbbing headache on one side for 2 days',
+                            'Itchy skin rash on my arms'
+                        ]
+                    }
+                ]);
+                return;
+            }
+
+            const userBubbleText = overrideProtocolId
+                ? `Changed complaint to: ${overrideLabel || overrideProtocolId}`
+                : forceVerdict && !cleanText
+                ? 'Show my doctor recommendation now'
+                : cleanText;
+
+            setAssistantMessages((prev) => [
+                ...prev.map((m) => ({ ...m, canSkipToVerdict: false })),
+                {
+                    id: `user-${Date.now()}`,
+                    role: 'user',
+                    text: userBubbleText
+                }
+            ]);
+
+            setAssistantLoading(true);
+            try {
+                const { data } = await axios.post(`${backendUrl}/api/chatbot/assistant`, {
+                    userId: userData?._id || 'anonymous',
+                    message: cleanText,
+                    triageState: assistantTriageState,
+                    forceVerdict,
+                    overrideProtocolId
+                });
+
+                if (data.success) {
+                    if (data.triageState) {
+                        setAssistantTriageState(data.triageState);
+                    }
+                    if (data.verdict) {
+                        setLatestVerdict(data.verdict);
+                    }
+
+                    setAssistantMessages((prev) => [
+                        ...prev,
+                        {
+                            id: `bot-${Date.now()}`,
+                            role: 'bot',
+                            intent: data.intent || 'general_chat',
+                            text: data.response,
+                            understood: data.understood || null,
+                            quickOptions: data.quickOptions || [],
+                            canSkipToVerdict: Boolean(data.canSkipToVerdict),
+                            verdict: data.verdict || null,
+                            safetyReport: data.safetyReport || null,
+                            doctors: data.doctors || [],
+                            secondaryDoctors: data.secondaryDoctors || [],
+                            patientProfileUsed: data.patientProfileUsed || null,
+                            sources: data.sourcesUsed || []
+                        }
+                    ]);
+                } else {
+                    setAssistantMessages((prev) => [
+                        ...prev,
+                        {
+                            id: `bot-${Date.now()}`,
+                            role: 'bot',
+                            intent: 'error',
+                            text: data.message || "I couldn't process that request right now. Please try again."
+                        }
+                    ]);
+                }
+            } catch (error) {
+                console.error('Assistant turn error:', error);
+                setAssistantMessages((prev) => [
+                    ...prev,
+                    {
+                        id: `bot-${Date.now()}`,
+                        role: 'bot',
+                        intent: 'error',
+                        text: 'Our clinical assistant is briefly unavailable. Please try again in a moment.'
+                    }
+                ]);
+            } finally {
+                setAssistantLoading(false);
+            }
+        },
+        [assistantLoading, assistantTriageState, backendUrl, userData?._id]
+    );
+
+    const resetAssistantChat = useCallback(async () => {
+        try {
+            await axios.post(`${backendUrl}/api/chatbot/clear`, {
+                userId: userData?._id || 'anonymous'
+            });
+        } catch (e) {
+            // ignore
+        }
+        setAssistantTriageState({
+            active: false,
+            questionCount: 0,
+            chiefComplaint: '',
+            organDomain: null,
+            lastSlotName: '',
+            collectedFacts: []
+        });
+        setLatestVerdict(null);
+        setAssistantMessages([
+            {
+                ...initialAssistantMessage,
+                id: `welcome-${Date.now()}`
+            }
+        ]);
+    }, [backendUrl, userData?._id]);
+
     const value = {
         doctors,
         getDoctosData,
@@ -291,7 +466,13 @@ const AppContextProvider = (props) => {
         fetchUnreadChatCount,
         incomingCall,
         setIncomingCall,
-        declineIncomingCall
+        declineIncomingCall,
+        assistantMessages,
+        assistantTriageState,
+        assistantLoading,
+        latestVerdict,
+        sendAssistantMessage,
+        resetAssistantChat
     };
 
     return (

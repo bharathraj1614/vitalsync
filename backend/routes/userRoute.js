@@ -10,7 +10,7 @@ userRouter.post("/google-auth", googleAuthUser)
 userRouter.get("/auth-config", getAuthConfig)
 
 userRouter.get("/get-profile", authUser, getProfile)
-userRouter.post("/update-profile", authUser, upload.single('image'), updateProfile)
+userRouter.post("/update-profile", upload.single('image'), authUser, updateProfile)
 userRouter.post("/book-appointment", authUser, bookAppointment)
 userRouter.get("/appointments", authUser, listAppointment)
 userRouter.get("/appointment/:appointmentId", authUser, getAppointment)

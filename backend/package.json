@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "server": "nodemon --ext js,json,env server.js"
+    "server": "nodemon --ext js,json,env server.js",
+    "triage:eval": "node triage/__tests__/eval.js"
   },
   "author": "",
   "license": "ISC",

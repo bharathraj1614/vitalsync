@@ -2,6 +2,7 @@ import React, { useContext, useState, useRef, useEffect } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { googleLogout } from '@react-oauth/google'
 import { AppContext } from '../context/AppContext'
+import { calculateProfileCompleteness } from '../utils/profileCompleteness'
 import {
   HeartPulse,
   Stethoscope,
@@ -222,7 +223,9 @@ const Navbar = () => {
 
       <header
         className={`sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 ${
-          location.pathname.startsWith('/chat') ? 'mb-2' : 'mb-6'
+          location.pathname.startsWith('/chat') || location.pathname.startsWith('/symptom-checker')
+            ? 'mb-2'
+            : 'mb-6'
         }`}
       >
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -463,8 +466,24 @@ const Navbar = () => {
                               className='w-full px-4 py-2.5 text-left flex items-start gap-3 text-slate-700 hover:bg-sky-50/70 transition-colors cursor-pointer group'
                             >
                               <User className='w-4 h-4 text-slate-600 mt-0.5 shrink-0' />
-                              <div>
-                                <p className='text-xs font-semibold text-slate-900 group-hover:text-sky-600'>My Profile & Allergies</p>
+                              <div className='flex-1'>
+                                <div className='flex items-center justify-between gap-2'>
+                                  <p className='text-xs font-semibold text-slate-900 group-hover:text-sky-600'>My Profile & Allergies</p>
+                                  {(() => {
+                                    const comp = calculateProfileCompleteness(userData)
+                                    return (
+                                      <span
+                                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums ${
+                                          comp.percentage === 100
+                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                            : 'bg-amber-50 text-amber-800 border border-amber-200'
+                                        }`}
+                                      >
+                                        {comp.percentage}%
+                                      </span>
+                                    )
+                                  })()}
+                                </div>
                                 <p className='text-[11px] text-slate-500'>Personal info, allergies & medicines</p>
                               </div>
                             </button>

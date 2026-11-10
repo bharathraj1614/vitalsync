@@ -59,7 +59,7 @@ const registerUser = async (req, res) => {
         const user = await newUser.save()
         const token = jwt.sign({ id: user._id, role: 'user' }, process.env.JWT_SECRET, { expiresIn: '7d' })
 
-        res.json({ success: true, token })
+        res.json({ success: true, token, isNewUser: true })
 
     } catch (error) {
         console.log(error)
@@ -190,7 +190,7 @@ const getAuthConfig = async (req, res) => {
 const getProfile = async (req, res) => {
 
     try {
-        const { userId } = req.body
+        const userId = req.userId || req.body.userId
         const userData = await userModel.findById(userId).select('-password')
 
         res.json({ success: true, userData })
@@ -206,20 +206,73 @@ const updateProfile = async (req, res) => {
 
     try {
 
-        const { userId, name, phone, address, dob, gender } = req.body
+        const userId = req.userId || req.body.userId
+        const { name, phone, address, dob, gender } = req.body
         const imageFile = req.file
 
+        if (!userId) {
+            return res.json({ success: false, message: "Not Authorized: Missing user ID" })
+        }
         if (!name || !phone || !dob || !gender) {
             return res.json({ success: false, message: "Data Missing" })
         }
 
         const updateData = { name, phone, address: typeof address === 'string' ? JSON.parse(address) : address, dob, gender }
         
-        if (req.body.allergies) {
+        if (req.body.allergies !== undefined) {
             updateData.allergies = typeof req.body.allergies === 'string' ? JSON.parse(req.body.allergies) : req.body.allergies
         }
-        if (req.body.currentMedications) {
+        if (req.body.noKnownAllergies !== undefined) {
+            updateData.noKnownAllergies = req.body.noKnownAllergies === 'true' || req.body.noKnownAllergies === true
+            if (updateData.noKnownAllergies) {
+                updateData.allergies = []
+            }
+        } else if (Array.isArray(updateData.allergies) && updateData.allergies.length > 0) {
+            updateData.noKnownAllergies = false
+        }
+
+        if (req.body.currentMedications !== undefined) {
             updateData.currentMedications = typeof req.body.currentMedications === 'string' ? JSON.parse(req.body.currentMedications) : req.body.currentMedications
+        }
+        if (req.body.noCurrentMedications !== undefined) {
+            updateData.noCurrentMedications = req.body.noCurrentMedications === 'true' || req.body.noCurrentMedications === true
+            if (updateData.noCurrentMedications) {
+                updateData.currentMedications = []
+            }
+        } else if (Array.isArray(updateData.currentMedications) && updateData.currentMedications.length > 0) {
+            updateData.noCurrentMedications = false
+        }
+
+        if (req.body.chronicConditions !== undefined) {
+            updateData.chronicConditions = typeof req.body.chronicConditions === 'string' ? JSON.parse(req.body.chronicConditions) : req.body.chronicConditions
+        }
+        if (req.body.noChronicConditions !== undefined) {
+            updateData.noChronicConditions = req.body.noChronicConditions === 'true' || req.body.noChronicConditions === true
+            if (updateData.noChronicConditions) {
+                updateData.chronicConditions = []
+            }
+        } else if (Array.isArray(updateData.chronicConditions) && updateData.chronicConditions.length > 0) {
+            updateData.noChronicConditions = false
+        }
+
+        if (req.body.bloodGroup !== undefined) {
+            updateData.bloodGroup = String(req.body.bloodGroup || '').trim()
+        }
+        if (req.body.heightCm !== undefined) {
+            const h = Number(req.body.heightCm)
+            updateData.heightCm = !isNaN(h) && h > 0 ? h : null
+        }
+        if (req.body.weightKg !== undefined) {
+            const w = Number(req.body.weightKg)
+            updateData.weightKg = !isNaN(w) && w > 0 ? w : null
+        }
+        if (req.body.emergencyContact !== undefined) {
+            updateData.emergencyContact = typeof req.body.emergencyContact === 'string'
+                ? JSON.parse(req.body.emergencyContact)
+                : req.body.emergencyContact
+        }
+        if (req.body.onboardingCompleted !== undefined) {
+            updateData.onboardingCompleted = req.body.onboardingCompleted === 'true' || req.body.onboardingCompleted === true
         }
 
         await userModel.findByIdAndUpdate(userId, updateData)
@@ -374,7 +427,7 @@ const updateProfile = async (req, res) => {
             }
         }
 
-        res.json({ success: true, message: 'Profile Updated' })
+        res.json({ success: true, message: 'Profile Updated', userData: updatedUser })
 
     } catch (error) {
         console.log(error)

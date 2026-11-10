@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -7,7 +7,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
   ShieldAlert,
   ShieldCheck,
   AlertTriangle,
@@ -20,30 +19,44 @@ import {
   KeyRound,
   CheckCircle2,
   Lock,
-  HeartHandshake
+  HeartHandshake,
+  Activity,
+  Droplets,
+  Ruler,
+  Scale,
+  UserPlus,
+  Sparkles,
+  Check
 } from 'lucide-react'
 import GoogleAuthButton, { GoogleLogoIcon } from '../components/GoogleAuthButton'
-
-const COMMON_ALLERGY_SUGGESTIONS = [
-  'Penicillin',
-  'Sulfa drugs',
-  'Aspirin',
-  'NSAIDs',
-  'Codeine',
-  'Amoxicillin'
-]
+import {
+  BLOOD_GROUPS,
+  COMMON_ALLERGY_OPTIONS,
+  COMMON_CHRONIC_CONDITIONS,
+  calculateProfileCompleteness
+} from '../utils/profileCompleteness'
 
 const MyProfile = () => {
   const [isEdit, setIsEdit] = useState(false)
   const [image, setImage] = useState(false)
   const [newAllergy, setNewAllergy] = useState('')
   const [newMed, setNewMed] = useState({ name: '', dosage: '' })
+  const [newCondition, setNewCondition] = useState('')
   const [saving, setSaving] = useState(false)
 
   const { token, backendUrl, userData, setUserData, loadUserProfileData } = useContext(AppContext)
 
+  useEffect(() => {
+    const handleWizardSaved = () => {
+      setIsEdit(false)
+      setImage(false)
+    }
+    window.addEventListener('vitalsync:profile-updated', handleWizardSaved)
+    return () => window.removeEventListener('vitalsync:profile-updated', handleWizardSaved)
+  }, [])
+
   const calculateAge = (dob) => {
-    if (!dob) return null
+    if (!dob || dob === 'Not Selected') return null
     const birthDate = new Date(dob)
     const diffMs = Date.now() - birthDate.getTime()
     const ageDate = new Date(diffMs)
@@ -51,34 +64,72 @@ const MyProfile = () => {
     return !isNaN(age) && age > 0 && age < 130 ? age : null
   }
 
+  const calculateBmi = (hCm, wKg) => {
+    const h = Number(hCm)
+    const w = Number(wKg)
+    if (!h || !w || h < 40 || w < 2) return null
+    const heightM = h / 100
+    const bmi = w / (heightM * heightM)
+    if (!isFinite(bmi) || bmi <= 0) return null
+    let category = 'Normal'
+    if (bmi < 18.5) category = 'Underweight'
+    else if (bmi >= 25 && bmi < 30) category = 'Overweight'
+    else if (bmi >= 30) category = 'Obese'
+    return { value: bmi.toFixed(1), category }
+  }
+
   // Update user profile
   const updateUserProfileData = async () => {
     setSaving(true)
     try {
-      // Auto-include any pending allergy or medicine typed in the input boxes
       const finalAllergies = [...(userData.allergies || [])]
+      let finalNoAllergies = Boolean(userData.noKnownAllergies)
       if (newAllergy.trim()) {
-        const pendingAllergy = newAllergy.trim().toLowerCase()
-        if (!finalAllergies.includes(pendingAllergy)) {
+        const pendingAllergy = newAllergy.trim()
+        if (!finalAllergies.some((a) => a.toLowerCase() === pendingAllergy.toLowerCase())) {
           finalAllergies.push(pendingAllergy)
         }
+        finalNoAllergies = false
         setNewAllergy('')
       }
 
       const finalMeds = [...(userData.currentMedications || [])]
+      let finalNoMeds = Boolean(userData.noCurrentMedications)
       if (newMed.name.trim()) {
         finalMeds.push({ name: newMed.name.trim(), dosage: newMed.dosage.trim() })
+        finalNoMeds = false
         setNewMed({ name: '', dosage: '' })
       }
 
+      const finalConditions = [...(userData.chronicConditions || [])]
+      let finalNoConditions = Boolean(userData.noChronicConditions)
+      if (newCondition.trim()) {
+        const pendingCond = newCondition.trim()
+        if (!finalConditions.some((c) => c.toLowerCase() === pendingCond.toLowerCase())) {
+          finalConditions.push(pendingCond)
+        }
+        finalNoConditions = false
+        setNewCondition('')
+      }
+
       const formData = new FormData()
+      if (userData?._id) formData.append('userId', userData._id)
       formData.append('name', userData.name)
       formData.append('phone', userData.phone || '')
       formData.append('address', JSON.stringify(userData.address || {}))
       formData.append('gender', userData.gender || '')
       formData.append('dob', userData.dob || '')
-      formData.append('allergies', JSON.stringify(finalAllergies))
-      formData.append('currentMedications', JSON.stringify(finalMeds))
+      formData.append('bloodGroup', userData.bloodGroup || '')
+      formData.append('heightCm', userData.heightCm || '')
+      formData.append('weightKg', userData.weightKg || '')
+      formData.append('emergencyContact', JSON.stringify(userData.emergencyContact || {}))
+      formData.append('allergies', JSON.stringify(finalNoAllergies ? [] : finalAllergies))
+      formData.append('noKnownAllergies', String(finalNoAllergies))
+      formData.append('currentMedications', JSON.stringify(finalNoMeds ? [] : finalMeds))
+      formData.append('noCurrentMedications', String(finalNoMeds))
+      formData.append('chronicConditions', JSON.stringify(finalNoConditions ? [] : finalConditions))
+      formData.append('noChronicConditions', String(finalNoConditions))
+      formData.append('onboardingCompleted', 'true')
 
       if (image) formData.append('image', image)
 
@@ -89,6 +140,7 @@ const MyProfile = () => {
       )
 
       if (data.success) {
+        if (data.userData) setUserData(data.userData)
         toast.success('Patient profile updated successfully')
         await loadUserProfileData()
         setIsEdit(false)
@@ -104,19 +156,61 @@ const MyProfile = () => {
     }
   }
 
+  // Quick-save "None" for allergies even when not in full edit mode
+  const quickConfirmNoAllergies = async () => {
+    try {
+      const formData = new FormData()
+      if (userData?._id) formData.append('userId', userData._id)
+      formData.append('name', userData.name)
+      formData.append('phone', userData.phone || '000000000')
+      formData.append('address', JSON.stringify(userData.address || {}))
+      formData.append('gender', userData.gender || 'Not Selected')
+      formData.append('dob', userData.dob || 'Not Selected')
+      formData.append('allergies', JSON.stringify([]))
+      formData.append('noKnownAllergies', 'true')
+
+      const { data } = await axios.post(`${backendUrl}/api/user/update-profile`, formData, {
+        headers: { token }
+      })
+      if (data.success) {
+        toast.success('Confirmed: No known allergies (NKDA)')
+        await loadUserProfileData()
+      }
+    } catch (error) {
+      toast.error('Could not update allergy status')
+    }
+  }
+
   const addAllergy = (allergyText) => {
-    const clean = allergyText.trim().toLowerCase()
+    const clean = allergyText.trim()
     if (!clean) return
     const current = userData.allergies || []
-    if (current.includes(clean)) {
+    if (current.some((a) => a.toLowerCase() === clean.toLowerCase())) {
       toast.info('Allergy already added')
       return
     }
     setUserData((prev) => ({
       ...prev,
-      allergies: [...(prev.allergies || []), clean]
+      allergies: [...(prev.allergies || []), clean],
+      noKnownAllergies: false
     }))
     setNewAllergy('')
+  }
+
+  const addCondition = (condText) => {
+    const clean = condText.trim()
+    if (!clean) return
+    const current = userData.chronicConditions || []
+    if (current.some((c) => c.toLowerCase() === clean.toLowerCase())) {
+      toast.info('Condition already added')
+      return
+    }
+    setUserData((prev) => ({
+      ...prev,
+      chronicConditions: [...(prev.chronicConditions || []), clean],
+      noChronicConditions: false
+    }))
+    setNewCondition('')
   }
 
   if (!userData) {
@@ -128,6 +222,8 @@ const MyProfile = () => {
   }
 
   const patientAge = calculateAge(userData.dob)
+  const bmiInfo = calculateBmi(userData.heightCm, userData.weightKg)
+  const completeness = calculateProfileCompleteness(userData)
 
   return (
     <div className='min-h-[85vh] py-8 max-w-5xl mx-auto space-y-7'>
@@ -144,11 +240,17 @@ const MyProfile = () => {
               </span>
               <span className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-slate-300 bg-white/10 border border-white/15'>
                 <ShieldCheck className='w-3.5 h-3.5 text-emerald-400' />
-                <span>Verified patient record</span>
+                <span>{completeness.percentage}% Complete</span>
               </span>
               {patientAge && (
                 <span className='inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold text-slate-300 bg-white/10 border border-white/15 tabular-nums'>
                   {patientAge} yrs • {userData.gender || 'Patient'}
+                </span>
+              )}
+              {userData.bloodGroup && (
+                <span className='inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold text-rose-200 bg-rose-500/20 border border-rose-400/30'>
+                  <Droplets className='w-3 h-3 text-rose-300' />
+                  <span>{userData.bloodGroup}</span>
                 </span>
               )}
             </div>
@@ -162,7 +264,16 @@ const MyProfile = () => {
             </p>
           </div>
 
-          <div className='shrink-0'>
+          <div className='shrink-0 flex flex-wrap items-center gap-2.5'>
+            <button
+              type='button'
+              onClick={() => window.dispatchEvent(new CustomEvent('vitalsync:open-onboarding'))}
+              className='inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500/20 hover:bg-sky-500/30 text-sky-100 border border-sky-400/30 rounded-xl text-xs font-bold transition-colors cursor-pointer'
+            >
+              <Sparkles className='w-3.5 h-3.5 text-sky-300' />
+              <span>Guided Setup Wizard</span>
+            </button>
+
             {isEdit ? (
               <div className='flex items-center gap-2'>
                 <button
@@ -197,6 +308,90 @@ const MyProfile = () => {
               </button>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Profile Completeness Progress Card */}
+      <section className='bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4'>
+        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
+          <div>
+            <div className='flex items-center gap-2'>
+              <h2 className='text-sm font-extrabold text-slate-900'>
+                Clinical Profile Completeness
+              </h2>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold tabular-nums ${
+                  completeness.percentage === 100
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : completeness.percentage >= 75
+                    ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                    : 'bg-amber-50 text-amber-800 border border-amber-200'
+                }`}
+              >
+                {completeness.percentage}%
+              </span>
+            </div>
+            <p className='text-xs text-slate-500 mt-0.5'>
+              {completeness.percentage === 100
+                ? 'Your medical dossier is 100% complete and synced for AI symptom triage and prescription safety checks.'
+                : 'Complete the remaining sections below so doctors and our safety engine have your full clinical context.'}
+            </p>
+          </div>
+
+          {!completeness.allergiesAnswered && (
+            <button
+              type='button'
+              onClick={quickConfirmNoAllergies}
+              className='inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition-colors cursor-pointer shrink-0'
+            >
+              <Check className='w-3.5 h-3.5 text-amber-700' />
+              <span>Select &ldquo;None (No known allergies)&rdquo; (+15%)</span>
+            </button>
+          )}
+        </div>
+
+        {/* Progress Bar */}
+        <div
+          className='w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/70'
+          role='progressbar'
+          aria-valuenow={completeness.percentage}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label='Profile completeness percentage'
+        >
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              completeness.percentage === 100
+                ? 'bg-emerald-500'
+                : completeness.percentage >= 75
+                ? 'bg-sky-600'
+                : 'bg-amber-500'
+            }`}
+            style={{ width: `${completeness.percentage}%` }}
+          />
+        </div>
+
+        {/* Itemized Completeness Pills */}
+        <div className='flex flex-wrap gap-2 pt-1'>
+          {completeness.items.map((item) => (
+            <span
+              key={item.id}
+              title={item.hint}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold border ${
+                item.completed
+                  ? 'bg-emerald-50/70 text-emerald-800 border-emerald-200'
+                  : 'bg-slate-50 text-slate-500 border-slate-200'
+              }`}
+            >
+              {item.completed ? (
+                <CheckCircle2 className='w-3.5 h-3.5 text-emerald-600 shrink-0' />
+              ) : (
+                <AlertTriangle className='w-3.5 h-3.5 text-amber-500 shrink-0' />
+              )}
+              <span>{item.label}</span>
+              <span className='opacity-70 tabular-nums'>({item.weight}%)</span>
+            </span>
+          ))}
         </div>
       </section>
 
@@ -290,15 +485,73 @@ const MyProfile = () => {
                     type='date'
                     className='border border-slate-200 rounded-lg px-2.5 py-1 text-xs outline-none focus:border-sky-500 text-slate-800'
                     onChange={(e) => setUserData((prev) => ({ ...prev, dob: e.target.value }))}
-                    value={userData.dob || ''}
+                    value={userData.dob && userData.dob !== 'Not Selected' ? userData.dob : ''}
                   />
                 ) : (
                   <span className='font-bold text-slate-800 tabular-nums'>
-                    {userData.dob || 'Not specified'}
+                    {userData.dob && userData.dob !== 'Not Selected' ? userData.dob : 'Not specified'}
                     {patientAge && <span className='text-slate-400 font-normal ml-1'>({patientAge} yrs)</span>}
                   </span>
                 )}
               </div>
+
+              <div className='flex items-center justify-between'>
+                <span className='text-slate-500 font-medium'>Blood group</span>
+                {isEdit ? (
+                  <select
+                    className='border border-slate-200 rounded-lg px-2.5 py-1 text-xs outline-none focus:border-sky-500 bg-white font-medium text-slate-800'
+                    onChange={(e) => setUserData((prev) => ({ ...prev, bloodGroup: e.target.value }))}
+                    value={userData.bloodGroup || ''}
+                  >
+                    <option value=''>Not selected</option>
+                    {BLOOD_GROUPS.map((bg) => (
+                      <option key={bg} value={bg}>
+                        {bg}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className='font-bold text-rose-600'>{userData.bloodGroup || 'Not specified'}</span>
+                )}
+              </div>
+
+              {/* Height & Weight */}
+              <div className='flex items-center justify-between'>
+                <span className='text-slate-500 font-medium'>Height & Weight</span>
+                {isEdit ? (
+                  <div className='flex items-center gap-1.5'>
+                    <input
+                      type='number'
+                      placeholder='cm'
+                      value={userData.heightCm || ''}
+                      onChange={(e) => setUserData((prev) => ({ ...prev, heightCm: e.target.value }))}
+                      className='w-16 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-800 tabular-nums'
+                    />
+                    <input
+                      type='number'
+                      placeholder='kg'
+                      value={userData.weightKg || ''}
+                      onChange={(e) => setUserData((prev) => ({ ...prev, weightKg: e.target.value }))}
+                      className='w-16 border border-slate-200 rounded-lg px-2 py-1 text-xs text-slate-800 tabular-nums'
+                    />
+                  </div>
+                ) : (
+                  <span className='font-bold text-slate-800 tabular-nums'>
+                    {userData.heightCm && userData.weightKg
+                      ? `${userData.heightCm} cm • ${userData.weightKg} kg`
+                      : 'Not specified'}
+                  </span>
+                )}
+              </div>
+
+              {bmiInfo && (
+                <div className='flex items-center justify-between pt-1'>
+                  <span className='text-slate-500 font-medium'>Body Mass Index</span>
+                  <span className='px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 font-bold text-[11px] tabular-nums'>
+                    {bmiInfo.value} ({bmiInfo.category})
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -310,14 +563,32 @@ const MyProfile = () => {
             <div className='space-y-2 text-xs'>
               <div className='p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between'>
                 <span className='text-slate-600'>Reported allergies:</span>
-                <span className={`font-bold tabular-nums ${userData.allergies?.length > 0 ? 'text-rose-600' : 'text-slate-700'}`}>
-                  {userData.allergies?.length || 0} registered
+                <span className={`font-bold tabular-nums ${userData.allergies?.length > 0 ? 'text-rose-600' : userData.noKnownAllergies ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  {userData.allergies?.length > 0
+                    ? `${userData.allergies.length} registered`
+                    : userData.noKnownAllergies
+                    ? 'None (NKDA)'
+                    : 'Unconfirmed'}
                 </span>
               </div>
               <div className='p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between'>
                 <span className='text-slate-600'>Regular medications:</span>
                 <span className='font-bold text-slate-700 tabular-nums'>
-                  {userData.currentMedications?.length || 0} active
+                  {userData.currentMedications?.length > 0
+                    ? `${userData.currentMedications.length} active`
+                    : userData.noCurrentMedications
+                    ? 'None'
+                    : 'Unconfirmed'}
+                </span>
+              </div>
+              <div className='p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between'>
+                <span className='text-slate-600'>Chronic conditions:</span>
+                <span className='font-bold text-slate-700 tabular-nums'>
+                  {userData.chronicConditions?.length > 0
+                    ? `${userData.chronicConditions.length} listed`
+                    : userData.noChronicConditions
+                    ? 'None'
+                    : 'Unconfirmed'}
                 </span>
               </div>
               <div className='p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between'>
@@ -332,11 +603,11 @@ const MyProfile = () => {
 
         {/* Right Column: Contact & Medical Safety (8 Cols) */}
         <div className='lg:col-span-8 space-y-6'>
-          {/* Contact Information Card */}
+          {/* Contact & Emergency Information Card */}
           <div className='bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4'>
             <h3 className='text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2 pb-3 border-b border-slate-100'>
               <Phone className='w-4 h-4 text-sky-600' />
-              <span>Contact information</span>
+              <span>Contact & emergency details</span>
             </h3>
 
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs'>
@@ -349,7 +620,7 @@ const MyProfile = () => {
                     type='tel'
                     inputMode='tel'
                     autoComplete='tel'
-                    value={userData.phone || ''}
+                    value={userData.phone && userData.phone !== '000000000' ? userData.phone : ''}
                     onChange={(e) => setUserData((prev) => ({ ...prev, phone: e.target.value }))}
                     placeholder='+91 98765 43210'
                     className='w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-sky-500 bg-slate-50/50 focus:bg-white transition-colors'
@@ -358,7 +629,7 @@ const MyProfile = () => {
                   <div className='flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 text-sm'>
                     <Phone className='w-4 h-4 text-slate-400 shrink-0' />
                     <span className='font-semibold text-slate-800 tabular-nums'>
-                      {userData.phone || 'No phone number provided'}
+                      {userData.phone && userData.phone !== '000000000' ? userData.phone : 'No phone number provided'}
                     </span>
                   </div>
                 )}
@@ -408,14 +679,75 @@ const MyProfile = () => {
                 )}
               </div>
             </div>
+
+            {/* Emergency Contact Row */}
+            <div className='pt-3 border-t border-slate-100'>
+              <label className='text-slate-500 text-xs font-medium flex items-center gap-1.5 mb-2'>
+                <UserPlus className='w-3.5 h-3.5 text-rose-500' />
+                <span>Emergency contact (Next of kin)</span>
+              </label>
+              {isEdit ? (
+                <div className='grid grid-cols-1 sm:grid-cols-3 gap-2.5'>
+                  <input
+                    type='text'
+                    placeholder='Contact name'
+                    value={userData.emergencyContact?.name || ''}
+                    onChange={(e) =>
+                      setUserData((prev) => ({
+                        ...prev,
+                        emergencyContact: { ...(prev.emergencyContact || {}), name: e.target.value }
+                      }))
+                    }
+                    className='border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-500'
+                  />
+                  <input
+                    type='text'
+                    placeholder='Relation (e.g. Spouse)'
+                    value={userData.emergencyContact?.relation || ''}
+                    onChange={(e) =>
+                      setUserData((prev) => ({
+                        ...prev,
+                        emergencyContact: { ...(prev.emergencyContact || {}), relation: e.target.value }
+                      }))
+                    }
+                    className='border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-500'
+                  />
+                  <input
+                    type='tel'
+                    inputMode='tel'
+                    placeholder='Emergency phone'
+                    value={userData.emergencyContact?.phone || ''}
+                    onChange={(e) =>
+                      setUserData((prev) => ({
+                        ...prev,
+                        emergencyContact: { ...(prev.emergencyContact || {}), phone: e.target.value }
+                      }))
+                    }
+                    className='border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-500 tabular-nums'
+                  />
+                </div>
+              ) : (
+                <div className='p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700'>
+                  {userData.emergencyContact?.name || userData.emergencyContact?.phone ? (
+                    <span className='font-semibold text-slate-800'>
+                      {userData.emergencyContact.name || 'Emergency Contact'}{' '}
+                      {userData.emergencyContact.relation && `(${userData.emergencyContact.relation})`} •{' '}
+                      <span className='tabular-nums'>{userData.emergencyContact.phone}</span>
+                    </span>
+                  ) : (
+                    <span className='text-slate-400 italic'>No emergency contact added yet.</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Clinical Allergies & Regular Medications Card */}
+          {/* Clinical Allergies, Regular Medications & Chronic Conditions Card */}
           <div className='bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-5'>
             <div className='flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100'>
               <h3 className='text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2'>
                 <ShieldAlert className='w-4 h-4 text-rose-600' />
-                <span>Allergies & regular medications</span>
+                <span>Allergies, regular medications & conditions</span>
               </h3>
               <span className='inline-flex items-center gap-1.5 text-[11px] bg-sky-50 text-sky-800 border border-sky-200 px-2.5 py-0.5 rounded-full font-bold'>
                 <span className='w-1.5 h-1.5 rounded-full bg-sky-600' />
@@ -462,13 +794,50 @@ const MyProfile = () => {
                       )}
                     </span>
                   ))
+                ) : userData.noKnownAllergies ? (
+                  <span className='inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold'>
+                    <CheckCircle2 className='w-3.5 h-3.5 text-emerald-600' />
+                    <span>None — No known allergies (NKDA)</span>
+                  </span>
                 ) : (
-                  <p className='text-xs text-slate-400 italic'>No known allergies reported.</p>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <p className='text-xs text-amber-700 font-medium'>
+                      Allergies not confirmed yet (limits profile completeness by 15%).
+                    </p>
+                    {!isEdit && (
+                      <button
+                        type='button'
+                        onClick={quickConfirmNoAllergies}
+                        className='px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-bold cursor-pointer'
+                      >
+                        Select &ldquo;None&rdquo;
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
 
               {isEdit && (
-                <div className='space-y-2 pt-1'>
+                <div className='space-y-2.5 pt-1'>
+                  <button
+                    type='button'
+                    onClick={() =>
+                      setUserData((prev) => ({
+                        ...prev,
+                        noKnownAllergies: !prev.noKnownAllergies,
+                        allergies: !prev.noKnownAllergies ? [] : prev.allergies
+                      }))
+                    }
+                    className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+                      userData.noKnownAllergies
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <Check className='w-3.5 h-3.5' />
+                    <span>None (No known drug or food allergies)</span>
+                  </button>
+
                   <div className='flex gap-2'>
                     <input
                       type='text'
@@ -476,7 +845,7 @@ const MyProfile = () => {
                       value={newAllergy}
                       onChange={(e) => setNewAllergy(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && newAllergy.trim()) {
+                        if (e.key === 'Enter' && !e.nativeEvent.isComposing && newAllergy.trim()) {
                           e.preventDefault()
                           addAllergy(newAllergy)
                         }
@@ -495,7 +864,7 @@ const MyProfile = () => {
                   {/* Suggestion Chips */}
                   <div className='flex flex-wrap items-center gap-1.5 pt-0.5'>
                     <span className='text-[10px] text-slate-400 font-semibold'>Quick add:</span>
-                    {COMMON_ALLERGY_SUGGESTIONS.map((sug) => (
+                    {COMMON_ALLERGY_OPTIONS.map((sug) => (
                       <button
                         key={sug}
                         type='button'
@@ -549,45 +918,174 @@ const MyProfile = () => {
                       )}
                     </div>
                   ))
+                ) : userData.noCurrentMedications ? (
+                  <span className='inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold'>
+                    <CheckCircle2 className='w-3.5 h-3.5 text-emerald-600' />
+                    <span>None — Not taking any regular medications</span>
+                  </span>
                 ) : (
-                  <p className='text-xs text-slate-400 italic'>No regular medicines added yet.</p>
+                  <p className='text-xs text-slate-400 italic'>No regular medicines confirmed yet.</p>
                 )}
               </div>
 
               {isEdit && (
-                <div className='flex flex-wrap gap-2 pt-1'>
-                  <input
-                    type='text'
-                    placeholder='Medicine name (e.g. Metformin)...'
-                    value={newMed.name}
-                    onChange={(e) => setNewMed((prev) => ({ ...prev, name: e.target.value }))}
-                    className='border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-sky-500 flex-1 min-w-[160px] bg-slate-50/50 focus:bg-white'
-                  />
-                  <input
-                    type='text'
-                    placeholder='Dose (e.g. 500mg)...'
-                    value={newMed.dosage}
-                    onChange={(e) => setNewMed((prev) => ({ ...prev, dosage: e.target.value }))}
-                    className='border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-sky-500 w-32 bg-slate-50/50 focus:bg-white'
-                  />
+                <div className='space-y-2 pt-1'>
                   <button
                     type='button'
-                    onClick={() => {
-                      if (newMed.name.trim()) {
-                        setUserData((prev) => ({
-                          ...prev,
-                          currentMedications: [
-                            ...(prev.currentMedications || []),
-                            { name: newMed.name.trim(), dosage: newMed.dosage.trim() }
-                          ]
-                        }))
-                        setNewMed({ name: '', dosage: '' })
-                      }
-                    }}
-                    className='bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs px-3.5 py-2 rounded-xl border border-slate-200 font-bold cursor-pointer transition-colors'
+                    onClick={() =>
+                      setUserData((prev) => ({
+                        ...prev,
+                        noCurrentMedications: !prev.noCurrentMedications,
+                        currentMedications: !prev.noCurrentMedications ? [] : prev.currentMedications
+                      }))
+                    }
+                    className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+                      userData.noCurrentMedications
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
                   >
-                    <Plus className='w-3.5 h-3.5 inline mr-1' /> Add
+                    <Check className='w-3.5 h-3.5' />
+                    <span>None (Not taking any regular medications)</span>
                   </button>
+
+                  <div className='flex flex-wrap gap-2'>
+                    <input
+                      type='text'
+                      placeholder='Medicine name (e.g. Metformin)...'
+                      value={newMed.name}
+                      onChange={(e) => setNewMed((prev) => ({ ...prev, name: e.target.value }))}
+                      className='border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-sky-500 flex-1 min-w-[160px] bg-slate-50/50 focus:bg-white'
+                    />
+                    <input
+                      type='text'
+                      placeholder='Dose (e.g. 500mg)...'
+                      value={newMed.dosage}
+                      onChange={(e) => setNewMed((prev) => ({ ...prev, dosage: e.target.value }))}
+                      className='border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-sky-500 w-32 bg-slate-50/50 focus:bg-white'
+                    />
+                    <button
+                      type='button'
+                      onClick={() => {
+                        if (newMed.name.trim()) {
+                          setUserData((prev) => ({
+                            ...prev,
+                            currentMedications: [
+                              ...(prev.currentMedications || []),
+                              { name: newMed.name.trim(), dosage: newMed.dosage.trim() }
+                            ],
+                            noCurrentMedications: false
+                          }))
+                          setNewMed({ name: '', dosage: '' })
+                        }
+                      }}
+                      className='bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs px-3.5 py-2 rounded-xl border border-slate-200 font-bold cursor-pointer transition-colors'
+                    >
+                      <Plus className='w-3.5 h-3.5 inline mr-1' /> Add
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Chronic / Pre-existing Conditions */}
+            <div className='space-y-2.5 pt-3 border-t border-slate-100'>
+              <label className='text-xs font-bold text-slate-800 flex items-center gap-1.5'>
+                <Activity className='w-3.5 h-3.5 text-indigo-600' />
+                <span>Chronic / pre-existing conditions:</span>
+              </label>
+
+              <div className='flex flex-wrap gap-2 items-center'>
+                {userData.chronicConditions && userData.chronicConditions.length > 0 ? (
+                  userData.chronicConditions.map((cond, idx) => (
+                    <span
+                      key={idx}
+                      className='bg-indigo-50 text-indigo-900 border border-indigo-200 text-xs px-3 py-1 rounded-xl flex items-center gap-1.5 font-bold'
+                    >
+                      <span>{cond}</span>
+                      {isEdit && (
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setUserData((prev) => ({
+                              ...prev,
+                              chronicConditions: prev.chronicConditions.filter((_, i) => i !== idx)
+                            }))
+                          }
+                          className='text-indigo-400 hover:text-indigo-800 ml-1 cursor-pointer'
+                        >
+                          <X className='w-3.5 h-3.5' />
+                        </button>
+                      )}
+                    </span>
+                  ))
+                ) : userData.noChronicConditions ? (
+                  <span className='inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold'>
+                    <CheckCircle2 className='w-3.5 h-3.5 text-emerald-600' />
+                    <span>None — No chronic medical conditions</span>
+                  </span>
+                ) : (
+                  <p className='text-xs text-slate-400 italic'>No chronic conditions confirmed yet.</p>
+                )}
+              </div>
+
+              {isEdit && (
+                <div className='space-y-2 pt-1'>
+                  <button
+                    type='button'
+                    onClick={() =>
+                      setUserData((prev) => ({
+                        ...prev,
+                        noChronicConditions: !prev.noChronicConditions,
+                        chronicConditions: !prev.noChronicConditions ? [] : prev.chronicConditions
+                      }))
+                    }
+                    className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+                      userData.noChronicConditions
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                  >
+                    <Check className='w-3.5 h-3.5' />
+                    <span>None (No chronic medical conditions)</span>
+                  </button>
+
+                  <div className='flex gap-2'>
+                    <input
+                      type='text'
+                      placeholder='Add condition (e.g. Diabetes, Asthma)...'
+                      value={newCondition}
+                      onChange={(e) => setNewCondition(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.nativeEvent.isComposing && newCondition.trim()) {
+                          e.preventDefault()
+                          addCondition(newCondition)
+                        }
+                      }}
+                      className='border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-sky-500 flex-1 max-w-sm bg-slate-50/50 focus:bg-white'
+                    />
+                    <button
+                      type='button'
+                      onClick={() => addCondition(newCondition)}
+                      className='bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs px-3.5 py-2 rounded-xl border border-slate-200 font-bold cursor-pointer transition-colors'
+                    >
+                      <Plus className='w-3.5 h-3.5 inline mr-1' /> Add
+                    </button>
+                  </div>
+
+                  <div className='flex flex-wrap items-center gap-1.5 pt-0.5'>
+                    <span className='text-[10px] text-slate-400 font-semibold'>Quick add:</span>
+                    {COMMON_CHRONIC_CONDITIONS.map((sug) => (
+                      <button
+                        key={sug}
+                        type='button'
+                        onClick={() => addCondition(sug)}
+                        className='px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 text-[10px] font-semibold transition-colors cursor-pointer border border-slate-200/60'
+                      >
+                        + {sug}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
