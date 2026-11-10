@@ -6,6 +6,7 @@ import userModel from "../models/userModel.js";
 import { AVAILABLE_SPECIALITIES, evaluateClinicalRules } from "./aiController.js";
 import { evaluateSafetyWithAI } from "../data/ddiDatabase.js";
 import { runTriageTurn } from "../triage/engine.js";
+import { isCancelOrResetCommand } from "../triage/classifier.js";
 
 // In-memory conversation history (per user session)
 const conversationHistory = new Map();
@@ -25,13 +26,37 @@ const MEDICINE_INTENT_KEYWORDS = [
     "can i take", "is it safe to take", "interaction", "interact with",
     "side effect", "allergic to", "safe for me", "tablet", "capsule",
     "ibuprofen", "paracetamol", "aspirin", "amoxicillin", "penicillin", "metformin",
-    "azithromycin", "pantoprazole", "omeprazole", "cetirizine", "dolo", "combiflam", "augmentin"
+    "azithromycin", "pantoprazole", "omeprazole", "cetirizine", "dolo", "combiflam", "augmentin",
+    "ciprofloxacin", "diclofenac", "naproxen", "warfarin", "lisinopril", "atorvastatin"
 ];
 
 const PLATFORM_FAQ_KEYWORDS = [
-    "how do i book", "how to book", "cancel appointment", "refund", "reschedule",
-    "video call", "join call", "prescription download", "verify prescription",
-    "payment", "razorpay", "stripe", "where can i see"
+    "how do i book", "how to book", "cancel appointment", "cancel booking", "cancel my appointment",
+    "refund", "reschedule", "video call", "video consultation", "consultations work", "how does video",
+    "join call", "prescription download", "download prescription", "my prescription", "verify prescription",
+    "payment", "razorpay", "stripe", "where can i see", "what is vitalsync", "upload report",
+    "medical record", "consultation fee", "how much does"
+];
+
+const GREETING_REGEX =
+    /^(hi|hello|hey|good\s*(morning|afternoon|evening|night)|howdy|greetings|namaste|hola|sup|yo)(\s+there|\s+doctor|\s+dr\.?\s*pulse|\s+bot|\s+assistant)?[!.,?\s]*$/i;
+
+const GRATITUDE_OR_CLOSING_REGEX =
+    /^(thanks|thank\s*you|thx|ty|ok|okay|k|cool|great|awesome|got\s*it|understood|alright|bye|goodbye|see\s*ya|nice)(\s+so\s+much|\s+a\s+lot|\s+doctor|\s+dr\.?\s*pulse)?[!.,?\s]*$/i;
+
+const BOT_IDENTITY_REGEX =
+    /^(who\s+are\s+you|what\s+are\s+you|what\s+can\s+you\s+do|how\s+do\s+you\s+work|what\s+is\s+your\s+name|help|help\s+me)[!.,?\s]*$/i;
+
+const GENERAL_DOCTOR_LOOKUP_PHRASES = [
+    "show available doctors",
+    "show me doctors",
+    "show doctors",
+    "find a doctor",
+    "find doctors",
+    "list doctors",
+    "browse doctors",
+    "available doctors",
+    "all doctors"
 ];
 
 /**
@@ -213,23 +238,190 @@ const assistantTurn = async (req, res) => {
 
         // 1. Load live patient clinical profile from MongoDB if logged in
         const patientContext = await getPatientClinicalContext(userId);
+        const lowerMsg = cleanMsg.toLowerCase();
+        const emptyTriageState = { active: false, questionCount: 0, chiefComplaint: "", collectedFacts: [] };
+
+        // 1A. SESSION RESET / CANCELLATION INTENT ("Start a new symptom check", "Check my symptoms instead", "cancel", "reset")
+        if (!overrideProtocolId && !forceVerdict && isCancelOrResetCommand(cleanMsg)) {
+            if (userId) conversationHistory.delete(userId);
+            return res.json({
+                success: true,
+                intent: "welcome",
+                response:
+                    "Ready for a fresh symptom check! Tell me what physical symptoms you are experiencing, when they started, and how they feel.",
+                patientProfileUsed: patientContext?.summaryBadge || null,
+                triageState: emptyTriageState,
+                quickOptions: [
+                    "I have severe hairfall at the top of my head",
+                    "Pooping right after drinking water happens daily",
+                    "Throbbing headache on one side for 2 days",
+                    "Itchy skin rash on my arms"
+                ]
+            });
+        }
+
+        // 1B. NAVIGATION & PAGE ACTION INTENT ("Open Medicine Safety Checker page", "View my appointments", "Open my profile")
+        if (!overrideProtocolId && !forceVerdict) {
+            if (
+                lowerMsg.includes("open medicine safety") ||
+                lowerMsg.includes("medicine safety checker page") ||
+                lowerMsg.includes("open drug checker") ||
+                lowerMsg.includes("go to medicine safety")
+            ) {
+                return res.json({
+                    success: true,
+                    intent: "navigate",
+                    navigateTo: "/drug-checker",
+                    actionButton: {
+                        label: "Open Medicine Safety Checker",
+                        path: "/drug-checker"
+                    },
+                    response:
+                        "You can open our dedicated Medicine Safety & Allergy Checker using the button below, or ask me directly here (for example: 'Is Ibuprofen safe with my profile?').",
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: emptyTriageState,
+                    quickOptions: [
+                        "Is Ibuprofen safe with my profile?",
+                        "Can I take Paracetamol and Cetirizine together?",
+                        "I have severe hairfall at the top of my head"
+                    ]
+                });
+            }
+
+            if (
+                lowerMsg === "check medicine safety" ||
+                lowerMsg === "medicine safety" ||
+                lowerMsg === "drug safety" ||
+                lowerMsg === "check drug interactions"
+            ) {
+                return res.json({
+                    success: true,
+                    intent: "medicine_guide",
+                    actionButton: {
+                        label: "Open Medicine Safety Checker",
+                        path: "/drug-checker"
+                    },
+                    response:
+                        "I can screen any medication against your recorded allergies and active prescriptions right here. Tell me which medicine you'd like to check (e.g., 'Is Ibuprofen safe with my profile?'), or open our multi-drug checker:",
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: emptyTriageState,
+                    quickOptions: [
+                        "Is Ibuprofen safe with my profile?",
+                        "Is Amoxicillin safe with my allergies?",
+                        "Check my symptoms instead"
+                    ]
+                });
+            }
+
+            if (lowerMsg.includes("view my appointments") || lowerMsg.includes("open my appointments") || lowerMsg === "my appointments") {
+                return res.json({
+                    success: true,
+                    intent: "navigate",
+                    navigateTo: "/my-appointments",
+                    actionButton: {
+                        label: "View My Appointments",
+                        path: "/my-appointments"
+                    },
+                    response: "You can view, manage, or join video consultations for your booked appointments on the My Appointments page:",
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: emptyTriageState,
+                    quickOptions: [
+                        "Show available doctors",
+                        "I have severe hairfall at the top of my head",
+                        "How do video consultations work?"
+                    ]
+                });
+            }
+
+            if (lowerMsg.includes("open my profile") || lowerMsg.includes("edit my profile") || lowerMsg === "my profile") {
+                return res.json({
+                    success: true,
+                    intent: "navigate",
+                    navigateTo: "/my-profile",
+                    actionButton: {
+                        label: "Open My Profile",
+                        path: "/my-profile"
+                    },
+                    response: "You can update your allergies, regular medications, chronic conditions, and emergency contacts on your profile page:",
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: emptyTriageState,
+                    quickOptions: [
+                        "Is Ibuprofen safe with my profile?",
+                        "I have severe hairfall at the top of my head",
+                        "Show available doctors"
+                    ]
+                });
+            }
+        }
+
+        // 1C. CONVERSATIONAL GREETINGS, PLEASANTRIES & BOT IDENTITY INTENT
+        if (!overrideProtocolId && !forceVerdict) {
+            if (GREETING_REGEX.test(cleanMsg)) {
+                const firstName = patientContext?.name ? ` ${patientContext.name.split(" ")[0]}` : "";
+                return res.json({
+                    success: true,
+                    intent: "greeting",
+                    response: `Hello${firstName}! I'm Dr. Pulse, your VitalSync Clinical Triage & Pharmacology Assistant. Describe your symptoms in your own words (e.g., 'throbbing headache for 2 days'), ask if a medicine is safe with your profile, or browse our specialists.`,
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: emptyTriageState,
+                    quickOptions: [
+                        "I have severe hairfall at the top of my head",
+                        "Pooping right after drinking water happens daily",
+                        "Throbbing headache on one side for 2 days",
+                        "Is Ibuprofen safe with my profile?"
+                    ]
+                });
+            }
+
+            if (GRATITUDE_OR_CLOSING_REGEX.test(cleanMsg)) {
+                return res.json({
+                    success: true,
+                    intent: "closing",
+                    response:
+                        "You're very welcome! Take care, and reach out anytime you want to check symptoms, screen a medication, or book a specialist.",
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: emptyTriageState,
+                    quickOptions: [
+                        "Start a new symptom check",
+                        "Show available doctors",
+                        "Check medicine safety"
+                    ]
+                });
+            }
+
+            if (BOT_IDENTITY_REGEX.test(cleanMsg)) {
+                return res.json({
+                    success: true,
+                    intent: "bot_identity",
+                    response:
+                        "I'm Dr. Pulse, VitalSync's AI Clinical Triage & Pharmacology Assistant. I guide you through a focused 2-step clinical check across 30 medical protocols to match the right specialist, screen medications against your allergies and active prescriptions, and help you book appointments.",
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: emptyTriageState,
+                    quickOptions: [
+                        "I have severe hairfall at the top of my head",
+                        "Is Ibuprofen safe with my profile?",
+                        "Show available doctors"
+                    ]
+                });
+            }
+        }
 
         // 2. Check if user is asking a Medicine / Drug Allergy Safety question
-        const lowerMsg = cleanMsg.toLowerCase();
         const isMedicineSafetyQuery =
-            !triageState?.active &&
             !overrideProtocolId &&
             MEDICINE_INTENT_KEYWORDS.some((kw) => lowerMsg.includes(kw)) &&
             (lowerMsg.includes("safe") ||
                 lowerMsg.includes("take") ||
                 lowerMsg.includes("interact") ||
-                lowerMsg.includes("allerg"));
+                lowerMsg.includes("allerg") ||
+                lowerMsg.includes("side effect"));
 
         if (isMedicineSafetyQuery) {
             const candidateDrugs = [
                 "Ibuprofen", "Paracetamol", "Aspirin", "Amoxicillin", "Penicillin",
                 "Metformin", "Azithromycin", "Pantoprazole", "Omeprazole", "Cetirizine",
-                "Dolo 650", "Combiflam", "Augmentin", "Ciprofloxacin", "Diclofenac", "Naproxen"
+                "Dolo 650", "Combiflam", "Augmentin", "Ciprofloxacin", "Diclofenac",
+                "Naproxen", "Warfarin", "Lisinopril", "Atorvastatin"
             ].filter((d) => lowerMsg.includes(d.toLowerCase()));
 
             const drugsToScreen = candidateDrugs.length > 0 ? candidateDrugs : [cleanMsg];
@@ -249,8 +441,12 @@ const assistantTurn = async (req, res) => {
                 intent: "medicine_safety",
                 response: replyText,
                 safetyReport,
+                actionButton: {
+                    label: "Open Medicine Safety Checker",
+                    path: "/drug-checker"
+                },
                 patientProfileUsed: patientContext?.summaryBadge || null,
-                triageState: { active: false, questionCount: 0, chiefComplaint: "", collectedFacts: [] },
+                triageState: emptyTriageState,
                 quickOptions: [
                     "Check my symptoms instead",
                     "Show General Physician doctors",
@@ -259,11 +455,15 @@ const assistantTurn = async (req, res) => {
             });
         }
 
-        // 3. Check for explicit specialist lookup (e.g. "Show me Dermatologists") or FAQ
+        // 3. Check for explicit specialist lookup (e.g. "Show me Dermatologists"), General Doctor Lookup, or FAQ
         const { hasSymptomIntent, explicitSpeciality } = detectDoctorQuery(cleanMsg);
+        const isGeneralDoctorLookup =
+            !overrideProtocolId &&
+            !hasSymptomIntent &&
+            GENERAL_DOCTOR_LOOKUP_PHRASES.some((p) => lowerMsg.includes(p));
         const isFaqIntent = !overrideProtocolId && PLATFORM_FAQ_KEYWORDS.some((kw) => lowerMsg.includes(kw));
 
-        if (explicitSpeciality && !triageState?.active && !hasSymptomIntent && !overrideProtocolId) {
+        if (explicitSpeciality && !hasSymptomIntent && !overrideProtocolId) {
             const docs = await doctorModel
                 .find({ speciality: explicitSpeciality, available: true })
                 .select("name speciality degree experience fees address image about")
@@ -273,17 +473,50 @@ const assistantTurn = async (req, res) => {
             return res.json({
                 success: true,
                 intent: "doctor_lookup",
+                actionButton: {
+                    label: `Browse All ${explicitSpeciality} Doctors`,
+                    path: `/doctors/${encodeURIComponent(explicitSpeciality)}`
+                },
                 response:
                     docs.length > 0
                         ? `Here are our available ${explicitSpeciality} specialists. You can book a consultation directly or describe your symptoms for a guided clinical check:`
                         : `We don't have an available ${explicitSpeciality} online right this moment, but you can browse all doctors or describe your symptoms below.`,
                 doctors: docs,
                 patientProfileUsed: patientContext?.summaryBadge || null,
-                triageState: { active: false, questionCount: 0, chiefComplaint: "", collectedFacts: [] },
+                triageState: emptyTriageState,
                 quickOptions: [
                     "I have severe hairfall at the top of my head",
                     "Pooping right after drinking water daily",
-                    "Show General Physician doctors"
+                    "Show available doctors"
+                ]
+            });
+        }
+
+        if (isGeneralDoctorLookup) {
+            const docs = await doctorModel
+                .find({ available: true })
+                .select("name speciality degree experience fees address image about")
+                .limit(6)
+                .lean();
+
+            return res.json({
+                success: true,
+                intent: "doctor_lookup",
+                actionButton: {
+                    label: "Browse All Doctors by Speciality",
+                    path: "/doctors"
+                },
+                response:
+                    docs.length > 0
+                        ? "Here are verified specialists currently available on VitalSync. You can book directly with any doctor below, or describe your symptoms so I can match the right department:"
+                        : "You can browse our full directory of doctors or describe your symptoms below for a specialist recommendation.",
+                doctors: docs,
+                patientProfileUsed: patientContext?.summaryBadge || null,
+                triageState: emptyTriageState,
+                quickOptions: [
+                    "Show General Physician doctors",
+                    "I have severe hairfall at the top of my head",
+                    "Pooping right after drinking water daily"
                 ]
             });
         }
@@ -300,6 +533,18 @@ const assistantTurn = async (req, res) => {
                 allowLLM: true
             });
 
+            if (turn.type === "reset") {
+                return res.json({
+                    success: true,
+                    intent: "welcome",
+                    response: turn.question,
+                    quickOptions: turn.quickOptions,
+                    canSkipToVerdict: false,
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: turn.triageState
+                });
+            }
+
             if (turn.type === "system_picker" || turn.type === "question") {
                 return res.json({
                     success: true,
@@ -313,40 +558,63 @@ const assistantTurn = async (req, res) => {
                 });
             }
 
-            // Deliver hydrated clinical verdict
-            const verdict = await hydrateClinicalVerdict({
-                routeResult: turn.routeResult,
-                chiefComplaint: turn.triageState.chiefComplaint,
-                collectedFacts: turn.triageState.collectedFacts,
-                patientContext
-            });
+            if (turn.type === "verdict") {
+                // Deliver hydrated clinical verdict
+                const verdict = await hydrateClinicalVerdict({
+                    routeResult: turn.routeResult,
+                    chiefComplaint: turn.triageState.chiefComplaint,
+                    collectedFacts: turn.triageState.collectedFacts,
+                    patientContext
+                });
 
-            const summaryText = verdict.isEmergencyBypass
-                ? verdict.emergencyBanner
-                : verdict.secondarySpeciality
-                ? `Based on your symptoms (${verdict.possibleConcernArea.toLowerCase()}), I recommend consulting a ${verdict.primarySpeciality}, and I have also included ${verdict.secondarySpeciality} specialists alongside.`
-                : `Based on your symptoms (${verdict.possibleConcernArea.toLowerCase()}), I recommend consulting a ${verdict.primarySpeciality}.`;
+                const summaryText = verdict.isEmergencyBypass
+                    ? verdict.emergencyBanner
+                    : verdict.secondarySpeciality
+                    ? `Based on your symptoms (${verdict.possibleConcernArea.toLowerCase()}), I recommend consulting a ${verdict.primarySpeciality}, and I have also included ${verdict.secondarySpeciality} specialists alongside.`
+                    : `Based on your symptoms (${verdict.possibleConcernArea.toLowerCase()}), I recommend consulting a ${verdict.primarySpeciality}.`;
 
-            return res.json({
-                success: true,
-                intent: "triage_verdict",
-                response: summaryText,
-                understood: turn.understood || null,
-                verdict,
-                doctors: verdict.primaryDoctors,
-                secondaryDoctors: verdict.secondaryDoctors,
-                patientProfileUsed: patientContext?.summaryBadge || null,
-                triageState: turn.triageState,
-                quickOptions: [
-                    "Start a new symptom check",
-                    "Check medicine safety",
-                    "How do video consultations work?"
-                ]
-            });
+                return res.json({
+                    success: true,
+                    intent: "triage_verdict",
+                    response: summaryText,
+                    understood: turn.understood || null,
+                    verdict,
+                    doctors: verdict.primaryDoctors,
+                    secondaryDoctors: verdict.secondaryDoctors,
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: turn.triageState,
+                    quickOptions: [
+                        "Start a new symptom check",
+                        "Check medicine safety",
+                        "How do video consultations work?"
+                    ]
+                });
+            }
+            // If `turn.type === "non_clinical"`, fall through to Okapi BM25 RAG / conversational guidance below
+            // while keeping `triageState` completely clean (`active: false, chiefComplaint: ""`).
         }
 
         // 5. Platform FAQ / General Healthcare Assistance via Okapi BM25 RAG
         const relevantDocs = retrieveContext(cleanMsg, 3);
+        const hasStrongRagMatch = relevantDocs.length > 0 && (isFaqIntent || relevantDocs[0].score >= 1.5);
+
+        if (!hasStrongRagMatch && !isFaqIntent) {
+            return res.json({
+                success: true,
+                intent: "clarify_input",
+                response:
+                    "Could you describe the physical symptoms you are experiencing (for example: 'throbbing headache for 2 days' or 'itchy rash on my arms'), ask if a medication is safe with your profile, or select one of the options below?",
+                patientProfileUsed: patientContext?.summaryBadge || null,
+                triageState: emptyTriageState,
+                quickOptions: [
+                    "I have severe hairfall at the top of my head",
+                    "Pooping right after drinking water happens daily",
+                    "Throbbing headache on one side for 2 days",
+                    "Show available doctors"
+                ]
+            });
+        }
+
         const contextBlock =
             relevantDocs.length > 0
                 ? relevantDocs.map((doc) => `[${doc.category.toUpperCase()}] ${doc.question}\n${doc.content}`).join("\n\n")
@@ -385,7 +653,7 @@ Respond warmly and concisely in 2-3 plain-text sentences (no markdown asterisks)
                 category: d.category
             })),
             patientProfileUsed: patientContext?.summaryBadge || null,
-            triageState: { active: false, questionCount: 0, chiefComplaint: "", collectedFacts: [] },
+            triageState: emptyTriageState,
             quickOptions: [
                 "I have severe hairfall at the top of my head",
                 "Pooping right after drinking water daily",

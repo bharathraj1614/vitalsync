@@ -206,9 +206,13 @@ export function mapSystemPick(text = "") {
 
 /** Lightweight symptom-language heuristics for intent detection. */
 const SYMPTOM_CUES = [
-    "i have", "i am having", "im having", "suffering", "feeling", "pain", "hurts", "hurting", "ache",
-    "since yesterday", "since morning", "for 2 days", "happens daily", "problem with", "issue with",
-    "swelling", "bleeding", "burning", "itching"
+    "i have", "i am having", "im having", "i feel", "feel", "feeling", "suffering",
+    "pain", "hurts", "hurting", "ache", "aching", "sore", "discomfort", "unwell", "sick",
+    "since yesterday", "since morning", "for 2 days", "for 3 days", "happens daily",
+    "problem with", "issue with", "wrong with", "something strange", "strange in my body",
+    "swelling", "swollen", "bleeding", "burning", "itching", "itchy", "rash", "fever",
+    "cough", "vomiting", "nausea", "dizzy", "dizziness", "weakness", "tired", "fatigue",
+    "headache", "stomach", "chest", "throat", "skin", "hair", "hairfall", "dard", "bukhar", "khansi"
 ];
 
 export function hasSymptomCues(text = "") {
@@ -217,4 +221,73 @@ export function hasSymptomCues(text = "") {
         const r = findPhrase(tokens, c);
         return r.found;
     });
+}
+
+const CANCEL_OR_RESET_REGEX =
+    /^(cancel|stop|exit|quit|reset|start\s*over|restart|clear|never\s*mind|nevermind|abort|start\s+a\s+new\s+symptom\s+check|check\s+my\s+symptoms\s+instead|new\s+symptom\s+check)[!.,?\s]*$/i;
+
+const GREETING_OR_PLEASANTRY_REGEX =
+    /^(hi|hello|hey|good\s*(morning|afternoon|evening|night)|howdy|greetings|namaste|hola|sup|yo|thanks|thank\s*you|thx|ty|ok|okay|k|cool|great|awesome|got\s*it|understood|alright|bye|goodbye|see\s*ya|nice)(\s+there|\s+doctor|\s+dr\.?\s*pulse|\s+bot|\s+assistant|\s+so\s+much|\s+a\s+lot)?[!.,?\s]*$/i;
+
+const META_OR_NAVIGATION_PHRASES = [
+    "open medicine safety",
+    "medicine safety checker",
+    "check medicine safety",
+    "drug safety checker",
+    "open drug checker",
+    "show general physician",
+    "show available doctors",
+    "show me doctors",
+    "show doctors",
+    "find a doctor",
+    "list doctors",
+    "browse doctors",
+    "start a new symptom check",
+    "check my symptoms instead",
+    "how do video consultations work",
+    "how does video consultation",
+    "how do i book",
+    "how to book",
+    "cancel appointment",
+    "reschedule appointment",
+    "prescription download",
+    "download prescription",
+    "verify prescription",
+    "view my appointments",
+    "open my appointments",
+    "open my profile",
+    "edit my profile",
+    "open health hub",
+    "who are you",
+    "what are you",
+    "what is vitalsync",
+    "what can you do",
+    "how do you work",
+    "what is your name"
+];
+
+/**
+ * Returns true if the message is an explicit session reset / abort command.
+ */
+export function isCancelOrResetCommand(text = "") {
+    const raw = String(text || "").trim();
+    return CANCEL_OR_RESET_REGEX.test(raw);
+}
+
+/**
+ * Returns true if the message is a UI action pill, navigation request, greeting,
+ * pleasantry, or platform meta-question that must NEVER be ingested as a medical
+ * chief complaint or triage answer.
+ */
+export function isNonSymptomMetaInput(text = "") {
+    const raw = String(text || "").trim();
+    if (!raw) return false;
+    if (CANCEL_OR_RESET_REGEX.test(raw)) return true;
+    if (GREETING_OR_PLEASANTRY_REGEX.test(raw)) return true;
+
+    const lower = raw.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+    if (META_OR_NAVIGATION_PHRASES.some((phrase) => lower.includes(phrase))) {
+        return true;
+    }
+    return false;
 }

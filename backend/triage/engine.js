@@ -23,6 +23,8 @@ import {
     classifyByLexicon,
     detectChildContext,
     hasSymptomCues,
+    isCancelOrResetCommand,
+    isNonSymptomMetaInput,
     mapAnswerToOption,
     mapSystemPick,
     prefillAnswers
@@ -134,6 +136,61 @@ export async function runTriageTurn({
     allowLLM = true
 }) {
     const cleanMsg = String(message || "").trim();
+
+    // 0. SESSION RESET / CANCELLATION INTERCEPTOR (prevents "cancel" or "start a new symptom check" from becoming a symptom or answer)
+    if (!overrideProtocolId && !forceVerdict && isCancelOrResetCommand(cleanMsg)) {
+        return {
+            type: "reset",
+            question:
+                "Ready for a fresh symptom check! Tell me what symptoms you are experiencing, when they started, and how they feel.",
+            quickOptions: [
+                "I have severe hairfall at the top of my head",
+                "Pooping right after drinking water happens daily",
+                "Throbbing headache on one side for 2 days",
+                "Itchy skin rash on my arms"
+            ],
+            canSkipToVerdict: false,
+            triageState: {
+                active: false,
+                questionCount: 0,
+                chiefComplaint: "",
+                protocolId: null,
+                answers: {},
+                answersText: {},
+                collectedFacts: []
+            }
+        };
+    }
+
+    // 0.5. META / NAVIGATION / GREETING GUARD (prevents action pills like "Open Medicine Safety Checker page" or "Hi" from becoming chief complaints)
+    if (!overrideProtocolId && !forceVerdict && isNonSymptomMetaInput(cleanMsg)) {
+        const directSafety = runSafetyGate(cleanMsg);
+        const directLex = classifyByLexicon(cleanMsg);
+        if (!directSafety.emergency && directSafety.urgent.length === 0 && !directLex) {
+            return {
+                type: "non_clinical",
+                question:
+                    "I'm Dr. Pulse, your VitalSync Clinical Assistant. Describe your physical symptoms in your own words to start a clinical check, ask if a medicine is safe with your profile, or pick an option below:",
+                quickOptions: [
+                    "I have severe hairfall at the top of my head",
+                    "Pooping right after drinking water happens daily",
+                    "Throbbing headache on one side for 2 days",
+                    "Show available doctors"
+                ],
+                canSkipToVerdict: false,
+                triageState: {
+                    active: false,
+                    questionCount: 0,
+                    chiefComplaint: "",
+                    protocolId: null,
+                    answers: {},
+                    answersText: {},
+                    collectedFacts: []
+                }
+            };
+        }
+    }
+
     const isActive = Boolean(triageState?.active);
     const chiefComplaint = isActive && triageState.chiefComplaint ? triageState.chiefComplaint : cleanMsg;
 
@@ -235,12 +292,12 @@ export async function runTriageTurn({
             }
         }
 
-        // If still unknown -> ask body-system picker instead of silently defaulting to GP!
+        // If still unknown -> verify it actually has symptom cues before prompting body-system picker!
         if (!protocol) {
             if (forceVerdict) {
                 protocol = getProtocol("generic_general");
                 classification = { protocolId: "generic_general", source: "forced_fallback", confidence: 0.5, alternatives: [] };
-            } else {
+            } else if (hasSymptomCues(cleanMsg) || safety.urgent.length > 0 || isChild) {
                 return {
                     type: "system_picker",
                     question:
@@ -255,6 +312,29 @@ export async function runTriageTurn({
                         protocolId: null,
                         organDomain: "general",
                         isChild,
+                        answers: {},
+                        answersText: {},
+                        collectedFacts: []
+                    }
+                };
+            } else {
+                // Non-symptom / unclear input with zero symptom cues -> do NOT start triage or pollute chiefComplaint!
+                return {
+                    type: "non_clinical",
+                    question:
+                        "Could you describe the physical symptoms you are experiencing (for example: pain, fever, rash, dizziness, or digestive trouble), or choose one of the options below?",
+                    quickOptions: [
+                        "I have severe hairfall at the top of my head",
+                        "Pooping right after drinking water happens daily",
+                        "Throbbing headache on one side for 2 days",
+                        "Show available doctors"
+                    ],
+                    canSkipToVerdict: false,
+                    triageState: {
+                        active: false,
+                        questionCount: 0,
+                        chiefComplaint: "",
+                        protocolId: null,
                         answers: {},
                         answersText: {},
                         collectedFacts: []

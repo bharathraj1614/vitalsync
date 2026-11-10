@@ -43,11 +43,28 @@ const Appointment = () => {
     const navigate = useNavigate()
     const { doctors, currencySymbol, backendUrl, token, getDoctosData } = useContext(AppContext)
 
+    const sanitizePrefilledReason = (raw) => {
+        if (!raw) return ''
+        const clean = String(raw).trim()
+        const blockedPhrases = [
+            'open medicine safety',
+            'medicine safety checker',
+            'check medicine safety',
+            'show available doctors',
+            'show general physician',
+            'start a new symptom check',
+            'check my symptoms instead',
+            'how do video consultations work'
+        ]
+        if (blockedPhrases.some((p) => clean.toLowerCase().includes(p))) return ''
+        return clean
+    }
+
     const [docInfo, setDocInfo] = useState(null)
     const [docSlots, setDocSlots] = useState([])
     const [slotIndex, setSlotIndex] = useState(0)
     const [slotTime, setSlotTime] = useState('')
-    const [reasonForVisit, setReasonForVisit] = useState(location.state?.prefilledSymptoms || '')
+    const [reasonForVisit, setReasonForVisit] = useState(() => sanitizePrefilledReason(location.state?.prefilledSymptoms))
     const [booking, setBooking] = useState(false)
     const [paymentConfig, setPaymentConfig] = useState({ testMode: false, razorpayEnabled: true, stripeEnabled: false })
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('razorpay')

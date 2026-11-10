@@ -59,16 +59,54 @@ const ChatWidget = () => {
     sendAssistantMessage(clean)
   }
 
+  const sanitizeReason = (raw) => {
+    const clean = String(raw || '').trim()
+    if (!clean) return ''
+    const lower = clean.toLowerCase()
+    const nonClinicalPhrases = [
+      'open medicine safety',
+      'medicine safety checker',
+      'check medicine safety',
+      'show available doctors',
+      'show general physician',
+      'start a new symptom check',
+      'check my symptoms instead',
+      'how do video consultations work'
+    ]
+    if (nonClinicalPhrases.some((p) => lower.includes(p))) return ''
+    return clean
+  }
+
   const handleBookDoctor = (doc, clinicalSummary) => {
+    const safeReason =
+      sanitizeReason(clinicalSummary) ||
+      sanitizeReason(assistantTriageState.chiefComplaint) ||
+      'AI Clinical Assistant referral'
     setIsOpen(false)
     navigate(`/appointment/${doc._id}`, {
       state: {
-        prefilledSymptoms:
-          clinicalSummary ||
-          assistantTriageState.chiefComplaint ||
-          'AI Clinical Assistant referral'
+        prefilledSymptoms: safeReason
       }
     })
+  }
+
+  const handleQuickOptionClick = (opt) => {
+    const clean = String(opt || '').trim()
+    const lower = clean.toLowerCase()
+    if (lower.includes('open medicine safety') || lower === 'medicine safety checker page') {
+      setIsOpen(false)
+      navigate('/drug-checker')
+      return
+    }
+    if (
+      lower === 'start a new symptom check' ||
+      lower === 'check my symptoms instead' ||
+      lower === 'new symptom check'
+    ) {
+      resetAssistantChat()
+      return
+    }
+    sendAssistantMessage(clean)
   }
 
   return (
@@ -277,6 +315,23 @@ const ChatWidget = () => {
                     </div>
                   )}
 
+                  {/* Dedicated Page Navigation CTA Button */}
+                  {msg.role === 'bot' && msg.actionButton && msg.actionButton.path && (
+                    <div className='pt-0.5'>
+                      <button
+                        type='button'
+                        onClick={() => {
+                          setIsOpen(false)
+                          navigate(msg.actionButton.path)
+                        }}
+                        className='inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-sky-600 text-white text-[11px] font-bold transition-colors cursor-pointer shadow-2xs'
+                      >
+                        <span>{msg.actionButton.label}</span>
+                        <ArrowRight className='w-3 h-3' />
+                      </button>
+                    </div>
+                  )}
+
                   {/* Quick-Reply Chips */}
                   {isLastBotMsg && !assistantLoading && msg.quickOptions && msg.quickOptions.length > 0 && (
                     <div className='space-y-1.5 pt-1'>
@@ -285,7 +340,7 @@ const ChatWidget = () => {
                           <button
                             key={idx}
                             type='button'
-                            onClick={() => sendAssistantMessage(opt)}
+                            onClick={() => handleQuickOptionClick(opt)}
                             className='text-[11px] bg-sky-50 hover:bg-sky-600 text-sky-900 hover:text-white border border-sky-200 px-2.5 py-1.5 rounded-xl font-semibold transition-colors cursor-pointer text-left'
                           >
                             {opt}

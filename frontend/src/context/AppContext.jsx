@@ -306,8 +306,13 @@ const AppContextProvider = (props) => {
             const cleanText = String(rawText || '').trim();
             if ((!cleanText && !forceVerdict && !overrideProtocolId) || assistantLoading) return;
 
-            // Handle special quick-action intents
-            if (cleanText.toLowerCase() === 'start a new symptom check') {
+            // Handle special quick-action intents locally (reset or route navigation)
+            const lowerClean = cleanText.toLowerCase();
+            if (
+                lowerClean === 'start a new symptom check' ||
+                lowerClean === 'check my symptoms instead' ||
+                lowerClean === 'new symptom check'
+            ) {
                 setAssistantTriageState({
                     active: false,
                     questionCount: 0,
@@ -318,7 +323,7 @@ const AppContextProvider = (props) => {
                 });
                 setLatestVerdict(null);
                 setAssistantMessages((prev) => [
-                    ...prev,
+                    ...prev.map((m) => ({ ...m, canSkipToVerdict: false })),
                     {
                         id: `user-${Date.now()}`,
                         role: 'user',
@@ -337,6 +342,14 @@ const AppContextProvider = (props) => {
                         ]
                     }
                 ]);
+                return;
+            }
+
+            if (
+                lowerClean === 'open medicine safety checker page' ||
+                lowerClean === 'open medicine safety checker'
+            ) {
+                window.dispatchEvent(new CustomEvent('vitalsync:navigate', { detail: { path: '/drug-checker' } }));
                 return;
             }
 
@@ -371,6 +384,8 @@ const AppContextProvider = (props) => {
                     }
                     if (data.verdict) {
                         setLatestVerdict(data.verdict);
+                    } else if (data.intent === 'welcome' || data.intent === 'session_reset') {
+                        setLatestVerdict(null);
                     }
 
                     setAssistantMessages((prev) => [
@@ -382,6 +397,8 @@ const AppContextProvider = (props) => {
                             text: data.response,
                             understood: data.understood || null,
                             quickOptions: data.quickOptions || [],
+                            actionButton: data.actionButton || null,
+                            navigateTo: data.navigateTo || null,
                             canSkipToVerdict: Boolean(data.canSkipToVerdict),
                             verdict: data.verdict || null,
                             safetyReport: data.safetyReport || null,

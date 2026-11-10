@@ -393,16 +393,53 @@ const SymptomChecker = () => {
     sendAssistantMessage(msg)
   }
 
+  const sanitizeReason = (raw) => {
+    const clean = String(raw || '').trim()
+    if (!clean) return ''
+    const lower = clean.toLowerCase()
+    const nonClinicalPhrases = [
+      'open medicine safety',
+      'medicine safety checker',
+      'check medicine safety',
+      'show available doctors',
+      'show general physician',
+      'start a new symptom check',
+      'check my symptoms instead',
+      'how do video consultations work'
+    ]
+    if (nonClinicalPhrases.some((p) => lower.includes(p))) return ''
+    return clean
+  }
+
   const handleBookDoctor = (doc, clinicalSummary) => {
+    const safeReason =
+      sanitizeReason(clinicalSummary) ||
+      sanitizeReason(assistantTriageState.chiefComplaint) ||
+      'Guided AI Symptom Assistant referral'
     navigate(`/appointment/${doc._id}`, {
       state: {
-        prefilledSymptoms:
-          clinicalSummary ||
-          assistantTriageState.chiefComplaint ||
-          'Guided AI Symptom Assistant referral'
+        prefilledSymptoms: safeReason
       }
     })
     window.scrollTo(0, 0)
+  }
+
+  const handleQuickOptionClick = (opt) => {
+    const clean = String(opt || '').trim()
+    const lower = clean.toLowerCase()
+    if (lower.includes('open medicine safety') || lower === 'medicine safety checker page') {
+      navigate('/drug-checker')
+      return
+    }
+    if (
+      lower === 'start a new symptom check' ||
+      lower === 'check my symptoms instead' ||
+      lower === 'new symptom check'
+    ) {
+      resetAssistantChat()
+      return
+    }
+    sendAssistantMessage(clean)
   }
 
   // Determine current step for the top clinical progress bar
@@ -618,6 +655,20 @@ const SymptomChecker = () => {
                     </div>
                   )}
 
+                  {/* Dedicated Page Navigation CTA Button (e.g. Open Medicine Safety Checker, Browse Doctors) */}
+                  {msg.role === 'bot' && msg.actionButton && msg.actionButton.path && (
+                    <div className='sm:pl-11 pt-0.5'>
+                      <button
+                        type='button'
+                        onClick={() => navigate(msg.actionButton.path)}
+                        className='inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-sky-600 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs'
+                      >
+                        <span>{msg.actionButton.label}</span>
+                        <ArrowRight className='w-3.5 h-3.5' />
+                      </button>
+                    </div>
+                  )}
+
                   {/* Interactive Quick-Reply Chips on the latest bot turn */}
                   {isLastBotMsg && !assistantLoading && msg.quickOptions && msg.quickOptions.length > 0 && (
                     <div className='sm:pl-11 space-y-2 pt-0.5'>
@@ -631,7 +682,7 @@ const SymptomChecker = () => {
                           <button
                             key={i}
                             type='button'
-                            onClick={() => sendAssistantMessage(opt)}
+                            onClick={() => handleQuickOptionClick(opt)}
                             className='px-3 py-1.5 rounded-xl bg-sky-50/90 hover:bg-sky-600 text-sky-900 hover:text-white border border-sky-200/90 hover:border-sky-600 text-xs font-semibold transition-all cursor-pointer text-left shadow-2xs'
                           >
                             {opt}

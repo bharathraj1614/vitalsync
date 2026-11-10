@@ -893,7 +893,17 @@ const PrescriptionForm = () => {
             <label className='block text-xs font-extrabold uppercase tracking-wider text-slate-700'>
               Diagnosis / Clinical Findings *
             </label>
-            {appointment?.reasonForVisit && !diagnosis && (
+            {appointment?.reasonForVisit &&
+              !diagnosis &&
+              ![
+                'open medicine safety',
+                'medicine safety checker',
+                'check medicine safety',
+                'show available doctors',
+                'show general physician',
+                'start a new symptom check',
+                'check my symptoms instead'
+              ].some((p) => String(appointment.reasonForVisit).toLowerCase().includes(p)) && (
               <button
                 type='button'
                 onClick={() => setDiagnosis(appointment.reasonForVisit)}

@@ -248,6 +248,37 @@ async function runEvaluation() {
     }
     console.log("  ✅ Ambiguous complaint prompted body-system picker instead of silent GP default.\n");
 
+    // 3B. Non-Symptom / Action Pill / Greeting Contamination Guard Check
+    console.log("[3B] Non-Symptom & Navigation Action Guard Check (Zero Chief Complaint Contamination):");
+    const nonSymptomInputs = [
+        "Open Medicine Safety Checker page",
+        "Check medicine safety",
+        "Show General Physician doctors",
+        "Show available doctors",
+        "How do video consultations work?",
+        "Hi",
+        "Hello Dr Pulse",
+        "Thank you",
+        "Who are you?"
+    ];
+    for (const msg of nonSymptomInputs) {
+        const resTurn = await runTriageTurn({ message: msg, allowLLM: false });
+        if (resTurn.type !== "non_clinical" || resTurn.triageState.active || resTurn.triageState.chiefComplaint !== "") {
+            console.error(`  ❌ Non-symptom input "${msg}" contaminated triage state:`, resTurn);
+            process.exit(1);
+        }
+    }
+    const resetTurn = await runTriageTurn({
+        message: "Start a new symptom check",
+        triageState: turn1.triageState,
+        allowLLM: false
+    });
+    if (resetTurn.type !== "reset" || resetTurn.triageState.active || resetTurn.triageState.chiefComplaint !== "") {
+        console.error("  ❌ Reset command failed to clear active triage state:", resetTurn);
+        process.exit(1);
+    }
+    console.log(`  ✅ All ${nonSymptomInputs.length + 1} navigation pills, greetings, and reset commands blocked from polluting chiefComplaint.\n`);
+
     // 4. Run all 155 clinical vignettes
     let passed = 0;
     let failed = 0;
