@@ -2,9 +2,44 @@
     {
         "id": "platform_about",
         "category": "platform",
-        "question": "What is VitalSync?",
-        "content": "VitalSync is an AI-powered telemedicine platform that connects patients with qualified healthcare professionals. It offers online appointment booking, AI-driven symptom analysis, medical record management with AI report summarization, and real-time video consultations. The platform supports multiple medical specialities including General Physician, Gynecologist, Dermatologist, Pediatrician, Neurologist, and Gastroenterologist.",
-        "keywords": ["vitalsync", "platform", "about", "what", "telemedicine", "app", "website"]
+        "question": "What is VitalSync and who is VitalSync?",
+        "content": "VitalSync is an AI-powered telemedicine and remote patient monitoring platform connecting patients with verified specialists across 6 departments (General Physician, Gynecologist, Dermatologist, Pediatricians, Neurologist, and Gastroenterologist). It features our Clinical Triage Engine v2 (30 medical protocols), a 1,300+ rule Medicine Safety & Allergy Checker, encrypted WebRTC HD video consultations with contactless rPPG webcam vitals, NEWS2 clinical acuity scoring, AI lab report analysis, and cryptographically signed QR prescriptions.",
+        "keywords": ["vitalsync", "platform", "about", "what", "who", "telemedicine", "app", "website", "overview", "company", "services", "features"]
+    },
+    {
+        "id": "assistant_capabilities",
+        "category": "feature",
+        "question": "What can I do with you? How can Dr. Pulse / VitalSync MedBot help me?",
+        "content": "Here is what you can do with me (Dr. Pulse, your VitalSync Clinical Assistant): 1) Guided Symptom Triage — Describe any symptom in your own words and answer 1–2 quick clinical questions to get matched with the right specialist and urgency level. 2) Medicine & Allergy Safety Screening — Ask 'Is Ibuprofen safe for me?' to screen drugs against your recorded allergies and active medications. 3) Specialist Discovery & Booking — Ask to see available doctors by department and book an appointment with pre-filled clinical intake notes. 4) Platform Guidance — Ask how video calls, digital prescriptions, or medical records work.",
+        "keywords": ["capabilities", "help", "assistant", "medbot", "pulse", "features", "what can you do", "what can i do with you", "use", "functions"]
+    },
+    {
+        "id": "video_consultations",
+        "category": "feature",
+        "question": "How do video consultations and camera vitals work?",
+        "content": "VitalSync provides encrypted peer-to-peer WebRTC HD video consultations directly in your browser: 1) Book an appointment with any doctor. 2) Open 'My Appointments' or 'My Health' when your session starts and click 'Join Video Call'. 3) During the call, you can enable contactless rPPG camera vitals to estimate your real-time heart rate (BPM) using your webcam, share your screen, exchange chat messages with your doctor, and receive an instant digital prescription.",
+        "keywords": ["video", "call", "consultation", "consultations", "webrtc", "camera", "rppg", "join", "online", "meeting", "teleconsultation"]
+    },
+    {
+        "id": "medicine_safety_checker",
+        "category": "feature",
+        "question": "How does the Medicine Safety & Drug Interaction Checker work?",
+        "content": "The Medicine Safety Checker screens medications against 1,300+ drug-drug interaction rules and your personal allergy/medication profile: 1) Ask me directly in chat (e.g., 'Is Ibuprofen safe with my profile?') or open the 'Medicine Safety' page in the top navigation bar. 2) Add two or more medicines to check for Severe, Moderate, or Minor interactions and cross-reactive allergy alerts.",
+        "keywords": ["medicine", "safety", "drug", "interaction", "checker", "allergy", "conflict", "pill", "tablet", "safe", "ddi"]
+    },
+    {
+        "id": "digital_prescriptions",
+        "category": "feature",
+        "question": "How do digital prescriptions and QR verification work?",
+        "content": "After a consultation, your doctor issues a digital prescription signed with RSA-2048 cryptography: 1) View or download your PDF prescription anytime from 'My Appointments' or 'My Health'. 2) Every prescription is automatically screened against your allergies. 3) Each prescription includes a tamper-evident QR code that pharmacies can verify at /verify-prescription.",
+        "keywords": ["prescription", "prescriptions", "download", "verify", "qr", "pdf", "medicine", "signed", "rx"]
+    },
+    {
+        "id": "health_hub_vitals",
+        "category": "feature",
+        "question": "What is My Health Hub and NEWS2 Vitals Monitoring?",
+        "content": "My Health Hub (/health) is your unified longitudinal health dashboard: 1) Log and track vital signs (Blood Pressure, Heart Rate, SpO2, Temperature, Respiration Rate, Blood Glucose). 2) View automatic National Early Warning Score 2 (NEWS2) clinical risk grading. 3) Track biomarker trends extracted from your uploaded lab reports and access all your digital prescriptions in one place.",
+        "keywords": ["health", "hub", "dashboard", "vitals", "news2", "biomarker", "blood pressure", "heart rate", "spo2", "monitoring"]
     },
     {
         "id": "how_book_appointment",

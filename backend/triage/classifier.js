@@ -261,7 +261,11 @@ const META_OR_NAVIGATION_PHRASES = [
     "who are you",
     "what are you",
     "what is vitalsync",
+    "who is vitalsync",
+    "about vitalsync",
     "what can you do",
+    "what can i do with you",
+    "how can you help",
     "how do you work",
     "what is your name"
 ];

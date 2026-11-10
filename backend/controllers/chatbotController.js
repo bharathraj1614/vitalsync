@@ -34,8 +34,8 @@ const PLATFORM_FAQ_KEYWORDS = [
     "how do i book", "how to book", "cancel appointment", "cancel booking", "cancel my appointment",
     "refund", "reschedule", "video call", "video consultation", "consultations work", "how does video",
     "join call", "prescription download", "download prescription", "my prescription", "verify prescription",
-    "payment", "razorpay", "stripe", "where can i see", "what is vitalsync", "upload report",
-    "medical record", "consultation fee", "how much does"
+    "payment", "razorpay", "stripe", "where can i see", "vitalsync", "upload report",
+    "medical record", "consultation fee", "how much does", "privacy", "data secure", "news2", "rppg"
 ];
 
 const GREETING_REGEX =
@@ -45,7 +45,10 @@ const GRATITUDE_OR_CLOSING_REGEX =
     /^(thanks|thank\s*you|thx|ty|ok|okay|k|cool|great|awesome|got\s*it|understood|alright|bye|goodbye|see\s*ya|nice)(\s+so\s+much|\s+a\s+lot|\s+doctor|\s+dr\.?\s*pulse)?[!.,?\s]*$/i;
 
 const BOT_IDENTITY_REGEX =
-    /^(who\s+are\s+you|what\s+are\s+you|what\s+can\s+you\s+do|how\s+do\s+you\s+work|what\s+is\s+your\s+name|help|help\s+me)[!.,?\s]*$/i;
+    /\b(who\s+are\s+you|what\s+are\s+you|what\s+can\s+you\s+do|what\s+can\s+i\s+do\s+with\s+you|how\s+can\s+you\s+help|how\s+do\s+you\s+work|what\s+do\s+you\s+do|what\s+is\s+your\s+name|tell\s+me\s+about\s+yourself|your\s+capabilities|your\s+features)\b|^help(\s+me)?[!.,?\s]*$/i;
+
+const PLATFORM_ABOUT_REGEX =
+    /\b(who\s+is\s+vitalsync|what\s+is\s+vitalsync|about\s+vitalsync|tell\s+me\s+about\s+vitalsync|what\s+does\s+vitalsync\s+do|how\s+does\s+vitalsync\s+work)\b/i;
 
 const GENERAL_DOCTOR_LOOKUP_PHRASES = [
     "show available doctors",
@@ -394,13 +397,35 @@ const assistantTurn = async (req, res) => {
                     success: true,
                     intent: "bot_identity",
                     response:
-                        "I'm Dr. Pulse, VitalSync's AI Clinical Triage & Pharmacology Assistant. I guide you through a focused 2-step clinical check across 30 medical protocols to match the right specialist, screen medications against your allergies and active prescriptions, and help you book appointments.",
+                        "Here is what you can do with me (Dr. Pulse, your VitalSync Clinical Assistant): (1) Guided Symptom Triage — describe any symptom and answer 1–2 quick questions to match the right specialist; (2) Medicine & Allergy Safety — ask 'Is Ibuprofen safe for me?' to check against your allergies and active prescriptions; (3) Specialist Discovery — browse available doctors and book appointments with pre-filled clinical intake notes; and (4) Platform Help — ask how video calls, camera vitals, or QR prescriptions work.",
                     patientProfileUsed: patientContext?.summaryBadge || null,
                     triageState: emptyTriageState,
                     quickOptions: [
                         "I have severe hairfall at the top of my head",
                         "Is Ibuprofen safe with my profile?",
-                        "Show available doctors"
+                        "Show available doctors",
+                        "How do video consultations work?"
+                    ]
+                });
+            }
+
+            if (PLATFORM_ABOUT_REGEX.test(cleanMsg)) {
+                return res.json({
+                    success: true,
+                    intent: "platform_about",
+                    actionButton: {
+                        label: "Browse Verified Doctors",
+                        path: "/doctors"
+                    },
+                    response:
+                        "VitalSync is an AI-powered telemedicine and remote patient monitoring platform connecting patients with board-certified doctors across 6 departments (General Physician, Gynecologist, Dermatologist, Pediatricians, Neurologist, and Gastroenterologist). It includes a 30-protocol Clinical Triage Engine, a 1,300+ rule Medicine & Allergy Safety Checker, encrypted WebRTC HD video calls with contactless webcam heart-rate monitoring (rPPG), NEWS2 clinical acuity scoring, and RSA-2048 signed QR digital prescriptions.",
+                    patientProfileUsed: patientContext?.summaryBadge || null,
+                    triageState: emptyTriageState,
+                    quickOptions: [
+                        "What can I do with you?",
+                        "Show available doctors",
+                        "Is Ibuprofen safe with my profile?",
+                        "I have severe hairfall at the top of my head"
                     ]
                 });
             }
@@ -594,53 +619,55 @@ const assistantTurn = async (req, res) => {
             // while keeping `triageState` completely clean (`active: false, chiefComplaint: ""`).
         }
 
-        // 5. Platform FAQ / General Healthcare Assistance via Okapi BM25 RAG
+        // 5. Platform FAQ / General Healthcare Assistance via Okapi BM25 RAG + Gemini Conversational Layer
         const relevantDocs = retrieveContext(cleanMsg, 3);
-        const hasStrongRagMatch = relevantDocs.length > 0 && (isFaqIntent || relevantDocs[0].score >= 1.5);
-
-        if (!hasStrongRagMatch && !isFaqIntent) {
-            return res.json({
-                success: true,
-                intent: "clarify_input",
-                response:
-                    "Could you describe the physical symptoms you are experiencing (for example: 'throbbing headache for 2 days' or 'itchy rash on my arms'), ask if a medication is safe with your profile, or select one of the options below?",
-                patientProfileUsed: patientContext?.summaryBadge || null,
-                triageState: emptyTriageState,
-                quickOptions: [
-                    "I have severe hairfall at the top of my head",
-                    "Pooping right after drinking water happens daily",
-                    "Throbbing headache on one side for 2 days",
-                    "Show available doctors"
-                ]
-            });
-        }
-
         const contextBlock =
             relevantDocs.length > 0
                 ? relevantDocs.map((doc) => `[${doc.category.toUpperCase()}] ${doc.question}\n${doc.content}`).join("\n\n")
                 : "";
 
-        let botReply =
-            "I can help you check symptoms step-by-step, find the right specialist, screen medications against your allergies, or guide you through booking an appointment. How are you feeling today?";
-
-        if (relevantDocs.length > 0) {
-            botReply = relevantDocs[0].content;
+        const sessionId = userId || "anonymous";
+        if (!conversationHistory.has(sessionId)) {
+            conversationHistory.set(sessionId, []);
         }
+        const history = conversationHistory.get(sessionId);
+        const historyBlock =
+            history.length > 0
+                ? history.slice(-6).map((h) => `${h.role}: ${h.text}`).join("\n")
+                : "No prior turns.";
+
+        let botReply =
+            relevantDocs.length > 0 && relevantDocs[0].score >= 0.8
+                ? relevantDocs[0].content
+                : "I'm Dr. Pulse, your VitalSync Clinical Assistant. You can describe any physical symptoms for a 2-step specialist check, ask if a medication is safe with your allergies, or ask about appointments, video calls, and prescriptions.";
 
         try {
             const model = getTextModel();
-            const prompt = `You are VitalSync's Unified Clinical & Platform Assistant.
+            const prompt = `You are Dr. Pulse, VitalSync's Unified Clinical Triage & Platform Assistant.
 Patient Context: ${patientContext?.summaryBadge || "Guest"}
-Retrieved Platform Info:
-${contextBlock || "Standard telemedicine portal with General Physician, Gastroenterologist, Neurologist, Dermatologist, Gynecologist, and Pediatricians."}
+Recent Conversation History:
+${historyBlock}
+
+Retrieved VitalSync Knowledge Base Context:
+${contextBlock || "VitalSync is an AI-powered telemedicine & remote patient monitoring platform with 6 specialist departments (General Physician, Gynecologist, Dermatologist, Pediatricians, Neurologist, Gastroenterologist), 30-protocol Clinical Triage Engine, 1,300+ rule Medicine & Allergy Safety Checker, WebRTC HD video calls with contactless rPPG webcam vitals, NEWS2 scoring, and RSA-2048 QR digital prescriptions."}
 
 User Message: ${cleanMsg}
 
-Respond warmly and concisely in 2-3 plain-text sentences (no markdown asterisks). If they mention any health symptom, invite them to describe it so you can run a quick 2-step clinical check.`;
+Instructions:
+- Directly and helpfully answer the user's question in 2-4 concise plain-text sentences (no markdown asterisks).
+- If they ask what they can do with you or who VitalSync is, clearly summarize the key capabilities above.
+- If they mention a symptom, invite them to describe it so you can run a quick 2-step clinical check.`;
             const result = await model.generateContent(prompt);
-            botReply = result.response.text().replace(/\*\*/g, "").trim();
+            const generated = result.response.text().replace(/\*\*/g, "").trim();
+            if (generated) botReply = generated;
         } catch {
-            // Keep deterministic RAG answer
+            // Keep deterministic RAG / fallback answer if LLM is offline or rate-limited
+        }
+
+        history.push({ role: "User", text: cleanMsg });
+        history.push({ role: "Assistant", text: botReply });
+        while (history.length > MAX_HISTORY * 2) {
+            history.shift();
         }
 
         return res.json({
@@ -656,9 +683,9 @@ Respond warmly and concisely in 2-3 plain-text sentences (no markdown asterisks)
             triageState: emptyTriageState,
             quickOptions: [
                 "I have severe hairfall at the top of my head",
-                "Pooping right after drinking water daily",
-                "Throbbing headache for 2 days",
-                "Show available doctors"
+                "Is Ibuprofen safe with my profile?",
+                "Show available doctors",
+                "How do video consultations work?"
             ]
         });
     } catch (error) {

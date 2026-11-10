@@ -87,11 +87,17 @@ const computeIDF = (term) => {
  * @returns {Array} Ranked KB entries with BM25 relevance scores
  */
 function retrieveContext(query, topK = 3) {
-    const queryTokens = tokenize(query);
-    const queryLower = String(query || "").toLowerCase();
+    let queryTokens = tokenize(query);
+    const queryLower = String(query || "").toLowerCase().trim();
 
+    // If a conversational question was composed entirely of stop-words (e.g. "what can i do with you", "how can you help me"),
+    // map it to assistant capability keywords instead of returning 0 tokens.
     if (queryTokens.length === 0) {
-        return [];
+        if (/\b(you|your|with you|help|do)\b/.test(queryLower)) {
+            queryTokens = ["capabilities", "assistant", "help"];
+        } else {
+            return [];
+        }
     }
 
     const uniqueQueryTerms = Array.from(new Set(queryTokens));
@@ -115,6 +121,11 @@ function retrieveContext(query, topK = 3) {
                 const numerator = tf * (BM25_K1 + 1);
                 const denominator = tf + BM25_K1 * (1 - BM25_B + BM25_B * (docLen / avgDocLen));
                 bm25Score += idf * (numerator / denominator);
+            }
+
+            // Explicit keyword tag bonus (prevents ubiquitous brand terms like "vitalsync" from suffering low IDF on their canonical entry)
+            if ((entry.keywords || []).some((k) => k.toLowerCase() === qTerm || k.toLowerCase().includes(qTerm))) {
+                bm25Score += 1.4;
             }
         }
 

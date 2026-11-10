@@ -259,7 +259,9 @@ async function runEvaluation() {
         "Hi",
         "Hello Dr Pulse",
         "Thank you",
-        "Who are you?"
+        "Who are you?",
+        "what can i do with you",
+        "who is vitalsync"
     ];
     for (const msg of nonSymptomInputs) {
         const resTurn = await runTriageTurn({ message: msg, allowLLM: false });
