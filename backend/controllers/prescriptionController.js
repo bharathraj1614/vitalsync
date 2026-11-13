@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import prescriptionModel from '../models/prescriptionModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import doctorModel from '../models/doctorModel.js';
