@@ -26,6 +26,21 @@ const formatSpeciality = (spec = '') => {
   return s
 }
 
+const formatMedicationList = (meds = []) => {
+  if (!Array.isArray(meds)) return ''
+  return meds
+    .map((med) => {
+      if (typeof med === 'string') return med.trim()
+      if (!med || typeof med !== 'object') return ''
+      const name = String(med.name || med.medication || '').trim()
+      if (!name) return ''
+      const dosage = String(med.dosage || '').trim()
+      return dosage ? `${name} (${dosage})` : name
+    })
+    .filter(Boolean)
+    .join(', ')
+}
+
 const getUrgencyConfig = (level) => {
   switch (level) {
     case 'high':
@@ -827,11 +842,8 @@ const SymptomChecker = () => {
                   </p>
                   <p>
                     <strong className='font-semibold text-slate-800'>Medications: </strong>
-                    {userData.currentMedications?.length > 0
-                      ? userData.currentMedications.join(', ')
-                      : userData.noCurrentMedications
-                      ? 'None'
-                      : 'Not specified'}
+                    {formatMedicationList(userData.currentMedications) ||
+                      (userData.noCurrentMedications ? 'None' : 'Not specified')}
                   </p>
                 </div>
 
