@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import prescriptionModel from '../models/prescriptionModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import doctorModel from '../models/doctorModel.js';
@@ -491,6 +492,45 @@ const verifyPrescription = async (req, res) => {
     }
 };
 
+const hasVerifiedAuthSession = async (headers = {}) => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return false;
+
+    if (headers.dtoken) {
+        try {
+            const decoded = jwt.verify(headers.dtoken, secret);
+            if (!decoded?.role || decoded.role === 'doctor') {
+                const exists = await doctorModel.exists({ _id: decoded?.id });
+                if (exists) return true;
+            }
+        } catch {
+            // Invalid or expired doctor token; fall through to other credentials.
+        }
+    }
+
+    if (headers.atoken) {
+        try {
+            const decoded = jwt.verify(headers.atoken, secret);
+            const isRoleAdmin = typeof decoded === 'object' && decoded?.role === 'admin';
+            const isLegacyMatch = decoded === (process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD);
+            if (isRoleAdmin || isLegacyMatch) return true;
+        } catch {
+            // Invalid or expired admin token; fall through to other credentials.
+        }
+    }
+
+    if (headers.token) {
+        try {
+            const decoded = jwt.verify(headers.token, secret);
+            if ((!decoded?.role || decoded.role === 'user') && decoded?.id) return true;
+        } catch {
+            // Invalid or expired user token.
+        }
+    }
+
+    return false;
+};
+
 // Pharmacy Anti-Replay Dispense Lock (prevents repeated dispensing of photocopied QR codes)
 const dispensePrescription = async (req, res) => {
     try {
@@ -510,7 +550,7 @@ const dispensePrescription = async (req, res) => {
             .update(`dispense:${target._id}:${target.prescriptionHash}`)
             .digest('hex');
         const hasValidProof = dispenseProof && dispenseProof === expectedProof;
-        const hasAuthSession = Boolean(req.headers?.atoken || req.headers?.dtoken || req.headers?.token);
+        const hasAuthSession = await hasVerifiedAuthSession(req.headers);
 
         if (!hasValidProof && !hasAuthSession) {
             return res.status(403).json({
