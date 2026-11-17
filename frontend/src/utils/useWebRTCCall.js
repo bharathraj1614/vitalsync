@@ -3,7 +3,17 @@ import { io } from 'socket.io-client'
 import axios from 'axios'
 
 const DEFAULT_ICE_SERVERS = [
-  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
+  {
+    urls: [
+      'turn:openrelay.metered.ca:80',
+      'turn:openrelay.metered.ca:80?transport=tcp',
+      'turn:openrelay.metered.ca:443',
+      'turns:openrelay.metered.ca:443?transport=tcp'
+    ],
+    username: 'openrelayproject',
+    credential: 'openrelayproject'
+  }
 ]
 
 /**
@@ -532,6 +542,7 @@ export function useWebRTCCall({
             await pc.setRemoteDescription(new RTCSessionDescription(description))
           }
           isSettingRemoteAnswerPendingRef.current = false
+          ignoreOfferRef.current = false
 
           await flushPendingCandidates(pc)
 
@@ -543,6 +554,7 @@ export function useWebRTCCall({
               description: pc.localDescription
             })
           }
+          pc._readyForMidCallRenegotiation = true
         } else if (candidate) {
           if (!pc.remoteDescription || isSettingRemoteAnswerPendingRef.current) {
             pendingCandidatesRef.current.push(candidate)
@@ -562,6 +574,28 @@ export function useWebRTCCall({
       }
     },
     [appointmentId, flushPendingCandidates]
+  )
+
+  // Explicitly send an offer (used when joining a room where peer is already seated or for ICE restart)
+  const sendExplicitOffer = useCallback(
+    async (pc, { iceRestart = false } = {}) => {
+      if (!pc || !socketRef.current?.connected) return
+      try {
+        makingOfferRef.current = true
+        const offer = await pc.createOffer({ iceRestart })
+        if (pc.signalingState !== 'stable') return
+        await pc.setLocalDescription(offer)
+        socketRef.current.emit('video:signal', {
+          appointmentId,
+          description: pc.localDescription
+        })
+      } catch (e) {
+        console.warn('Offer error:', e.message)
+      } finally {
+        makingOfferRef.current = false
+      }
+    },
+    [appointmentId]
   )
 
   // Create and wire RTCPeerConnection
@@ -603,8 +637,22 @@ export function useWebRTCCall({
           if (selectedSpeakerId && typeof remoteVideoRef.current.setSinkId === 'function') {
             remoteVideoRef.current.setSinkId(selectedSpeakerId).catch(() => {})
           }
+          remoteVideoRef.current.play?.().catch(() => {})
         }
-        setRemoteConnected(true)
+        if (event.track) {
+          event.track.onunmute = () => {
+            setRemoteConnected(true)
+            setCallStatus('connected')
+            remoteVideoRef.current?.play?.().catch(() => {})
+          }
+        }
+        if (
+          pc.connectionState === 'connected' ||
+          pc.iceConnectionState === 'connected' ||
+          pc.iceConnectionState === 'completed'
+        ) {
+          setRemoteConnected(true)
+        }
       }
 
       pc._readyForMidCallRenegotiation = false
@@ -630,10 +678,28 @@ export function useWebRTCCall({
         }
       }
 
-      pc.onconnectionstatechange = () => {
-        if (pc.connectionState === 'connected') {
+      pc.oniceconnectionstatechange = () => {
+        if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+          pc._readyForMidCallRenegotiation = true
           setCallStatus('connected')
           setRemoteConnected(true)
+        } else if (pc.iceConnectionState === 'disconnected') {
+          setCallStatus('reconnecting')
+        } else if (pc.iceConnectionState === 'failed') {
+          setCallStatus('reconnecting')
+          setRemoteConnected(false)
+          if (!politeRef.current) {
+            sendExplicitOffer(pc, { iceRestart: true })
+          }
+        }
+      }
+
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === 'connected') {
+          pc._readyForMidCallRenegotiation = true
+          setCallStatus('connected')
+          setRemoteConnected(true)
+          remoteVideoRef.current?.play?.().catch(() => {})
           if (mediaStateRef.current.dataSaver) {
             applySenderBandwidthProfile(pc, true)
           }
@@ -642,8 +708,8 @@ export function useWebRTCCall({
         } else if (pc.connectionState === 'failed') {
           setCallStatus('reconnecting')
           setRemoteConnected(false)
-          if (typeof pc.restartIce === 'function') {
-            pc.restartIce()
+          if (!politeRef.current) {
+            sendExplicitOffer(pc, { iceRestart: true })
           }
         }
       }
@@ -660,36 +726,10 @@ export function useWebRTCCall({
         pc.addTrack(videoTrack, activeVideoStream)
       }
 
-      setTimeout(() => {
-        pc._readyForMidCallRenegotiation = true
-      }, 0)
-
       peerRef.current = pc
       return pc
     },
-    [appointmentId, selectedSpeakerId, applySenderBandwidthProfile]
-  )
-
-  //Explicitly send an offer (used when joining a room where peer is already seated or for ICE restart)
-  const sendExplicitOffer = useCallback(
-    async (pc, { iceRestart = false } = {}) => {
-      if (!pc || !socketRef.current?.connected) return
-      try {
-        makingOfferRef.current = true
-        const offer = await pc.createOffer({ iceRestart })
-        if (pc.signalingState !== 'stable') return
-        await pc.setLocalDescription(offer)
-        socketRef.current.emit('video:signal', {
-          appointmentId,
-          description: pc.localDescription
-        })
-      } catch (e) {
-        console.warn('Offer error:', e.message)
-      } finally {
-        makingOfferRef.current = false
-      }
-    },
-    [appointmentId]
+    [appointmentId, selectedSpeakerId, applySenderBandwidthProfile, sendExplicitOffer]
   )
 
   // Manual ICE Restart / Reconnect trigger
@@ -977,13 +1017,6 @@ export function useWebRTCCall({
 
         const joinVideoSession = (isResume = false) => {
           socket.emit('join-chat', { appointmentId })
-          if (!isResume) {
-            socket.emit('call-initiate', {
-              roomId: appointmentId,
-              callerRole: role,
-              override
-            })
-          }
 
           socket.emit(
             'video:join',
@@ -1004,6 +1037,14 @@ export function useWebRTCCall({
               politeRef.current = Boolean(ack.polite)
               if (ack.iceServers?.length) {
                 iceServersRef.current = ack.iceServers
+              }
+
+              if (!isResume && !ack.peer) {
+                socket.emit('call-initiate', {
+                  roomId: appointmentId,
+                  callerRole: role,
+                  override
+                })
               }
 
               if (ack.peer) {

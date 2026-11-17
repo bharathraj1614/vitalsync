@@ -1015,8 +1015,8 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
           <div className={isMinimized ? 'w-full' : 'lg:col-span-8 space-y-4'}>
             <div
               ref={stageContainerRef}
-              className={`relative bg-slate-950 overflow-hidden aspect-video select-none ${
-                isMinimized ? '' : 'rounded-3xl shadow-2xl border border-slate-800'
+              className={`relative bg-slate-950 overflow-hidden aspect-[4/3] sm:aspect-video min-h-[250px] sm:min-h-0 select-none ${
+                isMinimized ? '' : 'rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-800'
               }`}
             >
               {/* REMOTE VIDEO CONTAINER (Full stage normally, or PiP when `isSwappedView` is true) */}
@@ -1026,7 +1026,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                 }}
                 className={
                   isSwappedView && isInActiveSession
-                    ? 'absolute bottom-3.5 right-3.5 w-36 sm:w-48 aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 cursor-pointer group'
+                    ? 'absolute bottom-2.5 right-2.5 sm:bottom-3.5 sm:right-3.5 w-24 sm:w-44 aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 cursor-pointer group'
                     : 'absolute inset-0 w-full h-full z-0'
                 }
               >
@@ -1161,7 +1161,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                     : isInActiveSession
                     ? isMinimized
                       ? 'absolute bottom-2 right-2 w-20 aspect-video rounded-lg overflow-hidden shadow-lg border border-white/25 bg-slate-900 z-20 cursor-pointer'
-                      : 'absolute bottom-3.5 right-3.5 w-36 sm:w-48 aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-700/90 hover:border-sky-400/70 bg-slate-900 z-20 cursor-pointer transition-all'
+                      : 'absolute bottom-2.5 right-2.5 sm:bottom-3.5 sm:right-3.5 w-24 sm:w-44 aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-700/90 hover:border-sky-400/70 bg-slate-900 z-20 cursor-pointer transition-all'
                     : 'hidden'
                 }
               >
@@ -1264,8 +1264,8 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
 
               {/* Top-Left HUD: Connection Status & Remote Peer Media State Badges */}
               {isInActiveSession && (
-                <div className='absolute top-3.5 left-3.5 z-20 flex flex-wrap items-center gap-2 max-w-[65%]'>
-                  <div className='bg-slate-900/85 backdrop-blur-md border border-slate-700/70 px-3 py-1.5 rounded-xl text-xs text-slate-100 flex items-center gap-2 shadow-sm'>
+                <div className='absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-[60%]'>
+                  <div className='bg-slate-900/85 backdrop-blur-md border border-slate-700/70 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs text-slate-100 flex items-center gap-1.5 sm:gap-2 shadow-sm'>
                     <span
                       className={`w-2 h-2 rounded-full ${
                         remoteConnected
@@ -1304,13 +1304,13 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
 
               {/* Top-Right HUD: Network Quality Pill, Diagnostics Popover & Contactless rPPG Vitals */}
               {isInActiveSession && !isMinimized && (
-                <div className='absolute top-3.5 right-3.5 z-30 flex flex-col items-end gap-2.5'>
+                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-2'>
                   <div className='flex items-center gap-2'>
                     {remoteConnected && (
                       <button
                         type='button'
                         onClick={() => setShowStatsPopover((s) => !s)}
-                        className={`px-3 py-1.5 rounded-xl border backdrop-blur-md text-[11px] font-bold flex items-center gap-1.5 cursor-pointer ${qualityBadgeStyle}`}
+                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border backdrop-blur-md text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer ${qualityBadgeStyle}`}
                         title='View Live WebRTC Network Telemetry'
                       >
                         <Gauge className='w-3.5 h-3.5' />
@@ -1476,7 +1476,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
               className={
                 isMinimized
                   ? 'hidden'
-                  : 'bg-slate-900 border border-slate-800 rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm'
+                  : 'bg-slate-900 border border-slate-800 rounded-2xl p-2.5 sm:p-4 flex flex-wrap items-center justify-center sm:justify-between gap-2 sm:gap-3 shadow-sm'
               }
             >
               {callStatus === 'idle' && (
@@ -1506,7 +1506,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
 
               {isInActiveSession && (
                 <>
-                  <div className='flex flex-wrap items-center gap-2'>
+                  <div className='flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2'>
                     {/* Mic */}
                     <button
                       type='button'
@@ -1653,7 +1653,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                   </div>
 
                   {/* Viewport & End Controls */}
-                  <div className='flex items-center gap-2'>
+                  <div className='flex flex-wrap items-center justify-center gap-1.5 sm:gap-2'>
                     <button
                       type='button'
                       onClick={() => setIsSwappedView((v) => !v)}
@@ -1726,7 +1726,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
             className={
               isMinimized
                 ? 'hidden'
-                : 'lg:col-span-4 bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs flex flex-col h-[540px]'
+                : 'lg:col-span-4 bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs flex flex-col h-[420px] sm:h-[540px]'
             }
           >
             {/* Tabs */}

@@ -51,7 +51,7 @@ const getRoom = (appointmentId) => {
  */
 export const buildIceServers = (identity = 'vitalsync') => {
     const iceServers = [
-        { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }
+        { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] }
     ];
 
     const turnUrls = String(process.env.TURN_URLS || process.env.TURN_URL || '')
@@ -75,6 +75,18 @@ export const buildIceServers = (identity = 'vitalsync') => {
                 credential: process.env.TURN_CREDENTIAL
             });
         }
+    } else {
+        // Fallback public TURN relays so mobile 4G/5G (Symmetric CGNAT) <-> Wi-Fi connects reliably
+        iceServers.push({
+            urls: [
+                'turn:openrelay.metered.ca:80',
+                'turn:openrelay.metered.ca:80?transport=tcp',
+                'turn:openrelay.metered.ca:443',
+                'turns:openrelay.metered.ca:443?transport=tcp'
+            ],
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        });
     }
 
     return iceServers;
@@ -246,6 +258,9 @@ export const registerVideoHandlers = (io, socket) => {
                     resume: Boolean(payload.resume),
                     mediaState: initialMediaState
                 });
+                // Both participants are now seated: dismiss any open incoming-call modal on other tabs/devices
+                if (room.userId) io.to(`user:${room.userId}`).emit('call-answered', { appointmentId });
+                if (room.docId) io.to(`doctor:${room.docId}`).emit('call-answered', { appointmentId });
             }
 
             return reply({

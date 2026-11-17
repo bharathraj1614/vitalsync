@@ -866,10 +866,9 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
           >
             <div
               ref={stageContainerRef}
-              className={`relative w-full bg-slate-950 overflow-hidden select-none ${
-                isMinimized ? '' : 'rounded-3xl shadow-xl border border-slate-800'
+              className={`relative w-full aspect-[4/3] sm:aspect-video min-h-[250px] sm:min-h-0 bg-slate-950 overflow-hidden select-none ${
+                isMinimized ? '' : 'rounded-2xl sm:rounded-3xl shadow-xl border border-slate-800'
               }`}
-              style={{ aspectRatio: '16/9' }}
             >
               {/* REMOTE PATIENT VIDEO CONTAINER */}
               <div
@@ -878,7 +877,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                 }}
                 className={
                   isSwappedView && isInActiveSession
-                    ? 'absolute bottom-4 right-4 w-36 sm:w-48 aspect-video rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 cursor-pointer'
+                    ? 'absolute bottom-2.5 right-2.5 sm:bottom-4 sm:right-4 w-24 sm:w-44 aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 cursor-pointer'
                     : 'absolute inset-0 w-full h-full z-0'
                 }
               >
@@ -980,7 +979,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                     : isInActiveSession
                     ? isMinimized
                       ? 'absolute bottom-2 right-2 w-20 h-14 rounded-lg overflow-hidden shadow-lg border border-white/25 bg-slate-900 z-20 cursor-pointer'
-                      : 'absolute bottom-4 right-4 w-36 sm:w-44 h-24 sm:h-28 rounded-2xl overflow-hidden shadow-xl border-2 border-white/20 hover:border-sky-400/70 bg-slate-900 z-20 cursor-pointer transition-all'
+                      : 'absolute bottom-2.5 right-2.5 sm:bottom-4 sm:right-4 w-24 sm:w-44 aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-xl border-2 border-white/20 hover:border-sky-400/70 bg-slate-900 z-20 cursor-pointer transition-all'
                     : 'hidden'
                 }
               >
@@ -1072,8 +1071,8 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
 
               {/* Top-Left HUD: Live Timer & Patient Media State Badges */}
               {isInActiveSession && (
-                <div className='absolute top-3.5 left-3.5 z-20 flex flex-wrap items-center gap-2 max-w-[60%]'>
-                  <div className='bg-slate-900/85 text-white px-3.5 py-1.5 rounded-full text-xs font-bold backdrop-blur-md border border-white/15 flex items-center gap-2 tabular-nums'>
+                <div className='absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-[60%]'>
+                  <div className='bg-slate-900/85 text-white px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold backdrop-blur-md border border-white/15 flex items-center gap-1.5 sm:gap-2 tabular-nums'>
                     <span
                       className={`w-2 h-2 rounded-full ${
                         callStatus === 'connected' ? 'bg-rose-500 animate-pulse' : 'bg-amber-400 animate-ping'
@@ -1108,12 +1107,12 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
 
               {/* Top-Right HUD: Network Quality Telemetry + Live Contactless rPPG Patient Pulse */}
               {isInActiveSession && !isMinimized && (
-                <div className='absolute top-3.5 right-3.5 z-30 flex flex-col items-end gap-2.5'>
+                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-2'>
                   {remoteConnected && (
                     <button
                       type='button'
                       onClick={() => setShowStatsPopover((s) => !s)}
-                      className={`px-3 py-1.5 rounded-xl border backdrop-blur-md text-[11px] font-bold flex items-center gap-1.5 cursor-pointer ${qualityBadgeStyle}`}
+                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border backdrop-blur-md text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer ${qualityBadgeStyle}`}
                       title='Inspect Live WebRTC Telemetry'
                     >
                       <Gauge className='w-3.5 h-3.5' />
@@ -1338,7 +1337,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
               className={
                 isMinimized
                   ? 'hidden'
-                  : 'w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 mt-4 flex flex-wrap items-center justify-between gap-2.5'
+                  : 'w-full bg-slate-50 border border-slate-200 rounded-2xl p-2.5 sm:p-3.5 mt-4 flex flex-wrap items-center justify-center sm:justify-between gap-1.5 sm:gap-2.5'
               }
             >
               {(callStatus === 'idle' || callStatus === 'ended') && (
@@ -1377,7 +1376,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
 
               {isInActiveSession && (
                 <>
-                  <div className='flex flex-wrap items-center gap-2'>
+                  <div className='flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2'>
                     {/* Mute */}
                     <button
                       type='button'
@@ -1504,7 +1503,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                   </div>
 
                   {/* Viewport & End / Complete Actions */}
-                  <div className='flex flex-wrap items-center gap-2'>
+                  <div className='flex flex-wrap items-center justify-center gap-1.5 sm:gap-2'>
                     <button
                       type='button'
                       onClick={() => setIsSwappedView((v) => !v)}

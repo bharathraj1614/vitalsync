@@ -33,8 +33,14 @@ const Sidebar = () => {
         : 'text-slate-600 hover:bg-slate-100/90 hover:text-slate-900'
     }`
 
+  const mobileNavItemClass = ({ isActive }) =>
+    `relative flex flex-col items-center justify-center gap-0.5 px-2 py-1 rounded-xl text-[10px] font-semibold transition-colors min-w-0 flex-1 ${
+      isActive ? 'text-sky-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+    }`
+
   return (
-    <aside className='sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto bg-white border-r border-slate-200/90 shrink-0 flex flex-col justify-between py-5 px-2.5 md:px-3.5 select-none z-20'>
+    <>
+      <aside className='hidden md:flex sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto bg-white border-r border-slate-200/90 shrink-0 flex-col justify-between py-5 px-2.5 md:px-3.5 select-none z-20'>
       <div>
         {aToken && (
           <ul className='space-y-1'>
@@ -231,7 +237,75 @@ const Sidebar = () => {
           </div>
         </div>
       )}
-    </aside>
+      </aside>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav
+        aria-label='Mobile navigation'
+        className='md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-around py-1.5 px-1 shadow-lg select-none'
+      >
+        {aToken && (
+          <>
+            <NavLink to={'/admin-dashboard'} className={mobileNavItemClass}>
+              <LayoutDashboard className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Overview</span>
+            </NavLink>
+            <NavLink to={'/all-appointments'} className={mobileNavItemClass}>
+              <CalendarCheck className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Visits</span>
+              {upcomingAdminVisits > 0 && (
+                <span className='absolute top-0.5 right-2 px-1 rounded-full bg-sky-600 text-white text-[9px] font-bold leading-tight'>
+                  {upcomingAdminVisits}
+                </span>
+              )}
+            </NavLink>
+            <NavLink to={'/doctor-list'} className={mobileNavItemClass}>
+              <Stethoscope className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Doctors</span>
+            </NavLink>
+            <NavLink to={'/add-doctor'} className={mobileNavItemClass}>
+              <UserPlus className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Add</span>
+            </NavLink>
+            <NavLink to={'/patients-list'} className={mobileNavItemClass}>
+              <Users className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Patients</span>
+            </NavLink>
+          </>
+        )}
+
+        {dToken && (
+          <>
+            <NavLink to={'/doctor-dashboard'} className={mobileNavItemClass}>
+              <LayoutDashboard className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Home</span>
+            </NavLink>
+            <NavLink to={'/doctor-appointments'} className={mobileNavItemClass}>
+              <CalendarCheck className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Visits</span>
+              {upcomingDoctorVisits > 0 && (
+                <span className='absolute top-0.5 right-3 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold leading-tight'>
+                  {upcomingDoctorVisits}
+                </span>
+              )}
+            </NavLink>
+            <NavLink to={'/doctor-chat'} className={mobileNavItemClass}>
+              <MessageSquare className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Messages</span>
+              {unreadChatCount > 0 && (
+                <span className='absolute top-0.5 right-3 px-1 rounded-full bg-sky-600 text-white text-[9px] font-bold leading-tight'>
+                  {unreadChatCount}
+                </span>
+              )}
+            </NavLink>
+            <NavLink to={'/doctor-profile'} className={mobileNavItemClass}>
+              <UserCog className='w-4 h-4 shrink-0' />
+              <span className='truncate'>Profile</span>
+            </NavLink>
+          </>
+        )}
+      </nav>
+    </>
   )
 }
 
