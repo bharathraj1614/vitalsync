@@ -535,13 +535,13 @@ const Navbar = () => {
 
         {/* Mobile Drawer Menu */}
         <div
-          className={`fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs transition-opacity lg:hidden ${
-            showMenu ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          className={`fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs overflow-hidden transition-all lg:hidden ${
+            showMenu ? 'opacity-100 pointer-events-auto visible' : 'opacity-0 pointer-events-none invisible'
           }`}
           onClick={() => setShowMenu(false)}
         >
           <div
-            className={`fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl p-6 flex flex-col justify-between transition-transform duration-300 ease-in-out overflow-y-auto ${
+            className={`absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl p-6 flex flex-col justify-between transition-transform duration-300 ease-in-out overflow-y-auto ${
               showMenu ? 'translate-x-0' : 'translate-x-full'
             }`}
             onClick={(e) => e.stopPropagation()}

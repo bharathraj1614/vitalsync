@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext, useRef } from 'react'
 import { GoogleOAuthProvider, GoogleLogin, useGoogleLogin } from '@react-oauth/google'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -30,6 +30,21 @@ export const GoogleLogoIcon = ({ className = 'w-4 h-4' }) => (
 // Inner Google Login button implementation when wrapped in GoogleOAuthProvider
 const GoogleLoginInner = ({ onSuccessAuth, isAuthenticating, setIsAuthenticating, buttonText, onOpenDevModal }) => {
     const { backendUrl } = useContext(AppContext)
+    const buttonContainerRef = useRef(null)
+    const [buttonWidth, setButtonWidth] = useState(360)
+
+    useEffect(() => {
+        const el = buttonContainerRef.current
+        if (!el) return
+        const updateWidth = () => {
+            const w = Math.floor(el.getBoundingClientRect().width)
+            if (w > 0) setButtonWidth(Math.min(Math.max(w, 240), 400))
+        }
+        updateWidth()
+        const observer = new ResizeObserver(updateWidth)
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [])
 
     const handleGoogleSuccess = async (credentialResponse) => {
         setIsAuthenticating(true)
@@ -85,7 +100,7 @@ const GoogleLoginInner = ({ onSuccessAuth, isAuthenticating, setIsAuthenticating
     return (
         <div className="w-full space-y-2">
             {/* Native GIS Google Button container */}
-            <div className="w-full flex justify-center [&>div]:w-full [&>div>iframe]:w-full overflow-hidden rounded-xl border border-slate-200 hover:border-slate-300 transition-colors shadow-2xs">
+            <div ref={buttonContainerRef} className="w-full flex justify-center overflow-hidden">
                 <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={handleGoogleError}
@@ -94,7 +109,7 @@ const GoogleLoginInner = ({ onSuccessAuth, isAuthenticating, setIsAuthenticating
                     size="large"
                     text={buttonText === 'Sign Up' ? 'signup_with' : 'signin_with'}
                     shape="rectangular"
-                    width="100%"
+                    width={buttonWidth}
                 />
             </div>
 

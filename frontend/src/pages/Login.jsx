@@ -293,11 +293,12 @@ const Login = () => {
               <div className='space-y-2.5'>
                 <GoogleAuthButton state={state} onAuthSuccess={() => navigate('/')} />
 
-                <div className='relative flex items-center justify-center pt-1'>
-                  <div className='border-t border-slate-200 w-full' />
-                  <span className='bg-white px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider relative shrink-0'>
+                <div className='flex items-center gap-3 pt-1'>
+                  <div className='h-px bg-slate-200 flex-1' />
+                  <span className='text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0'>
                     Or with clinical email
                   </span>
+                  <div className='h-px bg-slate-200 flex-1' />
                 </div>
               </div>
 
