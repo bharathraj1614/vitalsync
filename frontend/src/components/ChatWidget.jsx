@@ -113,18 +113,20 @@ const ChatWidget = () => {
       {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className='fixed bottom-6 right-6 z-50 pl-2 pr-4 h-12 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/25 border border-slate-700 flex items-center justify-center gap-2 transition-all duration-200 hover:scale-105 cursor-pointer'
+        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 h-12 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/25 border border-slate-700 flex items-center justify-center gap-2 transition-all duration-200 hover:scale-105 cursor-pointer ${
+          isOpen ? 'px-4' : 'w-12 sm:w-auto sm:pl-2 sm:pr-4'
+        }`}
         aria-label='Ask Health Assistant'
       >
         {isOpen ? (
           <>
-            <X className='w-5 h-5 text-white ml-1.5' />
+            <X className='w-5 h-5 text-white' />
             <span className='text-xs font-semibold'>Close</span>
           </>
         ) : (
           <>
             <MedBotAvatar mood={assistantLoading ? 'thinking' : 'welcome'} size='xs' />
-            <span className='text-xs font-semibold'>Ask MedBot</span>
+            <span className='hidden sm:inline text-xs font-semibold'>Ask MedBot</span>
           </>
         )}
       </button>
