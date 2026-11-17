@@ -38,7 +38,7 @@ const AdminGoogleLoginInner = ({ role, onSuccessAuth, setIsAuthenticating }) => 
         if (!el) return
         const updateWidth = () => {
             const w = Math.floor(el.getBoundingClientRect().width)
-            if (w > 0) setButtonWidth(Math.min(Math.max(w, 240), 400))
+            if (w > 0) setButtonWidth(Math.min(w, 400))
         }
         updateWidth()
         const observer = new ResizeObserver(updateWidth)
