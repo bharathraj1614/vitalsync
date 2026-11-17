@@ -433,6 +433,7 @@ export const initSocket = (httpServer) => {
                 const windowStatus = checkAppointmentWindow(appointment.slotDate, appointment.slotTime, isTestMode);
                 const snap = getVideoRoomSnapshot(roomId);
                 const doctorSeated = snap.participants?.includes('doctor');
+                const userSeated = snap.participants?.includes('user');
                 const canBypassWindow =
                     callerRole === 'doctor' ||
                     doctorSeated ||
@@ -450,6 +451,7 @@ export const initSocket = (httpServer) => {
                 }
 
                 if (callerRole === 'doctor') {
+                    if (userSeated) return; // Patient is already seated in the video room
                     const docName = appointment.docData?.name || 'Your Doctor';
                     const callPayload = {
                         appointmentId: String(roomId),
@@ -471,6 +473,7 @@ export const initSocket = (httpServer) => {
                         senderImage: callPayload.callerImage
                     });
                 } else {
+                    if (doctorSeated) return; // Doctor is already seated in the video room
                     const patientName = appointment.userData?.name || 'Patient';
                     const callPayload = {
                         appointmentId: String(roomId),

@@ -352,9 +352,9 @@ const Appointment = () => {
                 {/* LEFT COLUMN: Doctor Bio & Slot Picker (approx 65%) */}
                 <div className='lg:col-span-8 space-y-6'>
                     {/* Doctor Header Profile Card */}
-                    <div className='bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row gap-6 items-start'>
+                    <div className='bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-8 shadow-xs flex flex-col sm:flex-row gap-5 sm:gap-6 items-start'>
                         {/* Portrait */}
-                        <div className='w-full sm:w-52 shrink-0'>
+                        <div className='w-40 sm:w-52 mx-auto sm:mx-0 shrink-0'>
                             <div className='relative rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 aspect-[3/4]'>
                                 <img
                                     className='w-full h-full object-cover object-top'
@@ -649,16 +649,10 @@ const Appointment = () => {
                             />
                         </div>
                     </div>
-
-                    {/* Patient Reviews Section */}
-                    <ReviewSection docId={docId} />
-
-                    {/* Related Specialists in the Same Department */}
-                    <RelatedDoctors speciality={docInfo.speciality} docId={docId} />
                 </div>
 
                 {/* RIGHT COLUMN: Sticky Booking Summary & Checkout Card (approx 35%) */}
-                <div className='lg:col-span-4 sticky top-24 space-y-4'>
+                <div className='lg:col-span-4 lg:sticky lg:top-24 space-y-4'>
                     <div className='bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm space-y-5'>
                         {/* Summary Header */}
                         <div className='pb-4 border-b border-slate-100 flex items-center justify-between'>
@@ -838,6 +832,12 @@ const Appointment = () => {
                     </div>
                 </div>
 
+            </div>
+
+            {/* Patient Reviews & Related Specialists (rendered below booking checkout on all screen sizes) */}
+            <div className='space-y-8 pt-2'>
+                <ReviewSection docId={docId} />
+                <RelatedDoctors speciality={docInfo.speciality} docId={docId} />
             </div>
         </div>
     )

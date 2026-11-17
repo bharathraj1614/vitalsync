@@ -45,7 +45,7 @@ const App = () => {
     <div className='bg-[#F8F9FD] min-h-screen'>
       <ToastContainer position="top-right" autoClose={3500} />
       <Navbar />
-      <div className='flex items-start'>
+      <div className='flex items-start pb-16 md:pb-0'>
         <Sidebar />
         {mountedDocVideoId && (
           <DoctorVideoCall

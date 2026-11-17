@@ -252,11 +252,17 @@ const DoctorContextProvider = (props) => {
 
         newSocket.on('notification', (notif) => {
             setNotifications((prev) => [notif, ...prev.filter((n) => n._id !== notif._id)]);
+
+            const currentPath = window.location.pathname;
+            // Suppress incoming call alerts/sounds when already inside that video call room
+            if (notif.type === 'call_incoming' && notif.appointmentId && currentPath === `/doctor-video-call/${notif.appointmentId}`) {
+                return;
+            }
+
             playDoctorAlertSound(
                 notif.type === 'call_incoming' || notif.type === 'allergy_conflict' ? 'call' : 'default'
             );
 
-            const currentPath = window.location.pathname;
             if (notif.type === 'message' && notif.appointmentId && currentPath === `/doctor-chat/${notif.appointmentId}`) {
                 return;
             }
@@ -293,6 +299,12 @@ const DoctorContextProvider = (props) => {
             if (currentPath !== `/doctor-video-call/${callPayload.appointmentId}`) {
                 setIncomingCall(callPayload);
             }
+        });
+
+        newSocket.on('call-answered', (payload) => {
+            setIncomingCall((prev) =>
+                prev && (!payload?.appointmentId || prev.appointmentId === payload.appointmentId) ? null : prev
+            );
         });
 
         newSocket.on('call-ended', (payload) => {

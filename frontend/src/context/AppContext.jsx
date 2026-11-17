@@ -252,10 +252,16 @@ const AppContextProvider = (props) => {
 
         newSocket.on('notification', (notif) => {
             setNotifications((prev) => [notif, ...prev.filter((n) => n._id !== notif._id)]);
+
+            const currentPath = window.location.pathname;
+            // Suppress incoming call alerts/sounds when already inside that video call room
+            if (notif.type === 'call_incoming' && notif.appointmentId && currentPath === `/video-call/${notif.appointmentId}`) {
+                return;
+            }
+
             playNotificationSound(notif.type === 'call_incoming' ? 'call' : 'default');
 
             // Avoid duplicate toast if user is already inside that exact chat page
-            const currentPath = window.location.pathname;
             if (notif.type === 'message' && notif.appointmentId && currentPath === `/chat/${notif.appointmentId}`) {
                 return;
             }
@@ -286,6 +292,12 @@ const AppContextProvider = (props) => {
             if (currentPath !== `/video-call/${callPayload.appointmentId}`) {
                 setIncomingCall(callPayload);
             }
+        });
+
+        newSocket.on('call-answered', (payload) => {
+            setIncomingCall((prev) =>
+                prev && (!payload?.appointmentId || prev.appointmentId === payload.appointmentId) ? null : prev
+            );
         });
 
         newSocket.on('call-ended', (payload) => {
