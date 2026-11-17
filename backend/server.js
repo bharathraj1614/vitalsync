@@ -45,19 +45,28 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
+const parseOrigins = (value) =>
+  (value || '')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([
+  ...parseOrigins(process.env.FRONTEND_URL),
+  ...parseOrigins(process.env.ADMIN_URL),
+  'https://vitalsync-frontend-ivory.vercel.app',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000'
-].filter(Boolean);
+]));
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+    const normalizedOrigin = origin ? origin.replace(/\/+$/, '') : '';
+    if (!origin || allowedOrigins.includes(normalizedOrigin) || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
-      callback(new Error('CORS violation: Origin not allowed'));
+      callback(null, false);
     }
   },
   credentials: true
