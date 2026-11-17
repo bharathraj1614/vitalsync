@@ -532,8 +532,9 @@ const Navbar = () => {
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Drawer Menu */}
+        {/* Mobile Drawer Menu (rendered outside <header> so backdrop-blur doesn't trap fixed positioning) */}
         <div
           className={`fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs overflow-hidden transition-all lg:hidden ${
             showMenu ? 'opacity-100 pointer-events-auto visible' : 'opacity-0 pointer-events-none invisible'
@@ -688,7 +689,6 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-      </header>
     </>
   )
 }
