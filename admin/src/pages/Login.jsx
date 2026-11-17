@@ -49,13 +49,14 @@ const Login = () => {
   }
 
   return (
-    <div className='min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 relative overflow-hidden'>
+    <div className='min-h-screen bg-slate-50 flex flex-col items-center px-4 py-8 sm:py-10 relative overflow-x-hidden'>
       {/* Ambient background glows */}
       <div className='absolute top-10 left-10 w-96 h-96 bg-sky-100/50 rounded-full blur-3xl pointer-events-none' />
       <div className='absolute bottom-10 right-10 w-96 h-96 bg-teal-100/50 rounded-full blur-3xl pointer-events-none' />
 
+      <div className='w-full max-w-md my-auto flex flex-col items-center relative z-10'>
       {/* Brand Header */}
-      <div className='inline-flex items-center gap-3 mb-6 select-none relative z-10'>
+      <div className='inline-flex items-center gap-3 mb-6 select-none'>
         <div className='relative w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-600 via-sky-700 to-teal-600 flex items-center justify-center shadow-md'>
           <svg className='w-6 h-6 text-white' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
             <path
@@ -131,11 +132,12 @@ const Login = () => {
           {/* Google SSO Button */}
           <div className='space-y-3 pb-1'>
             <AdminGoogleAuthButton role={state} />
-            <div className='relative flex items-center justify-center pt-1'>
-              <div className='border-t border-slate-200 w-full' />
-              <span className='bg-white px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider relative shrink-0'>
+            <div className='flex items-center gap-3 pt-1'>
+              <div className='h-px bg-slate-200 flex-1' />
+              <span className='text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0'>
                 Or sign in with email & password
               </span>
+              <div className='h-px bg-slate-200 flex-1' />
             </div>
           </div>
 
@@ -231,7 +233,7 @@ const Login = () => {
       </form>
 
       {/* Security & Audit Footer */}
-      <div className='flex items-center justify-center gap-4 text-[11px] text-slate-400 mt-4 select-none relative z-10 text-center'>
+      <div className='flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-slate-400 mt-4 select-none text-center'>
         <span className='flex items-center gap-1'>
           <Lock className='w-3 h-3 text-slate-400' /> Restricted clinical access
         </span>
@@ -243,6 +245,7 @@ const Login = () => {
         <span className='flex items-center gap-1'>
           <ShieldCheck className='w-3 h-3 text-emerald-600' /> HIPAA compliant
         </span>
+      </div>
       </div>
     </div>
   )
