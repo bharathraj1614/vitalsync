@@ -173,6 +173,7 @@ export function useWebRTCCall({
   const pendingCandidatesRef = useRef([])
   const pendingSignalsRef = useRef([])
   const signalQueueRef = useRef(Promise.resolve())
+  const signalGenerationRef = useRef(0)
   const negotiationWatchdogRef = useRef(null)
 
   // Mirror state refs for event listeners
@@ -493,12 +494,16 @@ export function useWebRTCCall({
   }, [])
 
   const processSignalMessage = useCallback(
-    async ({ description, candidate }) => {
+    async ({ description, candidate }, generation = signalGenerationRef.current) => {
+      if (generation !== signalGenerationRef.current) return
       const pc = peerRef.current
       if (!pc) {
         pendingSignalsRef.current.push({ description, candidate })
         return
       }
+
+      const isStale = () =>
+        generation !== signalGenerationRef.current || peerRef.current !== pc || pc.signalingState === 'closed'
 
       try {
         if (description) {
@@ -519,14 +524,18 @@ export function useWebRTCCall({
           } else {
             await pc.setRemoteDescription(new RTCSessionDescription(description))
           }
+          if (isStale()) return
           isSettingRemoteAnswerPendingRef.current = false
           ignoreOfferRef.current = false
 
           await flushPendingCandidates(pc)
+          if (isStale()) return
 
           if (description.type === 'offer') {
             const answer = await pc.createAnswer()
+            if (isStale()) return
             await pc.setLocalDescription(answer)
+            if (isStale()) return
             socketRef.current?.emit('video:signal', {
               appointmentId,
               description: pc.localDescription
@@ -550,7 +559,9 @@ export function useWebRTCCall({
           }
         }
       } catch (err) {
-        isSettingRemoteAnswerPendingRef.current = false
+        if (generation === signalGenerationRef.current) {
+          isSettingRemoteAnswerPendingRef.current = false
+        }
         console.warn('WebRTC signaling error:', err.message)
       }
     },
@@ -559,8 +570,12 @@ export function useWebRTCCall({
 
   const handleSignalMessage = useCallback(
     (payload) => {
+      const generation = signalGenerationRef.current
       signalQueueRef.current = signalQueueRef.current
-        .then(() => processSignalMessage(payload))
+        .then(() => {
+          if (generation !== signalGenerationRef.current) return
+          return processSignalMessage(payload, generation)
+        })
         .catch((err) => {
           console.warn('Signaling queue error:', err?.message)
         })
@@ -593,6 +608,12 @@ export function useWebRTCCall({
 
   const createPeerConnection = useCallback(
     (iceServers) => {
+      signalGenerationRef.current += 1
+      signalQueueRef.current = Promise.resolve()
+      isSettingRemoteAnswerPendingRef.current = false
+      makingOfferRef.current = false
+      ignoreOfferRef.current = false
+
       if (peerRef.current) {
         try {
           peerRef.current.close()
