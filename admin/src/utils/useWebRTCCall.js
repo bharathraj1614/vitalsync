@@ -3,16 +3,13 @@ import { io } from 'socket.io-client'
 import axios from 'axios'
 
 const DEFAULT_ICE_SERVERS = [
-  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
   {
     urls: [
-      'turn:openrelay.metered.ca:80',
-      'turn:openrelay.metered.ca:80?transport=tcp',
-      'turn:openrelay.metered.ca:443',
-      'turns:openrelay.metered.ca:443?transport=tcp'
-    ],
-    username: 'openrelayproject',
-    credential: 'openrelayproject'
+      'stun:stun.l.google.com:19302',
+      'stun:stun1.l.google.com:19302',
+      'stun:stun2.l.google.com:19302',
+      'stun:stun.cloudflare.com:3478'
+    ]
   }
 ]
 
@@ -175,6 +172,8 @@ export function useWebRTCCall({
   const isSettingRemoteAnswerPendingRef = useRef(false)
   const pendingCandidatesRef = useRef([])
   const pendingSignalsRef = useRef([])
+  const signalQueueRef = useRef(Promise.resolve())
+  const negotiationWatchdogRef = useRef(null)
 
   // Mirror state refs for event listeners
   const appointmentIdRef = useRef(appointmentId)
@@ -493,7 +492,7 @@ export function useWebRTCCall({
     } catch (e) {}
   }, [])
 
-  const handleSignalMessage = useCallback(
+  const processSignalMessage = useCallback(
     async ({ description, candidate }) => {
       const pc = peerRef.current
       if (!pc) {
@@ -511,7 +510,7 @@ export function useWebRTCCall({
           ignoreOfferRef.current = !politeRef.current && offerCollision
           if (ignoreOfferRef.current) return
 
-          isSettingRemoteAnswerPendingRef.current = description.type === 'answer'
+          isSettingRemoteAnswerPendingRef.current = true
           if (offerCollision && pc.signalingState !== 'stable') {
             await Promise.all([
               pc.setLocalDescription({ type: 'rollback' }),
@@ -532,6 +531,9 @@ export function useWebRTCCall({
               appointmentId,
               description: pc.localDescription
             })
+            pc._flushEarlyLocalCandidates?.()
+          } else if (description.type === 'answer') {
+            pc._flushEarlyLocalCandidates?.()
           }
           pc._readyForMidCallRenegotiation = true
         } else if (candidate) {
@@ -555,6 +557,18 @@ export function useWebRTCCall({
     [appointmentId, flushPendingCandidates]
   )
 
+  const handleSignalMessage = useCallback(
+    (payload) => {
+      signalQueueRef.current = signalQueueRef.current
+        .then(() => processSignalMessage(payload))
+        .catch((err) => {
+          console.warn('Signaling queue error:', err?.message)
+        })
+      return signalQueueRef.current
+    },
+    [processSignalMessage]
+  )
+
   const sendExplicitOffer = useCallback(
     async (pc, { iceRestart = false } = {}) => {
       if (!pc || !socketRef.current?.connected) return
@@ -567,6 +581,7 @@ export function useWebRTCCall({
           appointmentId,
           description: pc.localDescription
         })
+        pc._flushEarlyLocalCandidates?.()
       } catch (e) {
         console.warn('Offer error:', e.message)
       } finally {
@@ -592,8 +607,26 @@ export function useWebRTCCall({
       const inboundStream = new MediaStream()
       remoteStreamRef.current = inboundStream
 
+      pc._hasSentLocalDescription = false
+      pc._earlyLocalCandidates = []
+      pc._flushEarlyLocalCandidates = () => {
+        pc._hasSentLocalDescription = true
+        const buffered = pc._earlyLocalCandidates.splice(0)
+        for (const c of buffered) {
+          if (socketRef.current?.connected) {
+            socketRef.current.emit('video:signal', {
+              appointmentId,
+              candidate: c
+            })
+          }
+        }
+      }
+
       pc.onicecandidate = ({ candidate }) => {
-        if (candidate && socketRef.current?.connected) {
+        if (!candidate) return
+        if (!pc._hasSentLocalDescription) {
+          pc._earlyLocalCandidates.push(candidate)
+        } else if (socketRef.current?.connected) {
           socketRef.current.emit('video:signal', {
             appointmentId,
             candidate
@@ -606,7 +639,9 @@ export function useWebRTCCall({
         if (stream) {
           remoteStreamRef.current = stream
         } else if (event.track) {
-          inboundStream.addTrack(event.track)
+          if (!inboundStream.getTracks().some((t) => t.id === event.track.id)) {
+            inboundStream.addTrack(event.track)
+          }
           remoteStreamRef.current = inboundStream
         }
         if (remoteVideoRef.current) {
@@ -616,19 +651,13 @@ export function useWebRTCCall({
           }
           remoteVideoRef.current.play?.().catch(() => {})
         }
+        setRemoteConnected(true)
         if (event.track) {
           event.track.onunmute = () => {
             setRemoteConnected(true)
             setCallStatus('connected')
             remoteVideoRef.current?.play?.().catch(() => {})
           }
-        }
-        if (
-          pc.connectionState === 'connected' ||
-          pc.iceConnectionState === 'connected' ||
-          pc.iceConnectionState === 'completed'
-        ) {
-          setRemoteConnected(true)
         }
       }
 
@@ -647,6 +676,7 @@ export function useWebRTCCall({
             appointmentId,
             description: pc.localDescription
           })
+          pc._flushEarlyLocalCandidates?.()
         } catch (err) {
           console.warn('Negotiation error:', err.message)
         } finally {
@@ -656,6 +686,10 @@ export function useWebRTCCall({
 
       pc.oniceconnectionstatechange = () => {
         if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+          if (negotiationWatchdogRef.current) {
+            clearTimeout(negotiationWatchdogRef.current)
+            negotiationWatchdogRef.current = null
+          }
           pc._readyForMidCallRenegotiation = true
           setCallStatus('connected')
           setRemoteConnected(true)
@@ -672,6 +706,10 @@ export function useWebRTCCall({
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === 'connected') {
+          if (negotiationWatchdogRef.current) {
+            clearTimeout(negotiationWatchdogRef.current)
+            negotiationWatchdogRef.current = null
+          }
           pc._readyForMidCallRenegotiation = true
           setCallStatus('connected')
           setRemoteConnected(true)
@@ -949,6 +987,13 @@ export function useWebRTCCall({
   const startCall = useCallback(
     async ({ audioOnly = false } = {}) => {
       hasJoinedOnceRef.current = false
+      signalQueueRef.current = Promise.resolve()
+      pendingSignalsRef.current = []
+      pendingCandidatesRef.current = []
+      if (negotiationWatchdogRef.current) {
+        clearTimeout(negotiationWatchdogRef.current)
+        negotiationWatchdogRef.current = null
+      }
       setReplacedByOtherTab(false)
       setCallStatus('connecting')
 
@@ -1040,6 +1085,25 @@ export function useWebRTCCall({
 
               if (ack.peer) {
                 await sendExplicitOffer(pc, { iceRestart: isResume })
+                if (!politeRef.current) {
+                  if (negotiationWatchdogRef.current) clearTimeout(negotiationWatchdogRef.current)
+                  negotiationWatchdogRef.current = setTimeout(() => {
+                    const currentPc = peerRef.current
+                    if (
+                      !currentPc ||
+                      !peerSeatedRef.current ||
+                      politeRef.current ||
+                      currentPc.connectionState === 'connected' ||
+                      currentPc.iceConnectionState === 'connected' ||
+                      currentPc.iceConnectionState === 'completed'
+                    ) {
+                      return
+                    }
+                    if (currentPc.signalingState === 'stable') {
+                      sendExplicitOffer(currentPc, { iceRestart: true })
+                    }
+                  }, 6000)
+                }
               }
             }
           )
@@ -1058,9 +1122,34 @@ export function useWebRTCCall({
           if (mediaState) {
             setPeerMediaState((prev) => ({ ...prev, ...mediaState }))
           }
-          if (!resume || !peerRef.current || peerRef.current.signalingState === 'closed') {
+          const existingPc = peerRef.current
+          const needsFreshPc =
+            !existingPc ||
+            existingPc.signalingState === 'closed' ||
+            existingPc.connectionState === 'closed' ||
+            (!resume && (Boolean(existingPc.remoteDescription) || Boolean(existingPc.localDescription)))
+          if (needsFreshPc) {
             pendingCandidatesRef.current = []
             createPeerConnection(iceServersRef.current)
+          }
+          if (!politeRef.current) {
+            if (negotiationWatchdogRef.current) clearTimeout(negotiationWatchdogRef.current)
+            negotiationWatchdogRef.current = setTimeout(() => {
+              const currentPc = peerRef.current
+              if (
+                !currentPc ||
+                !peerSeatedRef.current ||
+                politeRef.current ||
+                currentPc.connectionState === 'connected' ||
+                currentPc.iceConnectionState === 'connected' ||
+                currentPc.iceConnectionState === 'completed'
+              ) {
+                return
+              }
+              if (currentPc.signalingState === 'stable') {
+                sendExplicitOffer(currentPc, { iceRestart: true })
+              }
+            }, 6000)
           }
           broadcastMediaState()
           if (resume) {
@@ -1259,6 +1348,12 @@ export function useWebRTCCall({
         clearInterval(callTimerRef.current)
         callTimerRef.current = null
       }
+
+      if (negotiationWatchdogRef.current) {
+        clearTimeout(negotiationWatchdogRef.current)
+        negotiationWatchdogRef.current = null
+      }
+      signalQueueRef.current = Promise.resolve()
 
       if (document.pictureInPictureElement) {
         document.exitPictureInPicture().catch(() => {})
@@ -1910,6 +2005,7 @@ export function useWebRTCCall({
       }
       if (callTimerRef.current) clearInterval(callTimerRef.current)
       if (statsIntervalRef.current) clearInterval(statsIntervalRef.current)
+      if (negotiationWatchdogRef.current) clearTimeout(negotiationWatchdogRef.current)
     }
   }, [])
 
