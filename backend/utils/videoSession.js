@@ -43,20 +43,25 @@ const getRoom = (appointmentId) => {
     return videoRooms.get(id);
 };
 
+const TURN_DYNAMIC_CACHE_MS = 10 * 60 * 1000;
+let cachedDynamicTurn = { expiresAt: 0, servers: [] };
+
 /**
  * Build ICE server list.
+ *  TURN_API_URL     = optional endpoint returning WebRTC iceServers JSON (e.g. Metered credentials API)
  *  TURN_URLS        = "turn:turn.example.com:3478?transport=udp,turns:turn.example.com:5349?transport=tcp"
  *  TURN_SECRET      = shared secret configured in coturn (`static-auth-secret`) -> ephemeral HMAC credentials
  *  or TURN_USERNAME / TURN_CREDENTIAL for static long-term credentials.
  */
-export const buildIceServers = (identity = 'vitalsync') => {
+export const buildIceServers = async (identity = 'vitalsync') => {
     const iceServers = [
         {
             urls: [
                 'stun:stun.l.google.com:19302',
                 'stun:stun1.l.google.com:19302',
                 'stun:stun2.l.google.com:19302',
-                'stun:stun.cloudflare.com:3478'
+                'stun:stun.cloudflare.com:3478',
+                'stun:stun.relay.metered.ca:80'
             ]
         }
     ];
@@ -81,6 +86,37 @@ export const buildIceServers = (identity = 'vitalsync') => {
                 username: process.env.TURN_USERNAME,
                 credential: process.env.TURN_CREDENTIAL
             });
+        }
+    }
+
+    const turnApiUrl = String(process.env.TURN_API_URL || '').trim();
+    if (turnApiUrl && typeof fetch === 'function') {
+        const now = Date.now();
+        if (now < cachedDynamicTurn.expiresAt && cachedDynamicTurn.servers.length > 0) {
+            iceServers.push(...cachedDynamicTurn.servers);
+        } else {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 4000);
+            try {
+                const res = await fetch(turnApiUrl, { signal: controller.signal });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        const validServers = data.filter((entry) => entry && entry.urls);
+                        if (validServers.length > 0) {
+                            cachedDynamicTurn = {
+                                expiresAt: now + TURN_DYNAMIC_CACHE_MS,
+                                servers: validServers
+                            };
+                            iceServers.push(...validServers);
+                        }
+                    }
+                }
+            } catch {
+                // Ignore dynamic TURN API failure so STUN/static TURN fallback still succeeds
+            } finally {
+                clearTimeout(timer);
+            }
         }
     }
 
@@ -266,7 +302,7 @@ export const registerVideoHandlers = (io, socket) => {
                 peer: other
                     ? { role: otherRole, name: other.name, image: other.image, mediaState: other.mediaState || null }
                     : null,
-                iceServers: buildIceServers(`${role}-${appointmentId}`),
+                iceServers: await buildIceServers(`${role}-${appointmentId}`),
                 serverTime: Date.now()
             });
         } catch (err) {

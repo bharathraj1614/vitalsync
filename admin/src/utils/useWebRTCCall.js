@@ -2,16 +2,36 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { io } from 'socket.io-client'
 import axios from 'axios'
 
-const DEFAULT_ICE_SERVERS = [
-  {
-    urls: [
-      'stun:stun.l.google.com:19302',
-      'stun:stun1.l.google.com:19302',
-      'stun:stun2.l.google.com:19302',
-      'stun:stun.cloudflare.com:3478'
-    ]
+const buildDefaultIceServers = () => {
+  const servers = [
+    {
+      urls: [
+        'stun:stun.l.google.com:19302',
+        'stun:stun1.l.google.com:19302',
+        'stun:stun2.l.google.com:19302',
+        'stun:stun.cloudflare.com:3478',
+        'stun:stun.relay.metered.ca:80'
+      ]
+    }
+  ]
+
+  const rawTurnUrls = String(import.meta.env.VITE_TURN_URLS || '')
+    .split(',')
+    .map((u) => u.trim())
+    .filter(Boolean)
+
+  if (rawTurnUrls.length && import.meta.env.VITE_TURN_USERNAME && import.meta.env.VITE_TURN_CREDENTIAL) {
+    servers.push({
+      urls: rawTurnUrls,
+      username: import.meta.env.VITE_TURN_USERNAME,
+      credential: import.meta.env.VITE_TURN_CREDENTIAL
+    })
   }
-]
+
+  return servers
+}
+
+const DEFAULT_ICE_SERVERS = buildDefaultIceServers()
 
 /**
  * Safari / pre-Chrome-134 fallback for `<dialog closedby="any">`.
@@ -534,6 +554,7 @@ export function useWebRTCCall({
           if (description.type === 'offer') {
             const answer = await pc.createAnswer()
             if (isStale()) return
+            pc._hasSentLocalDescription = false
             await pc.setLocalDescription(answer)
             if (isStale()) return
             socketRef.current?.emit('video:signal', {
@@ -591,6 +612,7 @@ export function useWebRTCCall({
         makingOfferRef.current = true
         const offer = await pc.createOffer({ iceRestart })
         if (pc.signalingState !== 'stable') return
+        pc._hasSentLocalDescription = false
         await pc.setLocalDescription(offer)
         socketRef.current.emit('video:signal', {
           appointmentId,
@@ -605,6 +627,37 @@ export function useWebRTCCall({
     },
     [appointmentId]
   )
+
+  const scheduleNegotiationWatchdog = useCallback(() => {
+    if (negotiationWatchdogRef.current) clearTimeout(negotiationWatchdogRef.current)
+    negotiationWatchdogRef.current = setTimeout(() => {
+      const currentPc = peerRef.current
+      if (
+        !currentPc ||
+        !peerSeatedRef.current ||
+        politeRef.current ||
+        currentPc.connectionState === 'connected' ||
+        currentPc.iceConnectionState === 'connected' ||
+        currentPc.iceConnectionState === 'completed'
+      ) {
+        return
+      }
+      const hasBothDescriptions = Boolean(currentPc.localDescription && currentPc.remoteDescription)
+      const isCheckingIce =
+        currentPc.iceConnectionState === 'checking' || currentPc.connectionState === 'connecting'
+      if (hasBothDescriptions && isCheckingIce) {
+        return
+      }
+      if (
+        currentPc.signalingState === 'stable' &&
+        (!hasBothDescriptions ||
+          currentPc.iceConnectionState === 'failed' ||
+          currentPc.iceConnectionState === 'disconnected')
+      ) {
+        sendExplicitOffer(currentPc, { iceRestart: Boolean(currentPc.localDescription) })
+      }
+    }, 12000)
+  }, [sendExplicitOffer])
 
   const createPeerConnection = useCallback(
     (iceServers) => {
@@ -672,12 +725,26 @@ export function useWebRTCCall({
           }
           remoteVideoRef.current.play?.().catch(() => {})
         }
-        setRemoteConnected(true)
+        const iceConnected =
+          pc.iceConnectionState === 'connected' ||
+          pc.iceConnectionState === 'completed' ||
+          pc.connectionState === 'connected'
+        if (iceConnected || event.track?.muted === false) {
+          setRemoteConnected(true)
+          if (iceConnected) {
+            setCallStatus('connected')
+          }
+        }
         if (event.track) {
           event.track.onunmute = () => {
+            if (remoteVideoRef.current && remoteStreamRef.current) {
+              if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+                remoteVideoRef.current.srcObject = remoteStreamRef.current
+              }
+              remoteVideoRef.current.play?.().catch(() => {})
+            }
             setRemoteConnected(true)
             setCallStatus('connected')
-            remoteVideoRef.current?.play?.().catch(() => {})
           }
         }
       }
@@ -692,6 +759,7 @@ export function useWebRTCCall({
           makingOfferRef.current = true
           const offer = await pc.createOffer()
           if (pc.signalingState !== 'stable') return
+          pc._hasSentLocalDescription = false
           await pc.setLocalDescription(offer)
           socketRef.current.emit('video:signal', {
             appointmentId,
@@ -712,6 +780,12 @@ export function useWebRTCCall({
             negotiationWatchdogRef.current = null
           }
           pc._readyForMidCallRenegotiation = true
+          if (remoteVideoRef.current && remoteStreamRef.current) {
+            if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+              remoteVideoRef.current.srcObject = remoteStreamRef.current
+            }
+            remoteVideoRef.current.play?.().catch(() => {})
+          }
           setCallStatus('connected')
           setRemoteConnected(true)
         } else if (pc.iceConnectionState === 'disconnected') {
@@ -732,9 +806,14 @@ export function useWebRTCCall({
             negotiationWatchdogRef.current = null
           }
           pc._readyForMidCallRenegotiation = true
+          if (remoteVideoRef.current && remoteStreamRef.current) {
+            if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+              remoteVideoRef.current.srcObject = remoteStreamRef.current
+            }
+            remoteVideoRef.current.play?.().catch(() => {})
+          }
           setCallStatus('connected')
           setRemoteConnected(true)
-          remoteVideoRef.current?.play?.().catch(() => {})
           if (mediaStateRef.current.dataSaver) {
             applySenderBandwidthProfile(pc, true)
           }
@@ -755,9 +834,13 @@ export function useWebRTCCall({
 
       if (audioTrack && cameraStreamRef.current) {
         pc.addTrack(audioTrack, cameraStreamRef.current)
+      } else {
+        pc.addTransceiver('audio', { direction: 'recvonly' })
       }
       if (videoTrack && activeVideoStream) {
         pc.addTrack(videoTrack, activeVideoStream)
+      } else {
+        pc.addTransceiver('video', { direction: 'recvonly' })
       }
 
       peerRef.current = pc
@@ -1107,23 +1190,7 @@ export function useWebRTCCall({
               if (ack.peer) {
                 await sendExplicitOffer(pc, { iceRestart: isResume })
                 if (!politeRef.current) {
-                  if (negotiationWatchdogRef.current) clearTimeout(negotiationWatchdogRef.current)
-                  negotiationWatchdogRef.current = setTimeout(() => {
-                    const currentPc = peerRef.current
-                    if (
-                      !currentPc ||
-                      !peerSeatedRef.current ||
-                      politeRef.current ||
-                      currentPc.connectionState === 'connected' ||
-                      currentPc.iceConnectionState === 'connected' ||
-                      currentPc.iceConnectionState === 'completed'
-                    ) {
-                      return
-                    }
-                    if (currentPc.signalingState === 'stable') {
-                      sendExplicitOffer(currentPc, { iceRestart: true })
-                    }
-                  }, 6000)
+                  scheduleNegotiationWatchdog()
                 }
               }
             }
@@ -1154,23 +1221,7 @@ export function useWebRTCCall({
             createPeerConnection(iceServersRef.current)
           }
           if (!politeRef.current) {
-            if (negotiationWatchdogRef.current) clearTimeout(negotiationWatchdogRef.current)
-            negotiationWatchdogRef.current = setTimeout(() => {
-              const currentPc = peerRef.current
-              if (
-                !currentPc ||
-                !peerSeatedRef.current ||
-                politeRef.current ||
-                currentPc.connectionState === 'connected' ||
-                currentPc.iceConnectionState === 'connected' ||
-                currentPc.iceConnectionState === 'completed'
-              ) {
-                return
-              }
-              if (currentPc.signalingState === 'stable') {
-                sendExplicitOffer(currentPc, { iceRestart: true })
-              }
-            }, 6000)
+            scheduleNegotiationWatchdog()
           }
           broadcastMediaState()
           if (resume) {
@@ -1313,6 +1364,7 @@ export function useWebRTCCall({
       createPeerConnection,
       handleSignalMessage,
       sendExplicitOffer,
+      scheduleNegotiationWatchdog,
       broadcastMediaState,
       startCompositeRecorder,
       stopLocalMediaRecorder,
