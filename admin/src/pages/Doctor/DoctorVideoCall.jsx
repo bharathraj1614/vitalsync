@@ -112,6 +112,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
   const [showStatsPopover, setShowStatsPopover] = useState(false)
   const [showMobileVitalsSheet, setShowMobileVitalsSheet] = useState(false)
   const [showCueMenu, setShowCueMenu] = useState(false)
+  const [videoFitMode, setVideoFitMode] = useState('contain') // 'contain' | 'cover'
 
   const handleToastNotify = useCallback((msg, type = 'info') => {
     if (type === 'error') toast.error(msg)
@@ -867,7 +868,11 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
           >
             <div
               ref={stageContainerRef}
-              className={`relative w-full aspect-[4/3] sm:aspect-video min-h-[250px] sm:min-h-0 bg-slate-950 overflow-hidden select-none ${
+              className={`relative w-full aspect-[4/3] sm:aspect-video ${
+                !remoteConnected && !lobbyActive && !isMinimized
+                  ? 'min-h-[300px] sm:min-h-0'
+                  : 'min-h-[250px] sm:min-h-0'
+              } bg-slate-950 overflow-hidden select-none ${
                 isMinimized ? '' : 'rounded-2xl sm:rounded-3xl shadow-xl border border-slate-800'
               }`}
             >
@@ -878,7 +883,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                 }}
                 className={
                   isSwappedView && isInActiveSession
-                    ? 'absolute bottom-2.5 right-2.5 sm:bottom-4 sm:right-4 w-24 sm:w-44 aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 cursor-pointer'
+                    ? 'absolute bottom-2.5 right-2.5 sm:bottom-4 sm:right-4 w-24 sm:w-44 aspect-[3/4] sm:aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 cursor-pointer'
                     : 'absolute inset-0 w-full h-full z-0'
                 }
               >
@@ -887,7 +892,9 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                   autoPlay
                   playsInline
                   className={`w-full h-full ${
-                    peerMediaState.screen ? 'object-contain bg-slate-950' : 'object-cover'
+                    peerMediaState.screen || videoFitMode === 'contain'
+                      ? 'object-contain bg-slate-950'
+                      : 'object-cover'
                   }`}
                 />
                 {remoteConnected && !peerMediaState.video && !peerMediaState.screen && (
@@ -913,18 +920,18 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
 
               {/* Placeholder / Green Room / Post-Call Summary when Remote Not Connected */}
               {!remoteConnected && !lobbyActive && (
-                <div className='absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950 p-6 text-center'>
+                <div className='absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950 p-3.5 sm:p-6 text-center'>
                   {appointment?.userData?.image && (
                     <img
                       src={appointment.userData.image}
                       alt={appointment.userData.name}
-                      className='w-24 h-24 rounded-3xl bg-slate-800 object-cover mb-4 border-2 border-white/15 shadow-lg'
+                      className='w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-slate-800 object-cover mb-2 sm:mb-3.5 border-2 border-white/15 shadow-lg shrink-0'
                     />
                   )}
-                  <p className='text-white font-bold text-base sm:text-lg'>
+                  <p className='text-white font-bold text-sm sm:text-lg leading-snug'>
                     {appointment?.userData?.name || 'Patient Consultation Room'}
                   </p>
-                  <p className='text-slate-400 text-xs mt-1 max-w-md leading-relaxed'>
+                  <p className='text-slate-400 text-[11px] sm:text-xs mt-1 max-w-md leading-relaxed line-clamp-2 sm:line-clamp-none'>
                     {callStatus === 'idle' &&
                       'Preview your camera & headset in the Green Room, or click Start Consultation Call to ring the patient immediately.'}
                     {callStatus === 'connecting' &&
@@ -938,26 +945,26 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                   </p>
 
                   {callStatus === 'idle' && (
-                    <div className='mt-5 flex flex-wrap items-center justify-center gap-2.5'>
+                    <div className='mt-3 sm:mt-5 flex flex-wrap items-center justify-center gap-2'>
                       <button
                         type='button'
                         onClick={startLobbyPreview}
-                        className='px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 cursor-pointer'
+                        className='px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 sm:gap-2 cursor-pointer'
                       >
-                        <Settings className='w-3.5 h-3.5 text-sky-400' /> Green Room Preview
+                        <Settings className='w-3.5 h-3.5 text-sky-400 shrink-0' /> Green Room Preview
                       </button>
                       <button
                         type='button'
                         onClick={() => startCall({ audioOnly: false })}
-                        className='px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-600/20 cursor-pointer'
+                        className='px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] sm:text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-emerald-600/20 cursor-pointer'
                       >
-                        <Video className='w-4 h-4' /> Start Consultation Call
+                        <Video className='w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0' /> Start Consultation Call
                       </button>
                     </div>
                   )}
 
                   {callStatus === 'connecting' && (
-                    <div className='mt-4 flex gap-2'>
+                    <div className='mt-3 sm:mt-4 flex gap-2'>
                       <span className='w-2.5 h-2.5 bg-sky-400 rounded-full animate-bounce' style={{ animationDelay: '0ms' }} />
                       <span className='w-2.5 h-2.5 bg-sky-400 rounded-full animate-bounce' style={{ animationDelay: '150ms' }} />
                       <span className='w-2.5 h-2.5 bg-sky-400 rounded-full animate-bounce' style={{ animationDelay: '300ms' }} />
@@ -980,7 +987,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                     : isInActiveSession
                     ? isMinimized
                       ? 'absolute bottom-2 right-2 w-20 h-14 rounded-lg overflow-hidden shadow-lg border border-white/25 bg-slate-900 z-20 cursor-pointer'
-                      : 'absolute bottom-2.5 right-2.5 sm:bottom-4 sm:right-4 w-24 sm:w-44 aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-xl border-2 border-white/20 hover:border-sky-400/70 bg-slate-900 z-20 cursor-pointer transition-all'
+                      : 'absolute bottom-2.5 right-2.5 sm:bottom-4 sm:right-4 w-24 sm:w-44 aspect-[3/4] sm:aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-xl border-2 border-white/20 hover:border-sky-400/70 bg-slate-900 z-20 cursor-pointer transition-all'
                     : 'hidden'
                 }
               >
@@ -1106,22 +1113,34 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                 </div>
               )}
 
-              {/* Top-Right HUD: Network Quality Telemetry + Live Contactless rPPG Patient Pulse */}
+              {/* Top-Right HUD: Fit/Fill Toggle + Network Quality Telemetry + Compact rPPG Vitals Pill */}
               {isInActiveSession && !isMinimized && (
-                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-1.5 sm:gap-2 max-w-[54%] md:max-w-none'>
+                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-1.5 sm:gap-2 max-w-[56%] md:max-w-none'>
                   {remoteConnected && (
-                    <button
-                      type='button'
-                      onClick={() => setShowStatsPopover((s) => !s)}
-                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${qualityBadgeStyle}`}
-                      title='Inspect Live WebRTC Telemetry'
-                    >
-                      <Gauge className='w-3.5 h-3.5 shrink-0' />
-                      <span className='truncate'>
-                        {networkStats.rttMs !== null ? `${networkStats.rttMs} ms` : 'Link'} •{' '}
-                        {networkStats.candidateType}
-                      </span>
-                    </button>
+                    <div className='flex items-center gap-1.5'>
+                      {!peerMediaState.screen && (
+                        <button
+                          type='button'
+                          onClick={() => setVideoFitMode((m) => (m === 'contain' ? 'cover' : 'contain'))}
+                          className='px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-slate-950/88 hover:bg-slate-900 border border-white/15 text-slate-200 backdrop-blur-md shadow-lg text-[10px] sm:text-[11px] font-bold cursor-pointer whitespace-nowrap'
+                          title={videoFitMode === 'contain' ? 'Switch video to Fill (crop edges)' : 'Switch video to Fit (full frame)'}
+                        >
+                          {videoFitMode === 'contain' ? 'Fit' : 'Fill'}
+                        </button>
+                      )}
+                      <button
+                        type='button'
+                        onClick={() => setShowStatsPopover((s) => !s)}
+                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${qualityBadgeStyle}`}
+                        title='Inspect Live WebRTC Telemetry'
+                      >
+                        <Gauge className='w-3.5 h-3.5 shrink-0' />
+                        <span className='truncate'>
+                          {networkStats.rttMs !== null ? `${networkStats.rttMs} ms` : 'Link'} •{' '}
+                          {networkStats.candidateType}
+                        </span>
+                      </button>
+                    </div>
                   )}
 
                   {showStatsPopover && remoteConnected && (
@@ -1203,82 +1222,94 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
 
                     return (
                       <>
-                        {/* Mobile (< 768px): Compact Tap-to-Expand Clinical Vitals Pill (never obscures patient video) */}
+                        {/* Mobile & Desktop: Compact Tap-to-Expand Clinical Vitals Pill (never obscures patient face) */}
                         <button
                           type='button'
                           onClick={() => setShowMobileVitalsSheet((v) => !v)}
-                          className={`md:hidden px-2.5 py-1.5 rounded-xl bg-slate-950/90 backdrop-blur-md border shadow-lg text-white text-[10px] font-bold flex items-center gap-1.5 cursor-pointer max-w-full ${
+                          className={`px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-950/90 hover:bg-slate-900 backdrop-blur-md border shadow-lg text-white text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer max-w-full transition-colors ${
                             riskLevel === 'HIGH'
                               ? 'border-rose-400 animate-pulse'
                               : riskLevel === 'MEDIUM' || riskLevel === 'LOW_MEDIUM'
                               ? 'border-amber-400/60'
                               : 'border-slate-700/80'
                           }`}
-                          title='Tap to view full RCP NEWS2 clinical vitals'
+                          title='Click to toggle full RCP NEWS2 clinical vitals'
                         >
                           <span className='truncate'>
-                            ❤️ {hrVal ?? '--'} bpm • NEWS2 {scoreVal} ({riskLevel.replace('_', '-')})
+                            ❤️ {hrVal ?? '--'} BPM • NEWS2 {scoreVal} ({riskLevel.replace('_', '-')})
                           </span>
                         </button>
 
-                        {/* Desktop (>= 768px): Full Floating RCP NEWS2 HUD Card */}
-                        <div className='hidden md:block bg-slate-900/92 text-white p-3 rounded-2xl border border-slate-700/80 backdrop-blur-md shadow-xl w-72 space-y-2'>
-                          <div className='flex items-center justify-between gap-2'>
-                            <span className='text-[10px] text-slate-300 font-extrabold uppercase tracking-wider flex items-center gap-1.5'>
-                              <HeartPulse className='w-3.5 h-3.5 text-rose-400' />
-                              {patientVitals.source === 'rppg_spot_check'
-                                ? '15s POS-rPPG Pulse'
-                                : 'Patient Clinical Vitals'}
-                            </span>
-                            <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase ${hudRiskBadge}`}>
-                              NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
-                            </span>
-                          </div>
-
-                          <div className='grid grid-cols-2 gap-1.5 text-xs'>
-                            {patientVitals.systolicBp && (
-                              <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
-                                <span className='text-[9px] text-slate-400 uppercase block'>BP (mmHg)</span>
-                                <span className='font-mono font-black text-white'>
-                                  {patientVitals.systolicBp}/{patientVitals.diastolicBp || '--'}
+                        {/* Desktop (>= 768px): Toggleable Opaque RCP NEWS2 Popover Card (closed by default) */}
+                        {showMobileVitalsSheet && (
+                          <div className='hidden md:block bg-slate-950/95 text-white p-3.5 rounded-2xl border border-slate-700/80 backdrop-blur-md shadow-2xl w-72 space-y-2.5'>
+                            <div className='flex items-center justify-between gap-2'>
+                              <span className='text-[10px] text-slate-300 font-extrabold uppercase tracking-wider flex items-center gap-1.5'>
+                                <HeartPulse className='w-3.5 h-3.5 text-rose-400' />
+                                {patientVitals.source === 'rppg_spot_check'
+                                  ? '15s POS-rPPG Pulse'
+                                  : 'Patient Clinical Vitals'}
+                              </span>
+                              <div className='flex items-center gap-1.5'>
+                                <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase ${hudRiskBadge}`}>
+                                  NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
                                 </span>
+                                <button
+                                  type='button'
+                                  onClick={() => setShowMobileVitalsSheet(false)}
+                                  className='p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer'
+                                  aria-label='Close patient vitals'
+                                >
+                                  <X className='w-3.5 h-3.5' />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className='grid grid-cols-2 gap-1.5 text-xs'>
+                              {patientVitals.systolicBp && (
+                                <div className='bg-slate-900/90 px-2.5 py-1.5 rounded-xl border border-slate-800'>
+                                  <span className='text-[9px] text-slate-400 uppercase block'>BP (mmHg)</span>
+                                  <span className='font-mono font-black text-white'>
+                                    {patientVitals.systolicBp}/{patientVitals.diastolicBp || '--'}
+                                  </span>
+                                </div>
+                              )}
+                              {patientVitals.spo2 && (
+                                <div className='bg-slate-900/90 px-2.5 py-1.5 rounded-xl border border-slate-800'>
+                                  <span className='text-[9px] text-slate-400 uppercase block'>SpO₂</span>
+                                  <span className='font-mono font-black text-sky-300'>{patientVitals.spo2}%</span>
+                                </div>
+                              )}
+                              {patientVitals.temperatureF && (
+                                <div className='bg-slate-900/90 px-2.5 py-1.5 rounded-xl border border-slate-800'>
+                                  <span className='text-[9px] text-slate-400 uppercase block'>Temp</span>
+                                  <span className='font-mono font-black text-amber-300'>{patientVitals.temperatureF}°F</span>
+                                </div>
+                              )}
+                              {hrVal && (
+                                <div className='bg-slate-900/90 px-2.5 py-1.5 rounded-xl border border-slate-800'>
+                                  <span className='text-[9px] text-slate-400 uppercase block'>Pulse</span>
+                                  <span className='font-mono font-black text-emerald-400'>
+                                    {hrVal} <span className='text-[9px] text-slate-400 font-sans'>BPM</span>
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {flags.length > 0 && (
+                              <div className='text-[10px] text-rose-300 font-semibold bg-rose-950/60 border border-rose-500/30 rounded-lg px-2 py-1'>
+                                ⚠️ {flags.join(' • ')}
                               </div>
                             )}
-                            {patientVitals.spo2 && (
-                              <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
-                                <span className='text-[9px] text-slate-400 uppercase block'>SpO₂</span>
-                                <span className='font-mono font-black text-sky-300'>{patientVitals.spo2}%</span>
-                              </div>
-                            )}
-                            {patientVitals.temperatureF && (
-                              <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
-                                <span className='text-[9px] text-slate-400 uppercase block'>Temp</span>
-                                <span className='font-mono font-black text-amber-300'>{patientVitals.temperatureF}°F</span>
-                              </div>
-                            )}
-                            {hrVal && (
-                              <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
-                                <span className='text-[9px] text-slate-400 uppercase block'>Pulse</span>
-                                <span className='font-mono font-black text-emerald-400'>
-                                  {hrVal} <span className='text-[9px] text-slate-400 font-sans'>BPM</span>
-                                </span>
+
+                            {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
+                              <div className='text-[10px] text-slate-400 flex items-center justify-between'>
+                                <span>Stationary 15s capture...</span>
+                                <span className='font-mono text-emerald-400'>{patientVitals.progressPct}%</span>
                               </div>
                             )}
                           </div>
-
-                          {flags.length > 0 && (
-                            <div className='text-[10px] text-rose-300 font-semibold bg-rose-950/60 border border-rose-500/30 rounded-lg px-2 py-1'>
-                              ⚠️ {flags.join(' • ')}
-                            </div>
-                          )}
-
-                          {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
-                            <div className='text-[10px] text-slate-400 flex items-center justify-between'>
-                              <span>Stationary 15s capture...</span>
-                              <span className='font-mono text-emerald-400'>{patientVitals.progressPct}%</span>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </>
                     )
                   })()}
@@ -1675,6 +1706,88 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
               <div className='flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-4'>
                 {sideTab === 'chart' && (
                   <>
+                    {/* Live In-Session Patient Vitals & RCP NEWS2 Card (always visible in sidebar without obstructing video) */}
+                    {patientVitals && (() => {
+                      const hrVal = patientVitals.heartRate ?? patientVitals.bpm ?? null
+                      const liveTriage = computeNEWS2({
+                        heartRate: hrVal,
+                        systolicBp: patientVitals.systolicBp,
+                        diastolicBp: patientVitals.diastolicBp,
+                        spo2: patientVitals.spo2,
+                        temperatureF: patientVitals.temperatureF,
+                        respiratoryRate: patientVitals.respiratoryRate,
+                        bloodGlucose: patientVitals.bloodGlucose
+                      })
+                      const riskLevel = patientVitals.news2Risk || liveTriage.news2Risk || 'LOW'
+                      const scoreVal = patientVitals.news2Score ?? liveTriage.news2Score ?? 0
+                      const flags = Array.isArray(patientVitals.clinicalFlags) && patientVitals.clinicalFlags.length > 0
+                        ? patientVitals.clinicalFlags
+                        : liveTriage.clinicalFlags
+                      const sidebarRiskBadge =
+                        riskLevel === 'HIGH'
+                          ? 'bg-rose-100 text-rose-800 border-rose-300'
+                          : riskLevel === 'MEDIUM' || riskLevel === 'LOW_MEDIUM'
+                          ? 'bg-amber-100 text-amber-800 border-amber-300'
+                          : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+
+                      return (
+                        <div className='bg-white rounded-2xl border border-slate-200 p-3.5 space-y-2.5 shadow-2xs'>
+                          <div className='flex items-center justify-between gap-2'>
+                            <span className='text-[11px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5'>
+                              <HeartPulse className='w-3.5 h-3.5 text-rose-500' />
+                              {patientVitals.source === 'rppg_spot_check'
+                                ? 'Live 15s POS-rPPG Pulse'
+                                : 'Live Patient Vitals'}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full border text-[10px] font-extrabold uppercase shrink-0 ${sidebarRiskBadge}`}>
+                              NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
+                            </span>
+                          </div>
+                          <div className='grid grid-cols-2 gap-2 text-xs'>
+                            {patientVitals.systolicBp && (
+                              <div className='bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200/80'>
+                                <span className='text-[9px] text-slate-500 uppercase block font-semibold'>BP (mmHg)</span>
+                                <span className='font-mono font-black text-slate-900'>
+                                  {patientVitals.systolicBp}/{patientVitals.diastolicBp || '--'}
+                                </span>
+                              </div>
+                            )}
+                            {patientVitals.spo2 && (
+                              <div className='bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200/80'>
+                                <span className='text-[9px] text-slate-500 uppercase block font-semibold'>SpO₂</span>
+                                <span className='font-mono font-black text-sky-700'>{patientVitals.spo2}%</span>
+                              </div>
+                            )}
+                            {patientVitals.temperatureF && (
+                              <div className='bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200/80'>
+                                <span className='text-[9px] text-slate-500 uppercase block font-semibold'>Temp</span>
+                                <span className='font-mono font-black text-amber-700'>{patientVitals.temperatureF}°F</span>
+                              </div>
+                            )}
+                            {hrVal && (
+                              <div className='bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200/80'>
+                                <span className='text-[9px] text-slate-500 uppercase block font-semibold'>Pulse</span>
+                                <span className='font-mono font-black text-emerald-700'>
+                                  {hrVal} <span className='text-[9px] text-slate-500 font-sans'>BPM</span>
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {flags.length > 0 && (
+                            <p className='text-[11px] text-rose-700 font-semibold bg-rose-50 border border-rose-200 rounded-lg px-2.5 py-1.5'>
+                              ⚠️ {flags.join(' • ')}
+                            </p>
+                          )}
+                          {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
+                            <div className='text-[11px] text-slate-500 flex items-center justify-between'>
+                              <span>Stationary 15s capture...</span>
+                              <span className='font-mono font-bold text-emerald-600'>{patientVitals.progressPct}%</span>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()}
+
                     {/* Reason for Visit */}
                     {appointment?.reasonForVisit && (
                       <div className='bg-sky-50 border border-sky-200 rounded-2xl p-3.5 text-xs'>

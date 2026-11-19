@@ -30,6 +30,31 @@ const buildDefaultIceServers = () => {
 
 const DEFAULT_ICE_SERVERS = buildDefaultIceServers()
 
+const buildCameraVideoConstraints = (camId = '', exactDeviceId = false) => {
+  const isPortraitViewport =
+    typeof window !== 'undefined' && window.innerHeight > window.innerWidth
+  return {
+    width: { ideal: isPortraitViewport ? 720 : 1280 },
+    height: { ideal: isPortraitViewport ? 960 : 720 },
+    frameRate: { ideal: 30, max: 30 },
+    ...(camId
+      ? { deviceId: exactDeviceId ? { exact: camId } : { ideal: camId } }
+      : { facingMode: 'user' })
+  }
+}
+
+const resetCameraTrackZoom = (videoTrack) => {
+  if (!videoTrack || typeof videoTrack.applyConstraints !== 'function') return
+  try {
+    const caps = videoTrack.getCapabilities?.()
+    if (caps?.zoom) {
+      videoTrack
+        .applyConstraints({ advanced: [{ zoom: caps.zoom.min || 1 }] })
+        .catch(() => {})
+    }
+  } catch (e) {}
+}
+
 const safePlayVideo = (videoEl, { allowMutedFallback = false } = {}) => {
   if (!videoEl || typeof videoEl.play !== 'function') return
   const playPromise = videoEl.play()
@@ -421,12 +446,7 @@ export function useWebRTCCall({
       }
       const videoConstraints = audioOnly
         ? false
-        : {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            frameRate: { ideal: 30, max: 30 },
-            ...(camId ? { deviceId: { ideal: camId } } : {})
-          }
+        : buildCameraVideoConstraints(camId, false)
 
       let stream = null
       let cameraAvailable = !audioOnly
@@ -458,6 +478,7 @@ export function useWebRTCCall({
       if (acquiredVideoTrack && 'contentHint' in acquiredVideoTrack) {
         acquiredVideoTrack.contentHint = 'motion'
       }
+      resetCameraTrackZoom(acquiredVideoTrack)
       const hasVid = cameraAvailable && Boolean(acquiredVideoTrack)
       setHasCamera(hasVid)
       setIsVideoOff(!hasVid)
@@ -1750,17 +1771,14 @@ export function useWebRTCCall({
     }
     try {
       const camStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          ...(selectedCameraId ? { deviceId: { ideal: selectedCameraId } } : {})
-        }
+        video: buildCameraVideoConstraints(selectedCameraId, false)
       })
       const newTrack = camStream.getVideoTracks()[0]
       if (!newTrack) return
       if ('contentHint' in newTrack) {
         newTrack.contentHint = 'motion'
       }
+      resetCameraTrackZoom(newTrack)
       if (cameraStreamRef.current) {
         cameraStreamRef.current.addTrack(newTrack)
       } else {
@@ -1787,13 +1805,14 @@ export function useWebRTCCall({
       if (!cameraStreamRef.current) return
       try {
         const nextStream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          video: buildCameraVideoConstraints(deviceId, true)
         })
         const nextVideoTrack = nextStream.getVideoTracks()[0]
         if (!nextVideoTrack) return
         if ('contentHint' in nextVideoTrack) {
           nextVideoTrack.contentHint = 'motion'
         }
+        resetCameraTrackZoom(nextVideoTrack)
 
         const oldTracks = cameraStreamRef.current.getVideoTracks()
         oldTracks.forEach((t) => {

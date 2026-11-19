@@ -30,6 +30,31 @@ const buildDefaultIceServers = () => {
 
 const DEFAULT_ICE_SERVERS = buildDefaultIceServers()
 
+const buildVideoConstraints = ({ camId = '', exactDeviceId = false, includeFrameRate = false } = {}) => {
+  const isPortraitViewport = typeof window !== 'undefined' && window.innerHeight > window.innerWidth
+  const constraints = {
+    width: { ideal: isPortraitViewport ? 720 : 1280 },
+    height: { ideal: isPortraitViewport ? 960 : 720 },
+    ...(includeFrameRate ? { frameRate: { ideal: 30, max: 30 } } : {})
+  }
+  if (camId) {
+    constraints.deviceId = exactDeviceId ? { exact: camId } : { ideal: camId }
+  } else {
+    constraints.facingMode = 'user'
+  }
+  return constraints
+}
+
+const resetCameraZoomToWide = (videoTrack) => {
+  if (!videoTrack || typeof videoTrack.applyConstraints !== 'function') return
+  try {
+    const caps = videoTrack.getCapabilities?.()
+    if (caps?.zoom) {
+      videoTrack.applyConstraints({ advanced: [{ zoom: caps.zoom.min || 1 }] }).catch(() => {})
+    }
+  } catch (e) {}
+}
+
 const safePlayVideo = (videoEl, { allowMutedFallback = false } = {}) => {
   if (!videoEl || typeof videoEl.play !== 'function') return
   const playPromise = videoEl.play()
@@ -429,12 +454,7 @@ export function useWebRTCCall({
       }
       const videoConstraints = audioOnly
         ? false
-        : {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            frameRate: { ideal: 30, max: 30 },
-            ...(camId ? { deviceId: { ideal: camId } } : {})
-          }
+        : buildVideoConstraints({ camId, includeFrameRate: true })
 
       let stream = null
       let cameraAvailable = !audioOnly
@@ -467,6 +487,7 @@ export function useWebRTCCall({
       if (acquiredVideoTrack && 'contentHint' in acquiredVideoTrack) {
         acquiredVideoTrack.contentHint = 'motion'
       }
+      resetCameraZoomToWide(acquiredVideoTrack)
       const hasVid = cameraAvailable && Boolean(acquiredVideoTrack)
       setHasCamera(hasVid)
       setIsVideoOff(!hasVid)
@@ -1789,17 +1810,14 @@ export function useWebRTCCall({
     // If started audio-only, attempt to acquire camera dynamically mid-call
     try {
       const camStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          ...(selectedCameraId ? { deviceId: { ideal: selectedCameraId } } : {})
-        }
+        video: buildVideoConstraints({ camId: selectedCameraId })
       })
       const newTrack = camStream.getVideoTracks()[0]
       if (!newTrack) return
       if ('contentHint' in newTrack) {
         newTrack.contentHint = 'motion'
       }
+      resetCameraZoomToWide(newTrack)
       if (cameraStreamRef.current) {
         cameraStreamRef.current.addTrack(newTrack)
       } else {
@@ -1827,13 +1845,14 @@ export function useWebRTCCall({
       if (!cameraStreamRef.current) return
       try {
         const nextStream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          video: buildVideoConstraints({ camId: deviceId, exactDeviceId: true })
         })
         const nextVideoTrack = nextStream.getVideoTracks()[0]
         if (!nextVideoTrack) return
         if ('contentHint' in nextVideoTrack) {
           nextVideoTrack.contentHint = 'motion'
         }
+        resetCameraZoomToWide(nextVideoTrack)
 
         const oldTracks = cameraStreamRef.current.getVideoTracks()
         oldTracks.forEach((t) => {

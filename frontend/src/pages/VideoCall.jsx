@@ -92,6 +92,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
   const [chatInput, setChatInput] = useState('')
   const [showStatsPopover, setShowStatsPopover] = useState(false)
   const [showReactionMenu, setShowReactionMenu] = useState(false)
+  const [videoFitMode, setVideoFitMode] = useState('contain') // 'contain' | 'cover'
 
   const triggerNotification = useCallback((msg, type = 'success') => {
     setNotification({ msg, type })
@@ -1033,7 +1034,11 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
           <div className={isMinimized ? 'w-full' : 'lg:col-span-8 space-y-3 sm:space-y-4'}>
             <div
               ref={stageContainerRef}
-              className={`relative bg-slate-950 overflow-hidden aspect-[4/3] sm:aspect-video min-h-[250px] sm:min-h-0 select-none ${
+              className={`relative bg-slate-950 overflow-hidden aspect-[4/3] sm:aspect-video ${
+                !remoteConnected && !lobbyActive && !isMinimized
+                  ? 'min-h-[300px] sm:min-h-0'
+                  : 'min-h-[250px] sm:min-h-0'
+              } select-none ${
                 isMinimized ? '' : 'rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-800'
               }`}
             >
@@ -1044,7 +1049,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                 }}
                 className={
                   isSwappedView && isInActiveSession
-                    ? 'absolute bottom-2.5 right-2.5 sm:bottom-3.5 sm:right-3.5 w-24 sm:w-44 aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 cursor-pointer group'
+                    ? 'absolute bottom-2.5 right-2.5 sm:bottom-3.5 sm:right-3.5 w-24 sm:w-44 aspect-[3/4] sm:aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-slate-900 z-20 cursor-pointer group'
                     : 'absolute inset-0 w-full h-full z-0'
                 }
               >
@@ -1053,7 +1058,9 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                   autoPlay
                   playsInline
                   className={`w-full h-full ${
-                    peerMediaState.screen ? 'object-contain bg-slate-950' : 'object-cover'
+                    peerMediaState.screen || videoFitMode === 'contain'
+                      ? 'object-contain bg-slate-950'
+                      : 'object-cover'
                   }`}
                 />
                 {remoteConnected && !peerMediaState.video && !peerMediaState.screen && (
@@ -1079,25 +1086,29 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
 
               {/* Waiting / Green Room / Ended Overlay when Remote Not Connected */}
               {!remoteConnected && !lobbyActive && (
-                <div className='absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 p-6 text-center'>
+                <div
+                  className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 px-3.5 py-3.5 sm:p-6 text-center ${
+                    isInActiveSession ? 'pt-11 sm:pt-6' : ''
+                  }`}
+                >
                   {appointment?.docData?.image ? (
-                    <div className='relative mb-4'>
+                    <div className='relative mb-2 sm:mb-3.5 shrink-0'>
                       <img
                         src={appointment.docData.image}
                         alt={appointment.docData.name}
-                        className='w-24 h-24 rounded-full border-2 border-slate-700 object-cover bg-slate-800 shadow-xl'
+                        className='w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-slate-700 object-cover bg-slate-800 shadow-xl'
                       />
                       {isInActiveSession && (
                         <div className='absolute inset-0 rounded-full border-2 border-sky-400/40 animate-ping pointer-events-none' />
                       )}
                     </div>
                   ) : (
-                    <div className='w-20 h-20 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 mb-4'>
-                      <Video className='w-8 h-8' />
+                    <div className='w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 mb-2 sm:mb-3.5 shrink-0'>
+                      <Video className='w-6 h-6 sm:w-8 sm:h-8' />
                     </div>
                   )}
 
-                  <h3 className='text-slate-100 font-bold text-base sm:text-lg mb-1'>
+                  <h3 className='text-slate-100 font-bold text-sm sm:text-lg leading-snug mb-1'>
                     {callStatus === 'idle' && 'Green Room Ready — Check Your Devices or Join Now'}
                     {callStatus === 'connecting' && 'Ringing Your Doctor...'}
                     {callStatus === 'reconnecting' && 'Restoring Encrypted Connection...'}
@@ -1105,7 +1116,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                       (replacedByOtherTab ? 'Session Moved to Another Tab' : 'Consultation Session Ended')}
                   </h3>
 
-                  <p className='text-slate-400 text-xs max-w-md leading-relaxed'>
+                  <p className='text-slate-400 text-[11px] sm:text-xs max-w-md leading-relaxed line-clamp-2 sm:line-clamp-none'>
                     {callStatus === 'idle' &&
                       'Preview your camera and microphone before entering, or click Join Consultation to connect immediately.'}
                     {callStatus === 'connecting' &&
@@ -1117,47 +1128,57 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                   </p>
 
                   {callStatus === 'idle' && (
-                    <div className='mt-5 flex flex-wrap items-center justify-center gap-2.5'>
+                    <div className='mt-3 sm:mt-5 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5'>
                       <button
                         type='button'
                         onClick={startLobbyPreview}
-                        className='px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 cursor-pointer'
+                        className='px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap'
                       >
-                        <Settings className='w-3.5 h-3.5 text-sky-400' /> Test Camera & Mic (Green Room)
+                        <Settings className='w-3.5 h-3.5 text-sky-400 shrink-0' />
+                        <span className='sm:hidden'>Test Devices</span>
+                        <span className='hidden sm:inline'>Test Camera & Mic (Green Room)</span>
                       </button>
                       <button
                         type='button'
                         onClick={() => handleJoinConsultation(false)}
-                        className='px-5 py-2.5 rounded-xl bg-primary hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-sky-600/20 cursor-pointer'
+                        className='px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-primary hover:bg-sky-500 text-white text-[11px] sm:text-xs font-bold flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-sky-600/20 cursor-pointer whitespace-nowrap'
                       >
-                        <PhoneCall className='w-3.5 h-3.5' /> Join Video Consultation
+                        <PhoneCall className='w-3.5 h-3.5 shrink-0' />
+                        <span className='sm:hidden'>Join Video Call</span>
+                        <span className='hidden sm:inline'>Join Video Consultation</span>
                       </button>
                     </div>
                   )}
 
                   {callStatus === 'ended' && (
-                    <div className='mt-5 flex flex-wrap items-center justify-center gap-2.5'>
+                    <div className='mt-3 sm:mt-5 flex flex-wrap items-center justify-center gap-2 sm:gap-2.5'>
                       <button
                         type='button'
                         onClick={() => handleJoinConsultation(false)}
-                        className='px-4 py-2.5 rounded-xl bg-primary hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-2 cursor-pointer'
+                        className='px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-primary hover:bg-sky-500 text-white text-[11px] sm:text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap'
                       >
-                        <RefreshCw className='w-3.5 h-3.5' /> Rejoin Consultation
+                        <RefreshCw className='w-3.5 h-3.5 shrink-0' />
+                        <span className='sm:hidden'>Rejoin</span>
+                        <span className='hidden sm:inline'>Rejoin Consultation</span>
                       </button>
                       <button
                         type='button'
                         onClick={() => navigate(`/prescription/${appointmentId}`)}
-                        className='px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 cursor-pointer'
+                        className='px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] sm:text-xs font-bold flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap'
                       >
-                        <FileText className='w-3.5 h-3.5' /> View Digital Prescription
+                        <FileText className='w-3.5 h-3.5 shrink-0' />
+                        <span className='sm:hidden'>Prescription</span>
+                        <span className='hidden sm:inline'>View Digital Prescription</span>
                       </button>
                       {transcript.length > 0 && (
                         <button
                           type='button'
                           onClick={handleDownloadTranscript}
-                          className='px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer'
+                          className='px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap'
                         >
-                          <Download className='w-3.5 h-3.5' /> Download Transcript
+                          <Download className='w-3.5 h-3.5 shrink-0' />
+                          <span className='sm:hidden'>Transcript</span>
+                          <span className='hidden sm:inline'>Download Transcript</span>
                         </button>
                       )}
                     </div>
@@ -1178,8 +1199,8 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                     ? 'absolute inset-0 w-full h-full z-0 bg-slate-950'
                     : isInActiveSession
                     ? isMinimized
-                      ? 'absolute bottom-2 right-2 w-20 aspect-video rounded-lg overflow-hidden shadow-lg border border-white/25 bg-slate-900 z-20 cursor-pointer'
-                      : 'absolute bottom-2.5 right-2.5 sm:bottom-3.5 sm:right-3.5 w-24 sm:w-44 aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-700/90 hover:border-sky-400/70 bg-slate-900 z-20 cursor-pointer transition-all'
+                      ? 'absolute bottom-2 right-2 w-20 aspect-[3/4] sm:aspect-video rounded-lg overflow-hidden shadow-lg border border-white/25 bg-slate-900 z-20 cursor-pointer'
+                      : 'absolute bottom-2.5 right-2.5 sm:bottom-3.5 sm:right-3.5 w-24 sm:w-44 aspect-[3/4] sm:aspect-video rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border-2 border-slate-700/90 hover:border-sky-400/70 bg-slate-900 z-20 cursor-pointer transition-all'
                     : 'hidden'
                 }
               >
@@ -1191,7 +1212,11 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                   className={`w-full h-full ${
                     isScreenSharing
                       ? 'object-contain bg-slate-950'
-                      : `object-cover ${isMirrored ? '-scale-x-100' : ''}`
+                      : `${
+                          (isSwappedView || lobbyActive) && videoFitMode === 'contain'
+                            ? 'object-contain bg-slate-950'
+                            : 'object-cover'
+                        } ${isMirrored ? '-scale-x-100' : ''}`
                   }`}
                 />
                 {isVideoOff && !isScreenSharing && (
@@ -1282,7 +1307,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
 
               {/* Top-Left HUD: Connection Status & Remote Peer Media State Badges */}
               {isInActiveSession && (
-                <div className='absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-[52%] sm:max-w-[58%]'>
+                <div className='absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-[44%] sm:max-w-[54%]'>
                   <div className='bg-slate-950/[0.88] backdrop-blur-md border border-slate-700/80 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs text-slate-100 flex items-center gap-1.5 sm:gap-2 shadow-lg max-w-full'>
                     <span
                       className={`w-2 h-2 rounded-full shrink-0 ${
@@ -1320,15 +1345,28 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                 </div>
               )}
 
-              {/* Top-Right HUD: High-Contrast Network Quality Pill & Diagnostics Popover */}
+              {/* Top-Right HUD: Fit/Fill Toggle, High-Contrast Network Quality Pill & Diagnostics Popover */}
               {isInActiveSession && !isMinimized && (
-                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-2 max-w-[46%] sm:max-w-none'>
-                  <div className='flex items-center gap-2'>
+                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-2 max-w-[54%] sm:max-w-none'>
+                  <div className='flex items-center gap-1.5 sm:gap-2 max-w-full'>
+                    <button
+                      type='button'
+                      onClick={() => setVideoFitMode((m) => (m === 'contain' ? 'cover' : 'contain'))}
+                      aria-label={videoFitMode === 'contain' ? 'Switch video to Fill mode' : 'Switch video to Fit mode'}
+                      title={
+                        videoFitMode === 'contain'
+                          ? 'Full frame visible (Fit) — click to Fill'
+                          : 'Cropped to Fill — click to Fit full frame'
+                      }
+                      className='px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl border border-slate-700/80 bg-slate-950/[0.88] hover:bg-slate-900 text-slate-200 hover:text-white backdrop-blur-md shadow-lg text-[10px] sm:text-[11px] font-bold flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0'
+                    >
+                      <span>{videoFitMode === 'contain' ? 'Fit' : 'Fill'}</span>
+                    </button>
                     {remoteConnected && (
                       <button
                         type='button'
                         onClick={() => setShowStatsPopover((s) => !s)}
-                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transition-opacity hover:opacity-95 ${qualityBadgeStyle}`}
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap min-w-0 transition-opacity hover:opacity-95 ${qualityBadgeStyle}`}
                         title='View Live WebRTC Network Telemetry'
                       >
                         <Gauge className='w-3.5 h-3.5 shrink-0' />
