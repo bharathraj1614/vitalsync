@@ -891,6 +891,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                   ref={remoteVideoRef}
                   autoPlay
                   playsInline
+                  style={{ objectFit: peerMediaState.screen || videoFitMode === 'contain' ? 'contain' : 'cover' }}
                   className={`w-full h-full ${
                     peerMediaState.screen || videoFitMode === 'contain'
                       ? 'object-contain bg-slate-950'

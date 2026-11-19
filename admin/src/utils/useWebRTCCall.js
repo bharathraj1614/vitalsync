@@ -31,12 +31,25 @@ const buildDefaultIceServers = () => {
 const DEFAULT_ICE_SERVERS = buildDefaultIceServers()
 
 const buildCameraVideoConstraints = (camId = '', exactDeviceId = false) => {
-  const isPortraitViewport =
-    typeof window !== 'undefined' && window.innerHeight > window.innerWidth
+  const isMobileOrPortrait =
+    typeof window !== 'undefined' &&
+    (window.innerHeight > window.innerWidth ||
+      window.innerWidth < 900 ||
+      /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''))
+  const baseConstraints = isMobileOrPortrait
+    ? {
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        resizeMode: { ideal: 'none' },
+        frameRate: { ideal: 30, max: 30 }
+      }
+    : {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30, max: 30 }
+      }
   return {
-    width: { ideal: isPortraitViewport ? 720 : 1280 },
-    height: { ideal: isPortraitViewport ? 960 : 720 },
-    frameRate: { ideal: 30, max: 30 },
+    ...baseConstraints,
     ...(camId
       ? { deviceId: exactDeviceId ? { exact: camId } : { ideal: camId } }
       : { facingMode: 'user' })
@@ -367,7 +380,10 @@ export function useWebRTCCall({
       const speakers = list.filter((d) => d.kind === 'audiooutput')
       setDevices({ cameras, microphones, speakers })
 
-      if (!selectedCameraId && cameras[0]?.deviceId) setSelectedCameraId(cameras[0].deviceId)
+      const activeCamId = cameraStreamRef.current?.getVideoTracks?.()[0]?.getSettings?.()?.deviceId
+      if (!selectedCameraId && (activeCamId || cameras[0]?.deviceId)) {
+        setSelectedCameraId(activeCamId || cameras[0].deviceId)
+      }
       if (!selectedMicId && microphones[0]?.deviceId) setSelectedMicId(microphones[0].deviceId)
       if (!selectedSpeakerId && speakers[0]?.deviceId) setSelectedSpeakerId(speakers[0].deviceId)
     } catch (e) {}

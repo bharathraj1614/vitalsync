@@ -31,12 +31,23 @@ const buildDefaultIceServers = () => {
 const DEFAULT_ICE_SERVERS = buildDefaultIceServers()
 
 const buildVideoConstraints = ({ camId = '', exactDeviceId = false, includeFrameRate = false } = {}) => {
-  const isPortraitViewport = typeof window !== 'undefined' && window.innerHeight > window.innerWidth
-  const constraints = {
-    width: { ideal: isPortraitViewport ? 720 : 1280 },
-    height: { ideal: isPortraitViewport ? 960 : 720 },
-    ...(includeFrameRate ? { frameRate: { ideal: 30, max: 30 } } : {})
-  }
+  const isMobileOrPortrait =
+    typeof window !== 'undefined' &&
+    (window.innerHeight > window.innerWidth ||
+      window.innerWidth < 900 ||
+      /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ''))
+  const constraints = isMobileOrPortrait
+    ? {
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        resizeMode: { ideal: 'none' },
+        ...(includeFrameRate ? { frameRate: { ideal: 30, max: 30 } } : {})
+      }
+    : {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        ...(includeFrameRate ? { frameRate: { ideal: 30, max: 30 } } : {})
+      }
   if (camId) {
     constraints.deviceId = exactDeviceId ? { exact: camId } : { ideal: camId }
   } else {
@@ -369,7 +380,13 @@ export function useWebRTCCall({
       const speakers = list.filter((d) => d.kind === 'audiooutput')
       setDevices({ cameras, microphones, speakers })
 
-      if (!selectedCameraId && cameras[0]?.deviceId) setSelectedCameraId(cameras[0].deviceId)
+      const activeCamId = cameraStreamRef.current?.getVideoTracks?.()[0]?.getSettings?.()?.deviceId
+      if (activeCamId) {
+        setSelectedCameraId(activeCamId)
+      } else if (!selectedCameraId && cameras[0]?.deviceId) {
+        const frontCam = cameras.find((c) => /front|user|facetime/i.test(c.label || ''))
+        setSelectedCameraId((frontCam || cameras[0]).deviceId)
+      }
       if (!selectedMicId && microphones[0]?.deviceId) setSelectedMicId(microphones[0].deviceId)
       if (!selectedSpeakerId && speakers[0]?.deviceId) setSelectedSpeakerId(speakers[0].deviceId)
     } catch (e) {
