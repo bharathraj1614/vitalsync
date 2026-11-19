@@ -6,6 +6,7 @@ import RelatedDoctors from '../components/RelatedDoctors'
 import ReviewSection from '../components/ReviewSection'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import { buildLoginRedirectTarget } from '../components/ProtectedRoute'
 import {
   Clock,
   Calendar,
@@ -194,7 +195,8 @@ const Appointment = () => {
     const handleBookAndPay = async () => {
         if (!token) {
             toast.warning('Please sign in to schedule an appointment')
-            return navigate('/login')
+            const from = `${location.pathname}${location.search}${location.hash}`
+            return navigate(buildLoginRedirectTarget(location), { state: { from } })
         }
 
         if (!slotTime) {

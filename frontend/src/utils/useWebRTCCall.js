@@ -7,10 +7,7 @@ const buildDefaultIceServers = () => {
     {
       urls: [
         'stun:stun.l.google.com:19302',
-        'stun:stun1.l.google.com:19302',
-        'stun:stun2.l.google.com:19302',
-        'stun:stun.cloudflare.com:3478',
-        'stun:stun.relay.metered.ca:80'
+        'stun:stun.cloudflare.com:3478'
       ]
     }
   ]
@@ -32,6 +29,63 @@ const buildDefaultIceServers = () => {
 }
 
 const DEFAULT_ICE_SERVERS = buildDefaultIceServers()
+
+const safePlayVideo = (videoEl, { allowMutedFallback = false } = {}) => {
+  if (!videoEl || typeof videoEl.play !== 'function') return
+  const playPromise = videoEl.play()
+  if (playPromise && typeof playPromise.catch === 'function') {
+    playPromise.catch((err) => {
+      if (allowMutedFallback && err?.name === 'NotAllowedError') {
+        videoEl.muted = true
+        videoEl.play?.().catch(() => {})
+        if (typeof window !== 'undefined') {
+          const unlock = () => {
+            if (videoEl) {
+              videoEl.muted = false
+              videoEl.play?.().catch(() => {})
+            }
+            window.removeEventListener('pointerdown', unlock)
+            window.removeEventListener('touchstart', unlock)
+          }
+          window.addEventListener('pointerdown', unlock, { once: true })
+          window.addEventListener('touchstart', unlock, { once: true })
+        }
+      }
+    })
+  }
+}
+
+const findTransceiverByKind = (pc, kind) => {
+  if (!pc || typeof pc.getTransceivers !== 'function') return null
+  return (
+    pc.getTransceivers().find(
+      (t) => t.receiver?.track?.kind === kind || t.sender?.track?.kind === kind
+    ) || null
+  )
+}
+
+const ensureOfferTransceivers = (pc) => {
+  if (!pc || pc.signalingState === 'closed') return
+  if (!findTransceiverByKind(pc, 'audio')) {
+    pc.addTransceiver('audio', { direction: 'recvonly' })
+  }
+  if (!findTransceiverByKind(pc, 'video')) {
+    pc.addTransceiver('video', { direction: 'recvonly' })
+  }
+}
+
+const replaceOrAddTrack = async (pc, kind, track, stream) => {
+  if (!pc || pc.signalingState === 'closed') return
+  const transceiver = findTransceiverByKind(pc, kind)
+  if (transceiver?.sender) {
+    await transceiver.sender.replaceTrack(track || null)
+    if (track && (transceiver.direction === 'recvonly' || transceiver.direction === 'inactive')) {
+      transceiver.direction = 'sendrecv'
+    }
+  } else if (track && stream) {
+    pc.addTrack(track, stream)
+  }
+}
 
 /**
  * Safari / pre-Chrome-134 fallback for `<dialog closedby="any">`.
@@ -195,6 +249,8 @@ export function useWebRTCCall({
   const signalQueueRef = useRef(Promise.resolve())
   const signalGenerationRef = useRef(0)
   const negotiationWatchdogRef = useRef(null)
+  const iceRestartTimerRef = useRef(null)
+  const lastIceRestartAtRef = useRef(0)
 
   // Mirror state refs for event listeners
   const appointmentIdRef = useRef(appointmentId)
@@ -216,7 +272,9 @@ export function useWebRTCCall({
   // Timers & Audio Metering Refs
   const callTimerRef = useRef(null)
   const statsIntervalRef = useRef(null)
-  const prevStatsRef = useRef({ rxBytes: 0, txBytes: 0, ts: 0, packetsReceived: 0, packetsLost: 0 })
+  const prevStatsRef = useRef({ rxBytes: 0, txBytes: 0, pairBytes: 0, ts: 0, packetsReceived: 0, packetsLost: 0 })
+  const turnBytesPendingRef = useRef(0)
+  const lastTurnFlushAtRef = useRef(0)
   const audioCtxRef = useRef(null)
   const meterAnimRef = useRef(null)
 
@@ -235,17 +293,25 @@ export function useWebRTCCall({
     callStatusRef.current = callStatus
   }, [callStatus])
 
+  // Proactively wake Render signaling backend on mount to avoid cold-start timeouts
+  useEffect(() => {
+    if (!backendUrl || typeof fetch !== 'function') return
+    fetch(`${backendUrl}/health`, { mode: 'cors', cache: 'no-store' }).catch(() => {})
+  }, [backendUrl])
+
   // Sync local & remote streams whenever `<video>` elements mount or re-bind
   const syncVideoElements = useCallback(() => {
     const activeLocal = screenStreamRef.current || cameraStreamRef.current
     if (localVideoRef.current && activeLocal && localVideoRef.current.srcObject !== activeLocal) {
       localVideoRef.current.srcObject = activeLocal
+      safePlayVideo(localVideoRef.current)
     }
     if (remoteVideoRef.current && remoteStreamRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
       remoteVideoRef.current.srcObject = remoteStreamRef.current
       if (selectedSpeakerId && typeof remoteVideoRef.current.setSinkId === 'function') {
         remoteVideoRef.current.setSinkId(selectedSpeakerId).catch(() => {})
       }
+      safePlayVideo(remoteVideoRef.current, { allowMutedFallback: true })
     }
   }, [selectedSpeakerId])
 
@@ -397,7 +463,11 @@ export function useWebRTCCall({
       }
 
       cameraStreamRef.current = stream
-      const hasVid = cameraAvailable && stream.getVideoTracks().length > 0
+      const acquiredVideoTrack = stream.getVideoTracks()[0]
+      if (acquiredVideoTrack && 'contentHint' in acquiredVideoTrack) {
+        acquiredVideoTrack.contentHint = 'motion'
+      }
+      const hasVid = cameraAvailable && Boolean(acquiredVideoTrack)
       setHasCamera(hasVid)
       setIsVideoOff(!hasVid)
       setIsMuted(false)
@@ -511,13 +581,16 @@ export function useWebRTCCall({
   // Apply bandwidth encoding profile on video RTCRtpSender
   const applySenderBandwidthProfile = useCallback(async (pc, lowBandwidth) => {
     if (!pc) return
-    const videoSender = pc.getSenders().find((s) => s.track?.kind === 'video')
+    const videoSender =
+      findTransceiverByKind(pc, 'video')?.sender ||
+      pc.getSenders().find((s) => s.track?.kind === 'video')
     if (!videoSender || typeof videoSender.getParameters !== 'function') return
     try {
       const params = videoSender.getParameters()
       if (!params.encodings || params.encodings.length === 0) {
         params.encodings = [{}]
       }
+      params.degradationPreference = 'maintain-framerate'
       if (lowBandwidth) {
         params.encodings[0].maxBitrate = 180_000
         params.encodings[0].maxFramerate = 15
@@ -556,17 +629,25 @@ export function useWebRTCCall({
           ignoreOfferRef.current = !politeRef.current && offerCollision
           if (ignoreOfferRef.current) return
 
-          isSettingRemoteAnswerPendingRef.current = true
-          if (offerCollision && pc.signalingState !== 'stable') {
-            await Promise.all([
-              pc.setLocalDescription({ type: 'rollback' }),
-              pc.setRemoteDescription(new RTCSessionDescription(description))
-            ])
-          } else {
+          isSettingRemoteAnswerPendingRef.current = description.type === 'answer'
+          if (offerCollision) {
+            pc._earlyLocalCandidates = []
+          }
+          try {
             await pc.setRemoteDescription(new RTCSessionDescription(description))
+          } catch (srdErr) {
+            if (offerCollision && pc.signalingState !== 'stable') {
+              await pc.setLocalDescription({ type: 'rollback' }).catch(() => {})
+              await pc.setRemoteDescription(new RTCSessionDescription(description))
+            } else {
+              throw srdErr
+            }
+          } finally {
+            if (generation === signalGenerationRef.current) {
+              isSettingRemoteAnswerPendingRef.current = false
+            }
           }
           if (isStale()) return
-          isSettingRemoteAnswerPendingRef.current = false
           ignoreOfferRef.current = false
 
           await flushPendingCandidates(pc)
@@ -575,19 +656,32 @@ export function useWebRTCCall({
           if (description.type === 'offer') {
             const answer = await pc.createAnswer()
             if (isStale()) return
+            const prevSent = pc._hasSentLocalDescription
+            pc._earlyLocalCandidates = []
             pc._hasSentLocalDescription = false
-            await pc.setLocalDescription(answer)
+            try {
+              await pc.setLocalDescription(answer)
+            } catch (sldErr) {
+              pc._hasSentLocalDescription = prevSent
+              throw sldErr
+            }
             if (isStale()) return
-            socketRef.current?.emit('video:signal', {
-              appointmentId,
-              description: pc.localDescription
-            })
-            pc._flushEarlyLocalCandidates?.()
+            if (socketRef.current?.connected) {
+              socketRef.current.emit('video:signal', {
+                appointmentId,
+                description: pc.localDescription
+              })
+              pc._hasSentLocalDescription = true
+              pc._flushEarlyLocalCandidates?.()
+            } else {
+              pc._hasSentLocalDescription = prevSent
+            }
           } else if (description.type === 'answer') {
             pc._flushEarlyLocalCandidates?.()
           }
           pc._readyForMidCallRenegotiation = true
         } else if (candidate) {
+          if (ignoreOfferRef.current) return
           if (!pc.remoteDescription || isSettingRemoteAnswerPendingRef.current) {
             pendingCandidatesRef.current.push(candidate)
           } else {
@@ -629,17 +723,26 @@ export function useWebRTCCall({
   // Explicitly send an offer (used when joining a room where peer is already seated or for ICE restart)
   const sendExplicitOffer = useCallback(
     async (pc, { iceRestart = false } = {}) => {
-      if (!pc || !socketRef.current?.connected) return
+      if (!pc || pc.signalingState === 'closed' || !socketRef.current?.connected || makingOfferRef.current) return
       try {
         makingOfferRef.current = true
+        ensureOfferTransceivers(pc)
         const offer = await pc.createOffer({ iceRestart })
         if (pc.signalingState !== 'stable') return
+        const prevSent = pc._hasSentLocalDescription
+        pc._earlyLocalCandidates = []
         pc._hasSentLocalDescription = false
-        await pc.setLocalDescription(offer)
+        try {
+          await pc.setLocalDescription(offer)
+        } catch (sldErr) {
+          pc._hasSentLocalDescription = prevSent
+          throw sldErr
+        }
         socketRef.current.emit('video:signal', {
           appointmentId,
           description: pc.localDescription
         })
+        pc._hasSentLocalDescription = true
         pc._flushEarlyLocalCandidates?.()
       } catch (e) {
         console.warn('Offer error:', e.message)
@@ -648,6 +751,18 @@ export function useWebRTCCall({
       }
     },
     [appointmentId]
+  )
+
+  const scheduleIceRestart = useCallback(
+    (pc) => {
+      if (!pc || pc.signalingState === 'closed' || politeRef.current || !peerSeatedRef.current) return
+      const now = Date.now()
+      if (makingOfferRef.current || now - lastIceRestartAtRef.current < 4000) return
+      lastIceRestartAtRef.current = now
+      if (typeof pc.restartIce === 'function') pc.restartIce()
+      sendExplicitOffer(pc, { iceRestart: true })
+    },
+    [sendExplicitOffer]
   )
 
   const scheduleNegotiationWatchdog = useCallback(() => {
@@ -674,7 +789,7 @@ export function useWebRTCCall({
         currentPc.signalingState === 'stable' &&
         (!hasBothDescriptions ||
           currentPc.iceConnectionState === 'failed' ||
-          currentPc.iceConnectionState === 'disconnected')
+          currentPc.connectionState === 'failed')
       ) {
         sendExplicitOffer(currentPc, { iceRestart: Boolean(currentPc.localDescription) })
       }
@@ -689,6 +804,12 @@ export function useWebRTCCall({
       isSettingRemoteAnswerPendingRef.current = false
       makingOfferRef.current = false
       ignoreOfferRef.current = false
+      lastIceRestartAtRef.current = 0
+      prevStatsRef.current = { rxBytes: 0, txBytes: 0, pairBytes: 0, ts: 0, packetsReceived: 0, packetsLost: 0 }
+      if (iceRestartTimerRef.current) {
+        clearTimeout(iceRestartTimerRef.current)
+        iceRestartTimerRef.current = null
+      }
 
       if (peerRef.current) {
         try {
@@ -698,7 +819,9 @@ export function useWebRTCCall({
 
       const pc = new RTCPeerConnection({
         iceServers: iceServers?.length ? iceServers : DEFAULT_ICE_SERVERS,
-        iceCandidatePoolSize: 4
+        iceCandidatePoolSize: 2,
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require'
       })
 
       const inboundStream = new MediaStream()
@@ -707,23 +830,21 @@ export function useWebRTCCall({
       pc._hasSentLocalDescription = false
       pc._earlyLocalCandidates = []
       pc._flushEarlyLocalCandidates = () => {
-        pc._hasSentLocalDescription = true
+        if (!pc._hasSentLocalDescription || !socketRef.current?.connected) return
         const buffered = pc._earlyLocalCandidates.splice(0)
         for (const c of buffered) {
-          if (socketRef.current?.connected) {
-            socketRef.current.emit('video:signal', {
-              appointmentId,
-              candidate: c
-            })
-          }
+          socketRef.current.emit('video:signal', {
+            appointmentId,
+            candidate: c
+          })
         }
       }
 
       pc.onicecandidate = ({ candidate }) => {
         if (!candidate) return
-        if (!pc._hasSentLocalDescription) {
+        if (!pc._hasSentLocalDescription || !socketRef.current?.connected) {
           pc._earlyLocalCandidates.push(candidate)
-        } else if (socketRef.current?.connected) {
+        } else {
           socketRef.current.emit('video:signal', {
             appointmentId,
             candidate
@@ -732,21 +853,20 @@ export function useWebRTCCall({
       }
 
       pc.ontrack = (event) => {
-        const stream = event.streams?.[0]
-        if (stream) {
-          remoteStreamRef.current = stream
-        } else if (event.track) {
+        if (event.track) {
           if (!inboundStream.getTracks().some((t) => t.id === event.track.id)) {
             inboundStream.addTrack(event.track)
           }
           remoteStreamRef.current = inboundStream
         }
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStreamRef.current
+        if (remoteVideoRef.current && remoteStreamRef.current) {
+          if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+            remoteVideoRef.current.srcObject = remoteStreamRef.current
+          }
           if (selectedSpeakerId && typeof remoteVideoRef.current.setSinkId === 'function') {
             remoteVideoRef.current.setSinkId(selectedSpeakerId).catch(() => {})
           }
-          remoteVideoRef.current.play?.().catch(() => {})
+          safePlayVideo(remoteVideoRef.current, { allowMutedFallback: true })
         }
         const iceConnected =
           pc.iceConnectionState === 'connected' ||
@@ -764,7 +884,7 @@ export function useWebRTCCall({
               if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
                 remoteVideoRef.current.srcObject = remoteStreamRef.current
               }
-              remoteVideoRef.current.play?.().catch(() => {})
+              safePlayVideo(remoteVideoRef.current, { allowMutedFallback: true })
             }
             setRemoteConnected(true)
             setCallStatus('connected')
@@ -776,19 +896,33 @@ export function useWebRTCCall({
 
       pc.onnegotiationneeded = async () => {
         // Only send spontaneous mid-call renegotiation offers when peer is seated in room
-        if (!pc._readyForMidCallRenegotiation || !peerSeatedRef.current || !socketRef.current?.connected) {
+        if (
+          !pc._readyForMidCallRenegotiation ||
+          !peerSeatedRef.current ||
+          !socketRef.current?.connected ||
+          makingOfferRef.current
+        ) {
           return
         }
         try {
           makingOfferRef.current = true
+          ensureOfferTransceivers(pc)
           const offer = await pc.createOffer()
           if (pc.signalingState !== 'stable') return
+          const prevSent = pc._hasSentLocalDescription
+          pc._earlyLocalCandidates = []
           pc._hasSentLocalDescription = false
-          await pc.setLocalDescription(offer)
+          try {
+            await pc.setLocalDescription(offer)
+          } catch (sldErr) {
+            pc._hasSentLocalDescription = prevSent
+            throw sldErr
+          }
           socketRef.current.emit('video:signal', {
             appointmentId,
             description: pc.localDescription
           })
+          pc._hasSentLocalDescription = true
           pc._flushEarlyLocalCandidates?.()
         } catch (err) {
           console.warn('Negotiation error:', err.message)
@@ -797,81 +931,86 @@ export function useWebRTCCall({
         }
       }
 
+      const handleConnected = () => {
+        if (iceRestartTimerRef.current) {
+          clearTimeout(iceRestartTimerRef.current)
+          iceRestartTimerRef.current = null
+        }
+        if (negotiationWatchdogRef.current) {
+          clearTimeout(negotiationWatchdogRef.current)
+          negotiationWatchdogRef.current = null
+        }
+        pc._readyForMidCallRenegotiation = true
+        if (remoteVideoRef.current && remoteStreamRef.current) {
+          if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+            remoteVideoRef.current.srcObject = remoteStreamRef.current
+          }
+          safePlayVideo(remoteVideoRef.current, { allowMutedFallback: true })
+        }
+        setCallStatus('connected')
+        setRemoteConnected(true)
+        applySenderBandwidthProfile(pc, mediaStateRef.current.dataSaver)
+      }
+
+      const handleDisconnected = () => {
+        if (iceRestartTimerRef.current) return
+        iceRestartTimerRef.current = setTimeout(() => {
+          iceRestartTimerRef.current = null
+          if (
+            peerRef.current === pc &&
+            (pc.iceConnectionState === 'disconnected' || pc.connectionState === 'disconnected')
+          ) {
+            setCallStatus('reconnecting')
+          }
+        }, 3000)
+      }
+
+      const handleFailed = () => {
+        if (iceRestartTimerRef.current) {
+          clearTimeout(iceRestartTimerRef.current)
+          iceRestartTimerRef.current = null
+        }
+        setCallStatus('reconnecting')
+        setRemoteConnected(false)
+        scheduleIceRestart(pc)
+      }
+
       pc.oniceconnectionstatechange = () => {
         if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
-          if (negotiationWatchdogRef.current) {
-            clearTimeout(negotiationWatchdogRef.current)
-            negotiationWatchdogRef.current = null
-          }
-          pc._readyForMidCallRenegotiation = true
-          if (remoteVideoRef.current && remoteStreamRef.current) {
-            if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
-              remoteVideoRef.current.srcObject = remoteStreamRef.current
-            }
-            remoteVideoRef.current.play?.().catch(() => {})
-          }
-          setCallStatus('connected')
-          setRemoteConnected(true)
+          handleConnected()
         } else if (pc.iceConnectionState === 'disconnected') {
-          setCallStatus('reconnecting')
+          handleDisconnected()
         } else if (pc.iceConnectionState === 'failed') {
-          setCallStatus('reconnecting')
-          setRemoteConnected(false)
-          if (!politeRef.current) {
-            sendExplicitOffer(pc, { iceRestart: true })
-          }
+          handleFailed()
         }
       }
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === 'connected') {
-          if (negotiationWatchdogRef.current) {
-            clearTimeout(negotiationWatchdogRef.current)
-            negotiationWatchdogRef.current = null
-          }
-          pc._readyForMidCallRenegotiation = true
-          if (remoteVideoRef.current && remoteStreamRef.current) {
-            if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
-              remoteVideoRef.current.srcObject = remoteStreamRef.current
-            }
-            remoteVideoRef.current.play?.().catch(() => {})
-          }
-          setCallStatus('connected')
-          setRemoteConnected(true)
-          if (mediaStateRef.current.dataSaver) {
-            applySenderBandwidthProfile(pc, true)
-          }
+          handleConnected()
         } else if (pc.connectionState === 'disconnected') {
-          setCallStatus('reconnecting')
+          handleDisconnected()
         } else if (pc.connectionState === 'failed') {
-          setCallStatus('reconnecting')
-          setRemoteConnected(false)
-          if (!politeRef.current) {
-            sendExplicitOffer(pc, { iceRestart: true })
-          }
+          handleFailed()
         }
       }
 
-      // Attach local tracks (audio from cameraStream, video from screenStream if sharing else cameraStream)
+      // Attach existing local tracks in fixed order (audio, then video); offerer adds recvonly transceivers right before createOffer
       const audioTrack = cameraStreamRef.current?.getAudioTracks?.()[0]
       const activeVideoStream = screenStreamRef.current || cameraStreamRef.current
       const videoTrack = activeVideoStream?.getVideoTracks?.()[0]
 
       if (audioTrack && cameraStreamRef.current) {
         pc.addTrack(audioTrack, cameraStreamRef.current)
-      } else {
-        pc.addTransceiver('audio', { direction: 'recvonly' })
       }
       if (videoTrack && activeVideoStream) {
         pc.addTrack(videoTrack, activeVideoStream)
-      } else {
-        pc.addTransceiver('video', { direction: 'recvonly' })
       }
 
       peerRef.current = pc
       return pc
     },
-    [appointmentId, selectedSpeakerId, applySenderBandwidthProfile, sendExplicitOffer]
+    [appointmentId, selectedSpeakerId, applySenderBandwidthProfile, scheduleIceRestart]
   )
 
   // Manual ICE Restart / Reconnect trigger
@@ -882,6 +1021,18 @@ export function useWebRTCCall({
     sendExplicitOffer(pc, { iceRestart: true })
     notify('Refreshing encrypted media route (ICE Restart)...', 'info')
   }, [sendExplicitOffer, notify])
+
+  // Flush accumulated TURN relay bytes to backend monthly quota tracker
+  const flushTurnUsage = useCallback(() => {
+    const deltaBytes = Math.round(turnBytesPendingRef.current)
+    if (deltaBytes <= 0 || !socketRef.current?.connected) return
+    turnBytesPendingRef.current = 0
+    lastTurnFlushAtRef.current = Date.now()
+    socketRef.current.emit('video:turn-usage', {
+      appointmentId: appointmentIdRef.current,
+      deltaBytes
+    })
+  }, [])
 
   // Real-time `pc.getStats()` network quality monitor (every 2s while connected)
   useEffect(() => {
@@ -899,7 +1050,7 @@ export function useWebRTCCall({
       try {
         const report = await pc.getStats()
         let rttMs = null
-        let candidateType = 'Direct P2P'
+        let candidateType = 'Connecting'
         let rxBytes = 0
         let txBytes = 0
         let packetsReceived = 0
@@ -928,9 +1079,13 @@ export function useWebRTCCall({
           }
         })
 
+        let pairBytes = 0
         if (activePair) {
           if (typeof activePair.currentRoundTripTime === 'number') {
             rttMs = Math.round(activePair.currentRoundTripTime * 1000)
+          }
+          if (typeof activePair.bytesReceived === 'number' || typeof activePair.bytesSent === 'number') {
+            pairBytes = (activePair.bytesReceived || 0) + (activePair.bytesSent || 0)
           }
           const localCand = activePair.localCandidateId ? report.get(activePair.localCandidateId) : null
           const remoteCand = activePair.remoteCandidateId ? report.get(activePair.remoteCandidateId) : null
@@ -942,17 +1097,28 @@ export function useWebRTCCall({
 
         const prev = prevStatsRef.current
         const dtSec = prev.ts > 0 ? Math.max(0.5, (nowTs - prev.ts) / 1000) : 2
-        const rxBitrateKbps =
-          prev.ts > 0 ? Math.max(0, Math.round(((rxBytes - prev.rxBytes) * 8) / 1000 / dtSec)) : 0
-        const txBitrateKbps =
-          prev.ts > 0 ? Math.max(0, Math.round(((txBytes - prev.txBytes) * 8) / 1000 / dtSec)) : 0
+        const dRx = prev.ts > 0 ? Math.max(0, rxBytes - prev.rxBytes) : 0
+        const dTx = prev.ts > 0 ? Math.max(0, txBytes - prev.txBytes) : 0
+        const dPair = prev.pairBytes > 0 && pairBytes >= prev.pairBytes ? pairBytes - prev.pairBytes : 0
+        const rxBitrateKbps = prev.ts > 0 ? Math.max(0, Math.round((dRx * 8) / 1000 / dtSec)) : 0
+        const txBitrateKbps = prev.ts > 0 ? Math.max(0, Math.round((dTx * 8) / 1000 / dtSec)) : 0
 
         const dRecv = Math.max(0, packetsReceived - prev.packetsReceived)
         const dLost = Math.max(0, packetsLost - prev.packetsLost)
         const packetLossPct =
           dRecv + dLost > 0 ? Number(((dLost / (dRecv + dLost)) * 100).toFixed(1)) : 0
 
-        prevStatsRef.current = { rxBytes, txBytes, ts: nowTs, packetsReceived, packetsLost }
+        prevStatsRef.current = { rxBytes, txBytes, pairBytes, ts: nowTs, packetsReceived, packetsLost }
+
+        if (candidateType === 'TURN Relay') {
+          const turnDelta = dPair > 0 ? dPair : dRx + dTx
+          if (turnDelta > 0) {
+            turnBytesPendingRef.current += turnDelta
+            if (Date.now() - lastTurnFlushAtRef.current >= 20000) {
+              flushTurnUsage()
+            }
+          }
+        }
 
         let qualityGrade = 'excellent'
         if ((rttMs !== null && rttMs > 420) || packetLossPct >= 7) qualityGrade = 'poor'
@@ -980,7 +1146,7 @@ export function useWebRTCCall({
         statsIntervalRef.current = null
       }
     }
-  }, [callStatus])
+  }, [callStatus, flushTurnUsage])
 
   // Call Duration Timer
   useEffect(() => {
@@ -1131,9 +1297,15 @@ export function useWebRTCCall({
       signalQueueRef.current = Promise.resolve()
       pendingSignalsRef.current = []
       pendingCandidatesRef.current = []
+      turnBytesPendingRef.current = 0
+      lastTurnFlushAtRef.current = Date.now()
       if (negotiationWatchdogRef.current) {
         clearTimeout(negotiationWatchdogRef.current)
         negotiationWatchdogRef.current = null
+      }
+      if (iceRestartTimerRef.current) {
+        clearTimeout(iceRestartTimerRef.current)
+        iceRestartTimerRef.current = null
       }
       setReplacedByOtherTab(false)
       setCallStatus('connecting')
@@ -1158,6 +1330,7 @@ export function useWebRTCCall({
         const socket = io(backendUrl, {
           auth: authPayload || {},
           transports: ['websocket', 'polling'],
+          timeout: 60000,
           reconnection: true,
           reconnectionAttempts: 10,
           reconnectionDelay: 1000
@@ -1166,6 +1339,13 @@ export function useWebRTCCall({
 
         const joinVideoSession = (isResume = false) => {
           socket.emit('join-chat', { appointmentId })
+
+          let ackReceived = false
+          const joinSlowTimer = setTimeout(() => {
+            if (!ackReceived && callStatusRef.current === 'connecting') {
+              notify('Consultation server is waking up — still connecting...', 'info')
+            }
+          }, 15000)
 
           socket.emit(
             'video:join',
@@ -1176,6 +1356,8 @@ export function useWebRTCCall({
               mediaState: mediaStateRef.current
             },
             async (ack) => {
+              ackReceived = true
+              clearTimeout(joinSlowTimer)
               if (!ack?.ok) {
                 notify(ack?.message || 'Unable to enter consultation room.', 'error')
                 setCallStatus('idle')
@@ -1186,6 +1368,12 @@ export function useWebRTCCall({
               politeRef.current = Boolean(ack.polite)
               if (ack.iceServers?.length) {
                 iceServersRef.current = ack.iceServers
+              }
+              if (ack.turnQuotaExceeded) {
+                notify(
+                  'Monthly free TURN relay limit reached — using direct P2P/STUN mode to prevent billing charges.',
+                  'info'
+                )
               }
 
               if (!isResume && !ack.peer) {
@@ -1210,15 +1398,46 @@ export function useWebRTCCall({
                 peerSeatedRef.current = false
               }
 
-              // Create PeerConnection if not alive or if not resuming an active connection
+              // Reuse an active PeerConnection when already negotiating or healthy on resume; otherwise create fresh
               const existingPc = peerRef.current
-              const canReusePc =
-                isResume &&
+              const isExistingAlive =
                 existingPc &&
                 existingPc.connectionState !== 'closed' &&
                 existingPc.signalingState !== 'closed'
+              const isExistingIceConnected =
+                isExistingAlive &&
+                (existingPc.iceConnectionState === 'connected' ||
+                  existingPc.iceConnectionState === 'completed' ||
+                  existingPc.connectionState === 'connected')
+              const isExistingNegotiating =
+                isExistingAlive &&
+                (Boolean(existingPc.remoteDescription) ||
+                  Boolean(existingPc.localDescription) ||
+                  makingOfferRef.current)
+              const canReusePc = isResume
+                ? isExistingAlive &&
+                  existingPc.iceConnectionState !== 'failed' &&
+                  existingPc.connectionState !== 'failed' &&
+                  (existingPc.signalingState === 'stable' || isExistingIceConnected)
+                : isExistingNegotiating
 
-              const pc = canReusePc ? existingPc : createPeerConnection(iceServersRef.current)
+              let pc
+              if (canReusePc) {
+                pc = existingPc
+                if (ack.iceServers?.length && typeof pc.setConfiguration === 'function') {
+                  try {
+                    pc.setConfiguration({
+                      iceServers: ack.iceServers,
+                      iceCandidatePoolSize: 2,
+                      bundlePolicy: 'max-bundle',
+                      rtcpMuxPolicy: 'require'
+                    })
+                  } catch (e) {}
+                }
+                pc._flushEarlyLocalCandidates?.()
+              } else {
+                pc = createPeerConnection(iceServersRef.current)
+              }
 
               // Flush any signals that arrived while `video:join` ack was in flight
               const earlySignals = pendingSignalsRef.current.splice(0)
@@ -1226,9 +1445,23 @@ export function useWebRTCCall({
                 await handleSignalMessage(sig)
               }
 
-              // If the peer is already seated in the room, initiate the offer immediately
-              if (ack.peer) {
-                await sendExplicitOffer(pc, { iceRestart: isResume })
+              const iceAlreadyConnected =
+                pc.iceConnectionState === 'connected' ||
+                pc.iceConnectionState === 'completed' ||
+                pc.connectionState === 'connected'
+
+              if (isResume && iceAlreadyConnected) {
+                setCallStatus('connected')
+                setRemoteConnected(true)
+              } else if (
+                ack.peer &&
+                pc.signalingState === 'stable' &&
+                !makingOfferRef.current &&
+                ((!isResume && !pc.remoteDescription && !pc.localDescription) ||
+                  (isResume && !iceAlreadyConnected))
+              ) {
+                // Peer is seated and no offer/answer is already in flight — initiate offer
+                await sendExplicitOffer(pc, { iceRestart: isResume && Boolean(pc.localDescription) })
                 if (!politeRef.current) {
                   scheduleNegotiationWatchdog()
                 }
@@ -1245,25 +1478,47 @@ export function useWebRTCCall({
 
         socket.on('video:signal', handleSignalMessage)
 
-        socket.on('video:peer-joined', ({ role: peerRole, name, image, resume, mediaState }) => {
+        socket.on('video:peer-joined', async ({ role: peerRole, name, image, resume, mediaState }) => {
           peerSeatedRef.current = true
           setPeerInfo({ role: peerRole, name, image })
           if (mediaState) {
             setPeerMediaState((prev) => ({ ...prev, ...mediaState }))
           }
-          // Preserve an unused, warmed-up RTCPeerConnection; only recreate if closed or used in an earlier session
+
           const existingPc = peerRef.current
-          const needsFreshPc =
-            !existingPc ||
-            existingPc.signalingState === 'closed' ||
-            existingPc.connectionState === 'closed' ||
-            (!resume && (Boolean(existingPc.remoteDescription) || Boolean(existingPc.localDescription)))
-          if (needsFreshPc) {
-            pendingCandidatesRef.current = []
-            createPeerConnection(iceServersRef.current)
-          }
-          if (!politeRef.current) {
-            scheduleNegotiationWatchdog()
+          const isExistingAlive =
+            existingPc &&
+            existingPc.signalingState !== 'closed' &&
+            existingPc.connectionState !== 'closed'
+          const isExistingIceConnected =
+            isExistingAlive &&
+            (existingPc.iceConnectionState === 'connected' ||
+              existingPc.iceConnectionState === 'completed' ||
+              existingPc.connectionState === 'connected')
+
+          if (resume && isExistingIceConnected) {
+            setCallStatus('connected')
+            setRemoteConnected(true)
+            existingPc._flushEarlyLocalCandidates?.()
+          } else {
+            // Preserve an unused, warmed-up, or mid-offer RTCPeerConnection
+            const isBusy = makingOfferRef.current || isSettingRemoteAnswerPendingRef.current
+            const needsFreshPc =
+              !isExistingAlive ||
+              (!resume &&
+                !isBusy &&
+                (Boolean(existingPc.remoteDescription) || Boolean(existingPc.localDescription)))
+            if (needsFreshPc) {
+              pendingCandidatesRef.current = []
+              createPeerConnection(iceServersRef.current)
+              const queuedSignals = pendingSignalsRef.current.splice(0)
+              for (const sig of queuedSignals) {
+                await handleSignalMessage(sig)
+              }
+            }
+            if (!politeRef.current) {
+              scheduleNegotiationWatchdog()
+            }
           }
           // Re-share our current media state so the newly joined peer has exact indicators
           broadcastMediaState()
@@ -1364,6 +1619,28 @@ export function useWebRTCCall({
           notify('Your doctor just signed & issued your digital e-Prescription!', 'success')
         })
 
+        socket.on('turn:quota-alert', (alert) => {
+          if (!alert) return
+          const pctVal = typeof alert.pct === 'number' ? alert.pct : alert.percent
+          const usedGbVal = typeof alert.usedGb === 'number' ? alert.usedGb : alert.usageGb
+          const pct = typeof pctVal === 'number' ? `${Math.round(pctVal)}%` : ''
+          const usageLabel =
+            typeof usedGbVal === 'number' && typeof alert.limitGb === 'number'
+              ? ` (${usedGbVal.toFixed(1)} / ${alert.limitGb} GB)`
+              : ''
+          if (alert.level === 'cutoff') {
+            notify(
+              `TURN relay quota reached${pct ? ` (${pct})` : ''}${usageLabel} — switched to free direct P2P/STUN mode to prevent billing charges.`,
+              'error'
+            )
+          } else {
+            notify(
+              `TURN relay usage warning${pct ? ` (${pct})` : ''}${usageLabel} — approaching monthly free limit.`,
+              'info'
+            )
+          }
+        })
+
         // Live In-Call Chat Listeners
         socket.on('chat-message', (msg) => {
           if (String(msg.appointmentId || appointmentId) !== String(appointmentId)) return
@@ -1422,6 +1699,8 @@ export function useWebRTCCall({
         setCaptionsEnabled(false)
       }
 
+      flushTurnUsage()
+
       if (notifyServer && socketRef.current?.connected) {
         socketRef.current.emit('video:leave', { appointmentId, endForAll })
         if (endForAll) {
@@ -1461,6 +1740,10 @@ export function useWebRTCCall({
         clearTimeout(negotiationWatchdogRef.current)
         negotiationWatchdogRef.current = null
       }
+      if (iceRestartTimerRef.current) {
+        clearTimeout(iceRestartTimerRef.current)
+        iceRestartTimerRef.current = null
+      }
       signalQueueRef.current = Promise.resolve()
 
       if (document.pictureInPictureElement) {
@@ -1473,7 +1756,7 @@ export function useWebRTCCall({
       hasJoinedOnceRef.current = false
       setCallStatus('ended')
     },
-    [appointmentId, stopLocalMediaRecorder, stopMicMeter]
+    [appointmentId, stopLocalMediaRecorder, stopMicMeter, flushTurnUsage]
   )
 
   const endCall = useCallback(
@@ -1514,6 +1797,9 @@ export function useWebRTCCall({
       })
       const newTrack = camStream.getVideoTracks()[0]
       if (!newTrack) return
+      if ('contentHint' in newTrack) {
+        newTrack.contentHint = 'motion'
+      }
       if (cameraStreamRef.current) {
         cameraStreamRef.current.addTrack(newTrack)
       } else {
@@ -1524,9 +1810,7 @@ export function useWebRTCCall({
       }
       const pc = peerRef.current
       if (pc) {
-        const sender = pc.getSenders().find((s) => s.track?.kind === 'video')
-        if (sender) await sender.replaceTrack(newTrack)
-        else pc.addTrack(newTrack, cameraStreamRef.current)
+        await replaceOrAddTrack(pc, 'video', newTrack, cameraStreamRef.current)
       }
       setHasCamera(true)
       setIsVideoOff(false)
@@ -1547,6 +1831,9 @@ export function useWebRTCCall({
         })
         const nextVideoTrack = nextStream.getVideoTracks()[0]
         if (!nextVideoTrack) return
+        if ('contentHint' in nextVideoTrack) {
+          nextVideoTrack.contentHint = 'motion'
+        }
 
         const oldTracks = cameraStreamRef.current.getVideoTracks()
         oldTracks.forEach((t) => {
@@ -1558,8 +1845,9 @@ export function useWebRTCCall({
 
         if (!screenStreamRef.current) {
           if (localVideoRef.current) localVideoRef.current.srcObject = cameraStreamRef.current
-          const sender = peerRef.current?.getSenders?.().find((s) => s.track?.kind === 'video')
-          if (sender) await sender.replaceTrack(nextVideoTrack)
+          if (peerRef.current) {
+            await replaceOrAddTrack(peerRef.current, 'video', nextVideoTrack, cameraStreamRef.current)
+          }
         }
         setHasCamera(true)
         notify('Switched camera device.', 'success')
@@ -1595,8 +1883,9 @@ export function useWebRTCCall({
         nextAudioTrack.enabled = !isMuted
         cameraStreamRef.current.addTrack(nextAudioTrack)
 
-        const sender = peerRef.current?.getSenders?.().find((s) => s.track?.kind === 'audio')
-        if (sender) await sender.replaceTrack(nextAudioTrack)
+        if (peerRef.current) {
+          await replaceOrAddTrack(peerRef.current, 'audio', nextAudioTrack, cameraStreamRef.current)
+        }
 
         startMicMeter(cameraStreamRef.current)
         notify('Switched microphone device.', 'success')
@@ -1631,9 +1920,11 @@ export function useWebRTCCall({
     setIsScreenSharing(false)
 
     const camTrack = cameraStreamRef.current?.getVideoTracks?.()[0] || null
-    const sender = peerRef.current?.getSenders?.().find((s) => s.track?.kind === 'video')
-    if (sender && camTrack) {
-      await sender.replaceTrack(camTrack).catch(() => {})
+    const videoSender =
+      findTransceiverByKind(peerRef.current, 'video')?.sender ||
+      peerRef.current?.getSenders?.().find((s) => s.track?.kind === 'video')
+    if (videoSender) {
+      await videoSender.replaceTrack(camTrack).catch(() => {})
     }
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = cameraStreamRef.current
@@ -1666,12 +1957,7 @@ export function useWebRTCCall({
 
       const pc = peerRef.current
       if (pc) {
-        const sender = pc.getSenders().find((s) => s.track?.kind === 'video')
-        if (sender) {
-          await sender.replaceTrack(screenTrack)
-        } else {
-          pc.addTrack(screenTrack, displayStream)
-        }
+        await replaceOrAddTrack(pc, 'video', screenTrack, displayStream)
       }
 
       if (localVideoRef.current) {
@@ -2065,12 +2351,12 @@ export function useWebRTCCall({
       if (st !== 'connecting' && st !== 'connected' && st !== 'reconnecting') return
 
       if (document.visibilityState === 'visible') {
-        remoteVideoRef.current?.play?.().catch(() => {})
-        localVideoRef.current?.play?.().catch(() => {})
+        safePlayVideo(remoteVideoRef.current, { allowMutedFallback: true })
+        safePlayVideo(localVideoRef.current)
         if (socketRef.current && !socketRef.current.connected) {
           socketRef.current.connect()
         }
-        if (peerRef.current?.connectionState === 'failed') {
+        if (peerRef.current?.connectionState === 'failed' || peerRef.current?.iceConnectionState === 'failed') {
           triggerIceRestart()
         }
       }
@@ -2127,12 +2413,21 @@ export function useWebRTCCall({
         } catch (e) {}
       }
       if (socketRef.current) {
+        const pendingTurnBytes = Math.round(turnBytesPendingRef.current)
+        if (pendingTurnBytes > 0 && socketRef.current.connected) {
+          turnBytesPendingRef.current = 0
+          socketRef.current.emit('video:turn-usage', {
+            appointmentId: appointmentIdRef.current,
+            deltaBytes: pendingTurnBytes
+          })
+        }
         socketRef.current.emit('video:leave', { appointmentId: appointmentIdRef.current, endForAll: false })
         socketRef.current.disconnect()
       }
       if (callTimerRef.current) clearInterval(callTimerRef.current)
       if (statsIntervalRef.current) clearInterval(statsIntervalRef.current)
       if (negotiationWatchdogRef.current) clearTimeout(negotiationWatchdogRef.current)
+      if (iceRestartTimerRef.current) clearTimeout(iceRestartTimerRef.current)
     }
   }, [])
 

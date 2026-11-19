@@ -862,7 +862,11 @@ const SymptomChecker = () => {
                 <p>Sign in to check drug interactions against your allergies and active medications.</p>
                 <button
                   type='button'
-                  onClick={() => navigate('/login')}
+                  onClick={() =>
+                    navigate('/login?redirect=%2Fsymptom-checker', {
+                      state: { from: '/symptom-checker' }
+                    })
+                  }
                   className='w-full py-2 rounded-xl bg-slate-900 text-white font-semibold text-xs cursor-pointer'
                 >
                   Sign In

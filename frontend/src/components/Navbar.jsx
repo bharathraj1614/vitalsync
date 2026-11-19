@@ -89,7 +89,7 @@ const Navbar = () => {
       // ignore
     }
     localStorage.removeItem('token')
-    setToken(false)
+    setToken('')
     setShowDropdown(false)
     navigate('/login')
   }

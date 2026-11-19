@@ -1,11 +1,12 @@
 import React, { useContext, useState, useEffect } from 'react'
 import { DoctorContext } from './context/DoctorContext';
 import { AdminContext } from './context/AdminContext';
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Route, Routes, Navigate, useLocation } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
+import { AdminRoute, DoctorRoute, UnauthRedirect } from './components/RouteGuards'
 import Dashboard from './pages/Admin/Dashboard';
 import AllAppointments from './pages/Admin/AllAppointments';
 import AddDoctor from './pages/Admin/AddDoctor';
@@ -31,12 +32,20 @@ const App = () => {
   const routeDocVideoId = docVideoMatch ? docVideoMatch[1] : null
 
   useEffect(() => {
+    if (!dToken) {
+      setActiveDocCallId(null)
+      setIsDocCallLive(false)
+    }
+  }, [dToken])
+
+  useEffect(() => {
+    if (!dToken) return
     if (routeDocVideoId && (!isDocCallLive || routeDocVideoId === activeDocCallId)) {
       setActiveDocCallId(routeDocVideoId)
     } else if (!routeDocVideoId && !isDocCallLive) {
       setActiveDocCallId(null)
     }
-  }, [routeDocVideoId, isDocCallLive, activeDocCallId])
+  }, [dToken, routeDocVideoId, isDocCallLive, activeDocCallId])
 
   const mountedDocVideoId = dToken ? routeDocVideoId || (isDocCallLive ? activeDocCallId : null) : null
   const isMinimizedDocCall = Boolean(mountedDocVideoId && !routeDocVideoId && isDocCallLive)
@@ -59,25 +68,31 @@ const App = () => {
           <Route path='/' element={
             aToken ? <Dashboard /> : dToken ? <DoctorDashboard /> : <></>
           } />
-          <Route path='/admin-dashboard' element={<Dashboard />} />
-          <Route path='/all-appointments' element={<AllAppointments />} />
-          <Route path='/add-doctor' element={<AddDoctor />} />
-          <Route path='/doctor-list' element={<DoctorsList />} />
-          <Route path='/patients-list' element={<PatientsList />} />
-          <Route path='/doctor-dashboard' element={<DoctorDashboard />} />
-          <Route path='/doctor-appointments' element={<DoctorAppointments />} />
-          <Route path='/doctor-chat' element={<DoctorChatPage />} />
-          <Route path='/doctor-chat/:appointmentId' element={<DoctorChatPage />} />
-          <Route path='/doctor-profile' element={<DoctorProfile />} />
-          <Route path='/doctor-video-call/:appointmentId' element={null} />
-          <Route path='/doctor-prescription/:appointmentId' element={<PrescriptionForm />} />
+          <Route path='/login' element={<Navigate to='/' replace />} />
+          <Route path='/admin-dashboard' element={<AdminRoute><Dashboard /></AdminRoute>} />
+          <Route path='/all-appointments' element={<AdminRoute><AllAppointments /></AdminRoute>} />
+          <Route path='/add-doctor' element={<AdminRoute><AddDoctor /></AdminRoute>} />
+          <Route path='/doctor-list' element={<AdminRoute><DoctorsList /></AdminRoute>} />
+          <Route path='/patients-list' element={<AdminRoute><PatientsList /></AdminRoute>} />
+          <Route path='/doctor-dashboard' element={<DoctorRoute><DoctorDashboard /></DoctorRoute>} />
+          <Route path='/doctor-appointments' element={<DoctorRoute><DoctorAppointments /></DoctorRoute>} />
+          <Route path='/doctor-chat' element={<DoctorRoute><DoctorChatPage /></DoctorRoute>} />
+          <Route path='/doctor-chat/:appointmentId' element={<DoctorRoute><DoctorChatPage /></DoctorRoute>} />
+          <Route path='/doctor-profile' element={<DoctorRoute><DoctorProfile /></DoctorRoute>} />
+          <Route path='/doctor-video-call' element={<DoctorRoute><Navigate to='/doctor-appointments' replace /></DoctorRoute>} />
+          <Route path='/doctor-video-call/:appointmentId' element={<DoctorRoute>{null}</DoctorRoute>} />
+          <Route path='/doctor-prescription/:appointmentId' element={<DoctorRoute><PrescriptionForm /></DoctorRoute>} />
+          <Route path='*' element={<Navigate to='/' replace />} />
         </Routes>
       </div>
     </div>
   ) : (
     <>
       <ToastContainer position="top-right" autoClose={3500} />
-      <Login />
+      <Routes>
+        <Route path='/login' element={<Login />} />
+        <Route path='*' element={<UnauthRedirect />} />
+      </Routes>
     </>
   )
 }

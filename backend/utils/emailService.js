@@ -355,4 +355,56 @@ const sendPrescriptionEmail = async (patientEmail, patientName, doctorName) => {
     }
 };
 
-export { getTransporter, sendAppointmentConfirmation, sendCancellationEmail, sendPrescriptionEmail };
+/**
+ * Send TURN relay quota warning or hard-stop circuit-breaker alert email
+ */
+const sendTurnQuotaAlertEmail = async ({ toEmail, level = 'warning', monthKey = '', usedGb = 0, limitGb = 0, percent = 0 }) => {
+    try {
+        if (!toEmail) return false;
+        const transport = await getTransporter();
+        const isCutoff = level === 'cutoff';
+        const subject = isCutoff
+            ? `CRITICAL: VitalSync TURN Relay Hard-Stop Engaged (${percent}% of ${limitGb} GB)`
+            : `Warning: VitalSync TURN Relay Usage at ${percent}% (${usedGb} / ${limitGb} GB)`;
+        const accentColor = isCutoff ? '#dc2626' : '#d97706';
+        const title = isCutoff
+            ? 'TURN Relay Circuit Breaker Engaged (Free Tier Protected)'
+            : 'TURN Relay Monthly Usage Warning';
+        const summaryText = isCutoff
+            ? `VitalSync has reached <strong>${percent}%</strong> (${usedGb} GB of ${limitGb} GB) of your configured free-tier TURN relay quota for <strong>${monthKey}</strong>. To guarantee zero paid overage charges, TURN relay issuance has been automatically paused and calls have fallen back to free STUN/direct P2P mode until next UTC month.`
+            : `VitalSync has reached <strong>${percent}%</strong> (${usedGb} GB of ${limitGb} GB) of your configured free-tier TURN relay quota for <strong>${monthKey}</strong>. A hard-stop circuit breaker will automatically engage at the configured cutoff threshold to prevent any paid overage.`;
+
+        const info = await transport.sendMail({
+            from: getFromAddress('VitalSync Quota Guard'),
+            to: toEmail,
+            subject,
+            html: `
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: ${accentColor}; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                        <h1 style="color: #fff; margin: 0; font-size: 20px;">${title}</h1>
+                    </div>
+                    <div style="background: #fff; border: 1px solid #e5e7eb; border-top: none; padding: 28px; border-radius: 0 0 12px 12px;">
+                        <p style="color: #374151; line-height: 1.6;">${summaryText}</p>
+                        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin: 16px 0; font-size: 14px; color: #1f2937;">
+                            <div><strong>UTC Month:</strong> ${monthKey}</div>
+                            <div><strong>Measured Usage:</strong> ${usedGb} GB</div>
+                            <div><strong>Configured Limit:</strong> ${limitGb} GB (${percent}%)</div>
+                        </div>
+                        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 20px;">VitalSync Automated TURN Quota Guard</p>
+                    </div>
+                </div>
+            `
+        });
+
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        if (previewUrl) {
+            console.log(`📧 Preview TURN quota alert email: ${previewUrl}`);
+        }
+        return true;
+    } catch (error) {
+        console.log('TURN quota alert email error:', error.message);
+        return false;
+    }
+};
+
+export { getTransporter, sendAppointmentConfirmation, sendCancellationEmail, sendPrescriptionEmail, sendTurnQuotaAlertEmail };

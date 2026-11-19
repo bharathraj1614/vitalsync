@@ -34,7 +34,10 @@ const PrescriptionView = () => {
     const [showReviewModal, setShowReviewModal] = useState(false)
 
     const fetchPrescription = async () => {
-        if (!token || !appointmentId) return
+        if (!token || !appointmentId) {
+            setLoading(false)
+            return
+        }
         try {
             const { data } = await axios.get(
                 backendUrl + `/api/prescription/patient/${appointmentId}`,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react'
 import Navbar from './components/Navbar'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import Doctors from './pages/Doctors'
 import Login from './pages/Login'
@@ -25,6 +25,7 @@ import ChatInbox from './pages/ChatInbox'
 import ChatPage from './pages/ChatPage'
 import DrugChecker from './pages/DrugChecker'
 import PatientOnboardingModal from './components/PatientOnboardingModal'
+import ProtectedRoute from './components/ProtectedRoute'
 import { AppContext } from './context/AppContext'
 import { shouldPromptOnboarding } from './utils/profileCompleteness'
 
@@ -66,14 +67,22 @@ const App = () => {
   const routeVideoId = videoRouteMatch ? videoRouteMatch[1] : null
 
   useEffect(() => {
+    if (!token) {
+      setActiveCallId(null)
+      setIsCallLive(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    if (!token) return
     if (routeVideoId && (!isCallLive || routeVideoId === activeCallId)) {
       setActiveCallId(routeVideoId)
     } else if (!routeVideoId && !isCallLive) {
       setActiveCallId(null)
     }
-  }, [routeVideoId, isCallLive, activeCallId])
+  }, [token, routeVideoId, isCallLive, activeCallId])
 
-  const mountedVideoId = routeVideoId || (isCallLive ? activeCallId : null)
+  const mountedVideoId = token ? (routeVideoId || (isCallLive ? activeCallId : null)) : null
   const isMinimizedCall = Boolean(mountedVideoId && !routeVideoId && isCallLive)
 
   // Hide Footer and ChatWidget on full-screen video call, chat messenger, or symptom checker studio
@@ -101,27 +110,29 @@ const App = () => {
           <Route path='/about' element={<About />} />
           <Route path='/contact' element={<Contact />} />
           <Route path='/appointment/:docId' element={<Appointment />} />
-          <Route path='/my-appointments' element={<MyAppointments />} />
-          <Route path='/my-profile' element={<MyProfile />} />
-          <Route path='/verify' element={<Verify />} />
+          <Route path='/my-appointments' element={<ProtectedRoute><MyAppointments /></ProtectedRoute>} />
+          <Route path='/my-profile' element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
+          <Route path='/verify' element={<ProtectedRoute><Verify /></ProtectedRoute>} />
           <Route path='/symptom-checker' element={<SymptomChecker />} />
-          <Route path='/video-call/:appointmentId' element={null} />
-          <Route path='/prescription/:appointmentId' element={<PrescriptionView />} />
+          <Route path='/video-call' element={<ProtectedRoute><Navigate to='/my-appointments' replace /></ProtectedRoute>} />
+          <Route path='/video-call/:appointmentId' element={<ProtectedRoute>{null}</ProtectedRoute>} />
+          <Route path='/prescription/:appointmentId' element={<ProtectedRoute><PrescriptionView /></ProtectedRoute>} />
           <Route path='/verify-prescription' element={<VerifyPrescription />} />
           <Route path='/verify-prescription/:id' element={<VerifyPrescription />} />
 
           {/* My Health & Reports Center */}
-          <Route path='/health' element={<HealthHub />} />
+          <Route path='/health' element={<ProtectedRoute><HealthHub /></ProtectedRoute>} />
           {/* Backward-compatible routes */}
-          <Route path='/health-dashboard' element={<HealthDashboard />} />
-          <Route path='/medical-records' element={<MedicalRecords />} />
+          <Route path='/health-dashboard' element={<ProtectedRoute><HealthDashboard /></ProtectedRoute>} />
+          <Route path='/medical-records' element={<ProtectedRoute><MedicalRecords /></ProtectedRoute>} />
 
           {/* Doctor Messaging routes */}
-          <Route path='/chat' element={<ChatInbox />} />
-          <Route path='/chat/:appointmentId' element={<ChatPage />} />
+          <Route path='/chat' element={<ProtectedRoute><ChatInbox /></ProtectedRoute>} />
+          <Route path='/chat/:appointmentId' element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
 
           {/* Medicine Safety Checker */}
           <Route path='/drug-checker' element={<DrugChecker />} />
+          <Route path='*' element={<Navigate to='/' replace />} />
         </Routes>
       </main>
       {!isImmersive && <Footer />}

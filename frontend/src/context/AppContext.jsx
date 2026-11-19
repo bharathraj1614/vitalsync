@@ -42,7 +42,10 @@ const AppContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
     const [doctors, setDoctors] = useState([]);
-    const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : '');
+    const storedToken = localStorage.getItem('token');
+    const [token, setToken] = useState(
+        storedToken && storedToken !== 'undefined' && storedToken !== 'null' ? storedToken : ''
+    );
     const [userData, setUserData] = useState(false);
 
     // Real-time Socket & Presence state
@@ -109,6 +112,12 @@ const AppContextProvider = (props) => {
             }
         } catch (error) {
             console.log(error);
+            if (error.response?.status === 401 || error.response?.status === 403) {
+                localStorage.removeItem('token');
+                setToken('');
+                setUserData(false);
+                return;
+            }
             toast.error(error.message);
         }
     }, [backendUrl, token]);

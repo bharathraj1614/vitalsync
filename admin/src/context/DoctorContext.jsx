@@ -37,7 +37,10 @@ const playDoctorAlertSound = (type = 'default') => {
 const DoctorContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-    const [dToken, setDToken] = useState(localStorage.getItem('dToken') ? localStorage.getItem('dToken') : '');
+    const storedDToken = localStorage.getItem('dToken');
+    const [dToken, setDToken] = useState(
+        storedDToken && storedDToken !== 'undefined' && storedDToken !== 'null' ? storedDToken : ''
+    );
     const [appointments, setAppointments] = useState([]);
     const [dashData, setDashData] = useState(false);
     const [profileData, setProfileData] = useState(false);
@@ -50,6 +53,15 @@ const DoctorContextProvider = (props) => {
     const [incomingCall, setIncomingCall] = useState(null);
     const socketRef = useRef(null);
 
+    const clearInvalidDoctorSession = useCallback((error) => {
+        if (error?.response?.status === 401 || error?.response?.status === 403) {
+            localStorage.removeItem('dToken');
+            setDToken('');
+            return true;
+        }
+        return false;
+    }, []);
+
     const getAppointments = useCallback(async () => {
         if (!dToken) return;
         try {
@@ -61,9 +73,10 @@ const DoctorContextProvider = (props) => {
             }
         } catch (error) {
             console.log(error);
+            if (clearInvalidDoctorSession(error)) return;
             toast.error(error.message);
         }
-    }, [backendUrl, dToken]);
+    }, [backendUrl, dToken, clearInvalidDoctorSession]);
 
     const getProfileData = useCallback(async () => {
         if (!dToken) return;
@@ -72,9 +85,10 @@ const DoctorContextProvider = (props) => {
             setProfileData(data.profileData);
         } catch (error) {
             console.log(error);
+            if (clearInvalidDoctorSession(error)) return;
             toast.error(error.message);
         }
-    }, [backendUrl, dToken]);
+    }, [backendUrl, dToken, clearInvalidDoctorSession]);
 
     const getDashData = useCallback(async () => {
         if (!dToken) return;
@@ -87,9 +101,10 @@ const DoctorContextProvider = (props) => {
             }
         } catch (error) {
             console.log(error);
+            if (clearInvalidDoctorSession(error)) return;
             toast.error(error.message);
         }
-    }, [backendUrl, dToken]);
+    }, [backendUrl, dToken, clearInvalidDoctorSession]);
 
     const fetchDoctorNotifications = useCallback(async () => {
         if (!dToken) {

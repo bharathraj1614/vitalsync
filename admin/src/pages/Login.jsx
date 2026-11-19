@@ -1,10 +1,12 @@
 import axios from 'axios'
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { DoctorContext } from '../context/DoctorContext'
 import { AdminContext } from '../context/AdminContext'
 import { toast } from 'react-toastify'
 import { Stethoscope, ShieldCheck, Lock, Mail, ArrowRight, Eye, EyeOff, ExternalLink, HeartPulse, ShieldAlert } from 'lucide-react'
 import AdminGoogleAuthButton from '../components/AdminGoogleAuthButton'
+import { getSafeAdminRedirectPath } from '../components/RouteGuards'
 
 const Login = () => {
   const [state, setState] = useState('Doctor')
@@ -15,8 +17,20 @@ const Login = () => {
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
-  const { setDToken } = useContext(DoctorContext)
-  const { setAToken } = useContext(AdminContext)
+  const { dToken, setDToken } = useContext(DoctorContext)
+  const { aToken, setAToken } = useContext(AdminContext)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    if (aToken || dToken) {
+      const role = aToken ? 'admin' : 'doctor'
+      const rawRedirect = searchParams.get('redirect') || location.state?.from
+      const target = getSafeAdminRedirectPath(rawRedirect, role, '/')
+      navigate(target, { replace: true })
+    }
+  }, [aToken, dToken, navigate, searchParams, location.state])
 
   const onSubmitHandler = async (event) => {
     event.preventDefault()

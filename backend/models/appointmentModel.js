@@ -21,7 +21,7 @@ const appointmentSchema = new mongoose.Schema({
     // { reason, urgency: 'ROUTINE' | 'WITHIN_WEEK' | 'URGENT' | 'EMERGENCY', facility, notes, recommendedAt, doctorName }
     inPersonReferral: { type: Object, default: null },
     // Server-audited WebRTC consultation session telemetry logs
-    // [{ startedAt, endedAt, durationSec, endedBy, endReason, signalingReconnects }]
+    // [{ startedAt, endedAt, durationSec, endedBy, endReason, signalingReconnects, turnRelayBytes }]
     callLogs: { type: Array, default: [] }
 })
 

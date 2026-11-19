@@ -8,12 +8,24 @@ export const AdminContext = createContext();
 const AdminContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-    const [aToken, setAToken] = useState(localStorage.getItem('aToken') ? localStorage.getItem('aToken') : '');
+    const storedAToken = localStorage.getItem('aToken');
+    const [aToken, setAToken] = useState(
+        storedAToken && storedAToken !== 'undefined' && storedAToken !== 'null' ? storedAToken : ''
+    );
 
     const [appointments, setAppointments] = useState([]);
     const [doctors, setDoctors] = useState([]);
     const [patients, setPatients] = useState([]);
     const [dashData, setDashData] = useState(false);
+
+    const clearInvalidAdminSession = useCallback((error) => {
+        if (error?.response?.status === 401) {
+            localStorage.removeItem('aToken');
+            setAToken('');
+            return true;
+        }
+        return false;
+    }, []);
 
     const getAllDoctors = useCallback(async () => {
         if (!aToken) return;
@@ -25,9 +37,10 @@ const AdminContextProvider = (props) => {
                 toast.error(data.message);
             }
         } catch (error) {
+            if (clearInvalidAdminSession(error)) return;
             toast.error(error.message);
         }
-    }, [backendUrl, aToken]);
+    }, [backendUrl, aToken, clearInvalidAdminSession]);
 
     const getAllPatients = useCallback(async () => {
         if (!aToken) return;
@@ -107,10 +120,11 @@ const AdminContextProvider = (props) => {
                 toast.error(data.message);
             }
         } catch (error) {
+            if (clearInvalidAdminSession(error)) return;
             toast.error(error.message);
             console.log(error);
         }
-    }, [backendUrl, aToken]);
+    }, [backendUrl, aToken, clearInvalidAdminSession]);
 
     const getDashData = useCallback(async () => {
         if (!aToken) return;
@@ -123,9 +137,10 @@ const AdminContextProvider = (props) => {
             }
         } catch (error) {
             console.log(error);
+            if (clearInvalidAdminSession(error)) return;
             toast.error(error.message);
         }
-    }, [backendUrl, aToken]);
+    }, [backendUrl, aToken, clearInvalidAdminSession]);
 
     const cancelAppointment = async (appointmentId) => {
         try {

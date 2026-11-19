@@ -2,8 +2,9 @@ import React, { useContext, useEffect, useState, useRef, useId } from 'react'
 import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import GoogleAuthButton from '../components/GoogleAuthButton'
+import { getSafeRedirectPath } from '../components/ProtectedRoute'
 import {
   Lock,
   Mail,
@@ -24,6 +25,7 @@ import {
 
 const Login = () => {
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const initialMode = location.state?.mode === 'Sign Up' ? 'Sign Up' : 'Login'
   const [state, setState] = useState(initialMode)
   const [name, setName] = useState('')
@@ -44,6 +46,10 @@ const Login = () => {
 
   const navigate = useNavigate()
   const { backendUrl, token, setToken } = useContext(AppContext)
+  const redirectTarget = getSafeRedirectPath(
+    searchParams.get('redirect') || location.state?.from,
+    '/'
+  )
 
   // Manage native <dialog> for forgot password
   useEffect(() => {
@@ -175,9 +181,9 @@ const Login = () => {
 
   useEffect(() => {
     if (token) {
-      navigate('/')
+      navigate(redirectTarget, { replace: true })
     }
-  }, [token, navigate])
+  }, [token, navigate, redirectTarget])
 
   return (
     <div className='min-h-[85vh] py-8 sm:py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center relative overflow-hidden'>
@@ -291,7 +297,7 @@ const Login = () => {
             <form onSubmit={onSubmitHandler} className='space-y-4' noValidate>
               {/* Google Single Sign-On (GIS / One-Tap) */}
               <div className='space-y-2.5'>
-                <GoogleAuthButton state={state} onAuthSuccess={() => navigate('/')} />
+                <GoogleAuthButton state={state} onAuthSuccess={() => navigate(redirectTarget, { replace: true })} />
 
                 <div className='flex items-center gap-3 pt-1'>
                   <div className='h-px bg-slate-200 flex-1' />

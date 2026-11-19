@@ -57,7 +57,9 @@ const allowedOrigins = Array.from(new Set([
   'https://vitalsync-frontend-ivory.vercel.app',
   'http://localhost:5173',
   'http://localhost:5174',
-  'http://localhost:3000'
+  'http://localhost:3000',
+  'http://localhost:8081',
+  'http://localhost:19006'
 ]));
 
 app.use(cors({
