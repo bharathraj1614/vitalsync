@@ -212,38 +212,40 @@ const DoctorsList = () => {
       <div className='bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-3'>
         <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-3'>
           {/* Availability Tabs */}
-          <div className='inline-flex flex-wrap items-center gap-1 p-1 bg-slate-100/80 border border-slate-200/60 rounded-xl'>
-            {[
-              { id: 'all', label: 'All Doctors', count: doctors.length },
-              { id: 'available', label: 'Accepting Patients', count: availableCount },
-              { id: 'paused', label: 'Paused', count: pausedCount }
-            ].map((tab) => {
-              const active = availabilityFilter === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setAvailabilityFilter(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer ${
-                    active
-                      ? 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200/70'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={`px-1.5 py-0.2 rounded-md text-[11px] font-bold ${
-                      active ? 'bg-sky-50 text-sky-700' : 'bg-slate-200/70 text-slate-500'
+          <div className='overflow-x-auto no-scrollbar -mx-1 px-1'>
+            <div className='inline-flex flex-nowrap items-center gap-1 p-1 bg-slate-100/80 border border-slate-200/60 rounded-xl whitespace-nowrap'>
+              {[
+                { id: 'all', label: 'All Doctors', count: doctors.length },
+                { id: 'available', label: 'Accepting Patients', count: availableCount },
+                { id: 'paused', label: 'Paused', count: pausedCount }
+              ].map((tab) => {
+                const active = availabilityFilter === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setAvailabilityFilter(tab.id)}
+                    className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-all inline-flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                      active
+                        ? 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200/70'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    {tab.count}
-                  </span>
-                </button>
-              )
-            })}
+                    <span>{tab.label}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[11px] font-bold ${
+                        active ? 'bg-sky-50 text-sky-700' : 'bg-slate-200/70 text-slate-500'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Search + Specialty Select + View Toggle */}
-          <div className='flex flex-wrap items-center gap-2.5'>
+          <div className='flex flex-col sm:flex-row sm:items-center gap-2.5'>
             <div className='relative flex-1 sm:w-64'>
               <Search className='w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none' />
               <input
@@ -251,51 +253,53 @@ const DoctorsList = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder='Search name, specialty, degree...'
-                className='w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-sky-500 text-slate-800'
+                className='w-full min-h-[44px] sm:min-h-[38px] pl-9 pr-9 py-2 text-base sm:text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-sky-500 text-slate-800'
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className='absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer'
+                  className='absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-1.5'
                 >
-                  <X className='w-3.5 h-3.5' />
+                  <X className='w-4 h-4' />
                 </button>
               )}
             </div>
 
-            <select
-              value={selectedSpeciality}
-              onChange={(e) => setSelectedSpeciality(e.target.value)}
-              className='px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-none focus:border-sky-500 cursor-pointer'
-            >
-              {specialitiesList.map((spec) => (
-                <option key={spec} value={spec}>
-                  {spec === 'All' ? 'All Specialties' : spec}
-                </option>
-              ))}
-            </select>
+            <div className='flex items-center gap-2'>
+              <select
+                value={selectedSpeciality}
+                onChange={(e) => setSelectedSpeciality(e.target.value)}
+                className='flex-1 sm:flex-initial min-h-[44px] sm:min-h-[38px] px-3 py-2 text-base sm:text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-700 outline-none focus:border-sky-500 cursor-pointer'
+              >
+                {specialitiesList.map((spec) => (
+                  <option key={spec} value={spec}>
+                    {spec === 'All' ? 'All Specialties' : spec}
+                  </option>
+                ))}
+              </select>
 
-            <div className='inline-flex items-center p-1 bg-slate-100 border border-slate-200 rounded-xl'>
-              <button
-                type='button'
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg cursor-pointer transition-colors ${
-                  viewMode === 'grid' ? 'bg-white text-sky-600 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-                }`}
-                title='Grid View'
-              >
-                <LayoutGrid className='w-4 h-4' />
-              </button>
-              <button
-                type='button'
-                onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg cursor-pointer transition-colors ${
-                  viewMode === 'table' ? 'bg-white text-sky-600 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-                }`}
-                title='Table View'
-              >
-                <List className='w-4 h-4' />
-              </button>
+              <div className='inline-flex items-center p-1 bg-slate-100 border border-slate-200 rounded-xl shrink-0'>
+                <button
+                  type='button'
+                  onClick={() => setViewMode('grid')}
+                  className={`min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg cursor-pointer transition-colors ${
+                    viewMode === 'grid' ? 'bg-white text-sky-600 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title='Grid View'
+                >
+                  <LayoutGrid className='w-4 h-4' />
+                </button>
+                <button
+                  type='button'
+                  onClick={() => setViewMode('table')}
+                  className={`min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg cursor-pointer transition-colors ${
+                    viewMode === 'table' ? 'bg-white text-sky-600 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title='Table View'
+                >
+                  <List className='w-4 h-4' />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -369,13 +373,13 @@ const DoctorsList = () => {
                   <button
                     type='button'
                     onClick={() => changeAvailability(item._id)}
-                    className='text-slate-600 hover:text-sky-600 transition-colors cursor-pointer'
+                    className='min-w-[44px] min-h-[44px] flex items-center justify-end text-slate-600 hover:text-sky-600 transition-colors cursor-pointer'
                     title='Toggle Doctor Availability'
                   >
                     {item.available ? (
-                      <ToggleRight className='w-7 h-7 text-emerald-500' />
+                      <ToggleRight className='w-8 h-8 text-emerald-500' />
                     ) : (
-                      <ToggleLeft className='w-7 h-7 text-slate-400' />
+                      <ToggleLeft className='w-8 h-8 text-slate-400' />
                     )}
                   </button>
                 </div>
@@ -384,7 +388,7 @@ const DoctorsList = () => {
                   <button
                     type='button'
                     onClick={() => openEditModal(item)}
-                    className='flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/80 hover:border-sky-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
+                    className='flex-1 min-h-[44px] py-2 px-3 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-sky-700 border border-slate-200/80 hover:border-sky-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
                   >
                     <Edit3 className='w-3.5 h-3.5' />
                     <span>Edit Details</span>
@@ -392,10 +396,10 @@ const DoctorsList = () => {
                   <button
                     type='button'
                     onClick={() => setDeletingDoc(item)}
-                    className='p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/70 transition-colors cursor-pointer'
+                    className='min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/70 transition-colors cursor-pointer shrink-0'
                     title='Remove Doctor'
                   >
-                    <Trash2 className='w-3.5 h-3.5' />
+                    <Trash2 className='w-4 h-4' />
                   </button>
                 </div>
               </div>
@@ -490,11 +494,11 @@ const DoctorsList = () => {
       {/* EDIT DOCTOR MODAL */}
       {editingDoc && (
         <div
-          className='fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto'
+          className='fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto'
           onClick={() => !savingEdit && setEditingDoc(null)}
         >
           <div
-            className='bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 sm:p-8 space-y-6 my-8'
+            className='bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 max-h-[92dvh] overflow-y-auto overscroll-contain sm:my-8'
             onClick={(e) => e.stopPropagation()}
           >
             <div className='flex items-center justify-between pb-4 border-b border-slate-200'>
@@ -680,19 +684,19 @@ const DoctorsList = () => {
                 />
               </div>
 
-              <div className='flex items-center justify-end gap-3 pt-3 border-t border-slate-200'>
+              <div className='flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-3 border-t border-slate-200'>
                 <button
                   type='button'
                   onClick={() => setEditingDoc(null)}
                   disabled={savingEdit}
-                  className='px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 cursor-pointer'
+                  className='w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 cursor-pointer'
                 >
                   Cancel
                 </button>
                 <button
                   type='submit'
                   disabled={savingEdit}
-                  className='px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50'
+                  className='w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-50'
                 >
                   <Save className='w-4 h-4' />
                   <span>{savingEdit ? 'Saving Changes...' : 'Save Doctor Profile'}</span>

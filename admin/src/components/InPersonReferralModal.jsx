@@ -136,18 +136,18 @@ const InPersonReferralModal = ({
       ref={dialogRef}
       {...{ closedby: 'any' }}
       aria-labelledby={titleId}
-      className='m-auto rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl max-w-xl w-[calc(100%-2rem)] overflow-hidden backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs overscroll-contain'
+      className='m-auto rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl max-w-xl w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-h-[88dvh] overflow-hidden backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs overscroll-contain'
     >
-      <div className='p-6 sm:p-7 space-y-5 max-h-[88vh] overflow-y-auto overscroll-contain'>
+      <div className='p-4 sm:p-7 pb-[calc(1.25rem+env(safe-area-inset-bottom))] space-y-4 sm:space-y-5 max-h-[88dvh] overflow-y-auto overflow-x-hidden overscroll-contain'>
         {/* Header */}
-        <div className='flex items-start justify-between gap-4 pb-4 border-b border-slate-100'>
-          <div className='flex items-center gap-3'>
-            <div className='w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center justify-center shrink-0'>
-              <Building2 className='w-6 h-6' />
+        <div className='flex items-start justify-between gap-3 sm:gap-4 pb-3.5 sm:pb-4 border-b border-slate-100'>
+          <div className='flex items-start sm:items-center gap-3 min-w-0'>
+            <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center justify-center shrink-0'>
+              <Building2 className='w-5 h-5 sm:w-6 sm:h-6' />
             </div>
-            <div>
+            <div className='min-w-0'>
               <div className='flex items-center gap-2'>
-                <h3 id={titleId} className='text-base font-extrabold text-slate-900'>
+                <h3 id={titleId} className='text-sm sm:text-base font-extrabold text-slate-900 leading-snug'>
                   Recommend In-Person Hospital Visit
                 </h3>
               </div>
@@ -159,7 +159,8 @@ const InPersonReferralModal = ({
           <button
             type='button'
             onClick={onClose}
-            className='p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer'
+            aria-label='Close referral modal'
+            className='min-w-[36px] min-h-[36px] p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer shrink-0'
           >
             <X className='w-5 h-5' />
           </button>
@@ -208,7 +209,7 @@ const InPersonReferralModal = ({
             <label className='block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-2'>
               Urgency Level *
             </label>
-            <div className='grid grid-cols-2 gap-2'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
               {URGENCY_OPTIONS.map((u) => {
                 const selected = urgency === u.id
                 return (
@@ -261,35 +262,35 @@ const InPersonReferralModal = ({
           </div>
 
           {/* Actions */}
-          <div className='pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3'>
+          <div className='pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2.5 sm:gap-3'>
             {hasExistingReferral ? (
               <button
                 type='button'
                 onClick={handleClear}
                 disabled={loading}
-                className='px-3.5 py-2 rounded-xl text-rose-600 hover:bg-rose-50 border border-rose-200 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer'
+                className='w-full sm:w-auto min-h-[44px] sm:min-h-0 px-3.5 py-2.5 sm:py-2 rounded-xl text-rose-600 hover:bg-rose-50 border border-rose-200 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
               >
-                <Trash2 className='w-3.5 h-3.5' />
+                <Trash2 className='w-3.5 h-3.5 shrink-0' />
                 <span>Withdraw Referral (Resolved Online)</span>
               </button>
             ) : (
-              <div />
+              <div className='hidden sm:block' />
             )}
 
-            <div className='flex items-center gap-2'>
+            <div className='flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2'>
               <button
                 type='button'
                 onClick={onClose}
-                className='px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer'
+                className='w-full sm:w-auto min-h-[44px] sm:min-h-0 px-4 py-2.5 sm:py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer'
               >
                 Cancel
               </button>
               <button
                 type='submit'
                 disabled={loading || !reason}
-                className='px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer inline-flex items-center gap-1.5'
+                className='w-full sm:w-auto min-h-[44px] sm:min-h-0 px-5 py-2.5 sm:py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer inline-flex items-center justify-center gap-1.5'
               >
-                <CheckCircle2 className='w-3.5 h-3.5' />
+                <CheckCircle2 className='w-3.5 h-3.5 shrink-0' />
                 <span>{hasExistingReferral ? 'Update Referral' : 'Send In-Person Referral'}</span>
               </button>
             </div>

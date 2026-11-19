@@ -100,7 +100,7 @@ const Login = () => {
 
       <form
         onSubmit={onSubmitHandler}
-        className='w-full max-w-md bg-white border border-slate-200 rounded-3xl p-7 sm:p-8 shadow-xl shadow-slate-200/50 space-y-5 relative z-10'
+        className='w-full max-w-md bg-white border border-slate-200 rounded-3xl p-5 sm:p-8 shadow-xl shadow-slate-200/50 space-y-5 relative z-10'
         noValidate
       >
         {/* Role Switcher Tabs */}
@@ -108,26 +108,26 @@ const Login = () => {
           <button
             type='button'
             onClick={() => setState('Doctor')}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`min-h-[44px] py-2.5 px-2 sm:px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
               state === 'Doctor'
                 ? 'bg-white text-sky-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Stethoscope className='w-4 h-4' />
-            <span>Doctor workspace</span>
+            <Stethoscope className='w-4 h-4 shrink-0' />
+            <span className='truncate'>Doctor workspace</span>
           </button>
           <button
             type='button'
             onClick={() => setState('Admin')}
-            className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`min-h-[44px] py-2.5 px-2 sm:px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
               state === 'Admin'
                 ? 'bg-white text-sky-700 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <ShieldCheck className='w-4 h-4' />
-            <span>Clinic admin</span>
+            <ShieldCheck className='w-4 h-4 shrink-0' />
+            <span className='truncate'>Clinic admin</span>
           </button>
         </div>
 
@@ -170,7 +170,7 @@ const Login = () => {
                 spellCheck='false'
                 onChange={(e) => setEmail(e.target.value)}
                 value={email}
-                className='border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-sky-500 rounded-xl w-full pl-10 pr-4 py-2.5 text-sm text-slate-900 outline-none transition-colors'
+                className='border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-sky-500 rounded-xl w-full min-h-[44px] pl-10 pr-4 py-2.5 text-base sm:text-sm text-slate-900 outline-none transition-colors'
                 placeholder={state === 'Doctor' ? 'doctor@vitalsync.com' : 'admin@vitalsync.com'}
                 required
               />
@@ -190,7 +190,7 @@ const Login = () => {
                 autoComplete='current-password'
                 onChange={(e) => setPassword(e.target.value)}
                 value={password}
-                className='border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-sky-500 rounded-xl w-full pl-10 pr-12 py-2.5 text-sm text-slate-900 outline-none transition-colors'
+                className='border border-slate-200 bg-slate-50/60 focus:bg-white focus:border-sky-500 rounded-xl w-full min-h-[44px] pl-10 pr-12 py-2.5 text-base sm:text-sm text-slate-900 outline-none transition-colors'
                 placeholder='••••••••'
                 required
               />
@@ -205,7 +205,7 @@ const Login = () => {
                   e.stopPropagation()
                   setShowPassword((prev) => !prev)
                 }}
-                className='absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors z-10 cursor-pointer'
+                className='absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors z-10 cursor-pointer'
               >
                 {showPassword ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
               </button>
@@ -216,7 +216,7 @@ const Login = () => {
         <button
           disabled={loading}
           type='submit'
-          className='bg-sky-600 hover:bg-sky-500 text-white w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-600/20 transition-all cursor-pointer disabled:opacity-50'
+          className='bg-sky-600 hover:bg-sky-500 text-white w-full min-h-[48px] py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-600/20 transition-all cursor-pointer disabled:opacity-50'
         >
           {loading ? (
             <>

@@ -795,7 +795,37 @@ const PrescriptionForm = () => {
               <p className='font-bold text-slate-700 mb-2 text-xs uppercase tracking-wider'>
                 Medicines Prescribed
               </p>
-              <div className='border border-slate-200 rounded-2xl overflow-hidden'>
+              {/* Mobile Card List (< 640px) */}
+              <div className='sm:hidden space-y-2.5'>
+                {existingPrescription.medicines.map((med, i) => (
+                  <div key={i} className='p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2'>
+                    <div className='flex items-start justify-between gap-2'>
+                      <p className='text-sm font-bold text-slate-900 break-words'>{med.name}</p>
+                      <span className='px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[11px] font-semibold text-slate-700 shrink-0 tabular-nums'>
+                        {med.duration}
+                      </span>
+                    </div>
+                    <div className='grid grid-cols-2 gap-2 text-xs'>
+                      <div className='bg-white rounded-xl px-2.5 py-1.5 border border-slate-200/80'>
+                        <span className='block text-[10px] font-semibold uppercase text-slate-400'>Dosage</span>
+                        <span className='font-semibold text-slate-800'>{med.dosage}</span>
+                      </div>
+                      <div className='bg-white rounded-xl px-2.5 py-1.5 border border-slate-200/80'>
+                        <span className='block text-[10px] font-semibold uppercase text-slate-400'>Frequency</span>
+                        <span className='font-semibold text-slate-800'>{med.frequency}</span>
+                      </div>
+                    </div>
+                    {med.instructions && (
+                      <p className='text-xs text-slate-600 bg-white rounded-xl px-2.5 py-1.5 border border-slate-200/80'>
+                        <span className='font-semibold text-slate-500'>Instructions: </span>
+                        {med.instructions}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* Desktop Table (>= 640px) */}
+              <div className='hidden sm:block border border-slate-200 rounded-2xl overflow-x-auto'>
                 <table className='w-full text-left text-sm'>
                   <thead className='bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider'>
                     <tr>
@@ -864,7 +894,7 @@ const PrescriptionForm = () => {
 
       <PatientAllergyBanner />
 
-      <form onSubmit={handleSubmit} className='bg-white rounded-3xl shadow-2xs border border-slate-200 p-6 md:p-8'>
+      <form onSubmit={handleSubmit} className='bg-white rounded-2xl sm:rounded-3xl shadow-2xs border border-slate-200 p-4 sm:p-6 md:p-8'>
         {/* Top Header */}
         <div className='flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-slate-200'>
           <div>
@@ -979,29 +1009,36 @@ const PrescriptionForm = () => {
               return (
                 <div
                   key={index}
-                  className={`p-4 sm:p-5 rounded-2xl border relative transition-all ${
+                  className={`p-3.5 sm:p-5 rounded-2xl border relative transition-all ${
                     inlineAllergy
                       ? 'bg-rose-50/70 border-rose-300 ring-2 ring-rose-500/15'
                       : 'bg-slate-50/80 border-slate-200'
                   }`}
                 >
-                  {medicines.length > 1 && (
-                    <button
-                      type='button'
-                      onClick={() => removeMedicineRow(index)}
-                      className='absolute top-3.5 right-3.5 p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer'
-                      title='Remove medicine row'
-                    >
-                      <Trash2 className='w-4 h-4' />
-                    </button>
-                  )}
+                  {/* Card Header Row (prevents remove button from overlapping labels on mobile) */}
+                  <div className='flex items-center justify-between gap-2 mb-3'>
+                    <span className='text-[11px] font-extrabold uppercase tracking-wider text-slate-500'>
+                      Medicine #{index + 1}
+                    </span>
+                    {medicines.length > 1 && (
+                      <button
+                        type='button'
+                        onClick={() => removeMedicineRow(index)}
+                        className='min-w-[36px] min-h-[36px] p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer flex items-center justify-center'
+                        title='Remove medicine row'
+                        aria-label={`Remove medicine ${index + 1}`}
+                      >
+                        <Trash2 className='w-4 h-4' />
+                      </button>
+                    )}
+                  </div>
 
                   {/* Instant Inline Allergy Warning Banner while typing */}
                   {inlineAllergy && (
-                    <div className='mb-3.5 p-3 rounded-xl bg-rose-600 text-white text-xs flex items-center justify-between gap-3 shadow-xs'>
-                      <div className='flex items-center gap-2'>
-                        <ShieldAlert className='w-4 h-4 shrink-0' />
-                        <span>
+                    <div className='mb-3.5 p-3 rounded-xl bg-rose-600 text-white text-xs flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-xs'>
+                      <div className='flex items-start sm:items-center gap-2 min-w-0'>
+                        <ShieldAlert className='w-4 h-4 shrink-0 mt-0.5 sm:mt-0' />
+                        <span className='break-words'>
                           <strong>Instant Allergy Alert:</strong> "{med.name}" conflicts with patient's reported allergy to{' '}
                           <strong className='underline uppercase'>{inlineAllergy.allergen}</strong> ({inlineAllergy.reason}).
                         </span>
@@ -1012,11 +1049,11 @@ const PrescriptionForm = () => {
                     </div>
                   )}
 
-                  <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mb-4'>
-                    <div className='md:col-span-2 relative'>
-                      <label className='block text-xs font-semibold text-slate-600 mb-1 flex items-center justify-between'>
-                        <span>Medicine Name (Formulary Autocomplete)</span>
-                        <span className='text-[10px] text-sky-600 font-bold'>Smart Search</span>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-3 sm:mb-4'>
+                    <div className='sm:col-span-2 relative'>
+                      <label className='text-xs font-semibold text-slate-600 mb-1 flex items-center justify-between gap-2'>
+                        <span className='truncate'>Medicine Name *</span>
+                        <span className='text-[10px] text-sky-600 font-bold shrink-0'>Smart Search</span>
                       </label>
                       <div className='relative'>
                         <input
@@ -1029,8 +1066,8 @@ const PrescriptionForm = () => {
                             handleMedicineChange(index, 'name', e.target.value)
                             setActiveAutocompleteRow(index)
                           }}
-                          placeholder='e.g., Paracetamol 500mg, Amoxicillin 500mg...'
-                          className={`w-full bg-white border rounded-xl p-2.5 text-sm outline-none transition-colors ${
+                          placeholder='e.g., Paracetamol 500mg, Amoxicillin...'
+                          className={`w-full min-h-[44px] bg-white border rounded-xl p-2.5 text-sm outline-none transition-colors ${
                             inlineAllergy
                               ? 'border-rose-400 focus:border-rose-600 text-rose-900 font-semibold'
                               : 'border-slate-200 focus:border-sky-500'
@@ -1040,9 +1077,9 @@ const PrescriptionForm = () => {
                         {/* Smart Autocomplete Dropdown */}
                         {activeAutocompleteRow === index && suggestions.length > 0 && (
                           <div className='absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-2xl border border-slate-200 shadow-xl max-h-64 overflow-y-auto divide-y divide-slate-100'>
-                            <div className='px-3 py-1.5 bg-slate-50 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between'>
-                              <span>Clinical Formulary Suggestions (Click to Auto-Fill)</span>
-                              <span>{suggestions.length} matches</span>
+                            <div className='px-3 py-1.5 bg-slate-50 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between gap-2'>
+                              <span className='truncate'>Formulary Suggestions</span>
+                              <span className='shrink-0'>{suggestions.length} matches</span>
                             </div>
                             {suggestions.map((item, sIdx) => {
                               const itemConflict = detectInlineAllergyConflict(
@@ -1057,18 +1094,18 @@ const PrescriptionForm = () => {
                                     e.preventDefault()
                                     handleSelectFormularyMedicine(index, item)
                                   }}
-                                  className={`w-full px-3.5 py-2.5 text-left transition-colors flex items-center justify-between gap-3 cursor-pointer ${
+                                  className={`w-full px-3.5 py-2.5 text-left transition-colors flex items-center justify-between gap-2.5 cursor-pointer ${
                                     itemConflict
                                       ? 'bg-rose-50/70 hover:bg-rose-100/80'
                                       : 'hover:bg-sky-50/70'
                                   }`}
                                 >
-                                  <div className='min-w-0'>
-                                    <div className='flex items-center gap-2'>
+                                  <div className='min-w-0 flex-1'>
+                                    <div className='flex flex-wrap items-center gap-1.5'>
                                       <p className='text-xs font-bold text-slate-900 truncate'>
                                         {item.name}
                                       </p>
-                                      <span className='px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold'>
+                                      <span className='px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold shrink-0'>
                                         {item.drugClass}
                                       </span>
                                     </div>
@@ -1078,7 +1115,7 @@ const PrescriptionForm = () => {
                                   </div>
                                   {itemConflict ? (
                                     <span className='px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-extrabold shrink-0'>
-                                      ⚠️ Allergy: {itemConflict.allergen}
+                                      ⚠️ Allergy
                                     </span>
                                   ) : (
                                     <span className='text-[11px] font-bold text-sky-600 shrink-0'>
@@ -1101,7 +1138,7 @@ const PrescriptionForm = () => {
                         value={med.dosage}
                         onChange={(e) => handleMedicineChange(index, 'dosage', e.target.value)}
                         placeholder='e.g., 1 tablet (500mg)'
-                        className='w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-sky-500'
+                        className='w-full min-h-[44px] bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-sky-500'
                       />
                     </div>
 
@@ -1111,7 +1148,7 @@ const PrescriptionForm = () => {
                         required
                         value={med.frequency}
                         onChange={(e) => handleMedicineChange(index, 'frequency', e.target.value)}
-                        className='w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-sky-500'
+                        className='w-full min-h-[44px] bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-sky-500'
                       >
                         <option value=''>Select</option>
                         <option value='1-0-0 (Morning)'>1-0-0 (Morning)</option>
@@ -1123,7 +1160,7 @@ const PrescriptionForm = () => {
                     </div>
                   </div>
 
-                  <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4'>
                     <div>
                       <label className='block text-xs font-semibold text-slate-600 mb-1'>Duration *</label>
                       <input
@@ -1132,17 +1169,17 @@ const PrescriptionForm = () => {
                         value={med.duration}
                         onChange={(e) => handleMedicineChange(index, 'duration', e.target.value)}
                         placeholder='e.g., 5 Days'
-                        className='w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-sky-500'
+                        className='w-full min-h-[44px] bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-sky-500'
                       />
                     </div>
-                    <div className='md:col-span-2'>
+                    <div className='sm:col-span-2'>
                       <label className='block text-xs font-semibold text-slate-600 mb-1'>Special Instructions (Optional)</label>
                       <input
                         type='text'
                         value={med.instructions}
                         onChange={(e) => handleMedicineChange(index, 'instructions', e.target.value)}
                         placeholder='e.g., Strictly after meals with water'
-                        className='w-full bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-sky-500'
+                        className='w-full min-h-[44px] bg-white border border-slate-200 rounded-xl p-2.5 text-sm outline-none focus:border-sky-500'
                       />
                     </div>
                   </div>
@@ -1182,9 +1219,9 @@ const PrescriptionForm = () => {
         <div className='flex justify-end pt-5 border-t border-slate-200'>
           <button
             type='submit'
-            className='px-7 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-sm font-bold shadow-md shadow-sky-600/25 transition-all cursor-pointer inline-flex items-center gap-2'
+            className='w-full sm:w-auto min-h-[44px] px-7 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-sm font-bold shadow-md shadow-sky-600/25 transition-all cursor-pointer inline-flex items-center justify-center gap-2'
           >
-            <FileSignature className='w-4 h-4' />
+            <FileSignature className='w-4 h-4 shrink-0' />
             <span>
               {existingPrescription ? 'Verify Safety, Re-Sign & Notify Patient' : 'Verify Safety, Sign & Issue Prescription'}
             </span>

@@ -179,7 +179,7 @@ const AddDoctor = () => {
         {/* Left: Onboarding Form (8 cols) */}
         <form
           onSubmit={onSubmitHandler}
-          className='lg:col-span-8 bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-2xs space-y-6'
+          className='lg:col-span-8 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-8 shadow-2xs space-y-6'
         >
           {/* Portrait Upload Section */}
           <div className='flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200/80'>
@@ -224,7 +224,7 @@ const AddDoctor = () => {
               <input
                 onChange={(e) => setName(e.target.value)}
                 value={name}
-                className='w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-sky-500 text-slate-900 font-medium'
+                className='w-full min-h-[44px] border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 text-slate-900 font-medium'
                 type='text'
                 placeholder='e.g. Dr. Aarav Mehta'
                 required
@@ -236,7 +236,7 @@ const AddDoctor = () => {
               <select
                 onChange={(e) => handleSpecialityChange(e.target.value)}
                 value={speciality}
-                className='w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-sky-500 bg-white text-slate-900 font-semibold cursor-pointer'
+                className='w-full min-h-[44px] border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 bg-white text-slate-900 font-semibold cursor-pointer'
               >
                 {SPECIALTIES.map((spec) => (
                   <option key={spec} value={spec}>
@@ -251,7 +251,7 @@ const AddDoctor = () => {
               <input
                 onChange={(e) => setEmail(e.target.value)}
                 value={email}
-                className='w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-sky-500 text-slate-900'
+                className='w-full min-h-[44px] border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 text-slate-900'
                 type='email'
                 placeholder='doctor@vitalsync.com'
                 required
@@ -274,7 +274,7 @@ const AddDoctor = () => {
                 <input
                   onChange={(e) => setPassword(e.target.value)}
                   value={password}
-                  className='w-full border border-slate-200 rounded-xl pl-3.5 pr-12 py-2.5 text-sm outline-none focus:border-sky-500 text-slate-900 bg-white'
+                  className='w-full min-h-[44px] border border-slate-200 rounded-xl pl-3.5 pr-12 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 text-slate-900 bg-white'
                   type={showPassword ? 'text' : 'password'}
                   placeholder='Minimum 8 characters'
                   required
@@ -290,7 +290,7 @@ const AddDoctor = () => {
                     e.stopPropagation()
                     setShowPassword((prev) => !prev)
                   }}
-                  className='absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors z-10 cursor-pointer'
+                  className='absolute right-1.5 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors z-10 cursor-pointer'
                 >
                   {showPassword ? <EyeOff className='w-4 h-4' /> : <Eye className='w-4 h-4' />}
                 </button>
@@ -302,20 +302,20 @@ const AddDoctor = () => {
               <input
                 onChange={(e) => setDegree(e.target.value)}
                 value={degree}
-                className='w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-sky-500 text-slate-900'
+                className='w-full min-h-[44px] border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 text-slate-900'
                 type='text'
                 placeholder='e.g. MBBS, MD'
                 required
               />
             </div>
 
-            <div className='grid grid-cols-2 gap-3'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
               <div>
                 <label className='font-bold text-slate-700 block mb-1.5'>Experience *</label>
                 <select
                   onChange={(e) => setExperience(e.target.value)}
                   value={experience}
-                  className='w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-sky-500 bg-white text-slate-900 cursor-pointer'
+                  className='w-full min-h-[44px] border border-slate-200 rounded-xl px-3 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 bg-white text-slate-900 cursor-pointer'
                 >
                   <option value='1 Year'>1 Year</option>
                   <option value='2 Years'>2 Years</option>
@@ -339,7 +339,7 @@ const AddDoctor = () => {
                 <input
                   onChange={(e) => setFees(e.target.value)}
                   value={fees}
-                  className='w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-sky-500 text-slate-900 font-bold'
+                  className='w-full min-h-[44px] border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 text-slate-900 font-bold'
                   type='number'
                   min='0'
                   placeholder='600'
@@ -353,7 +353,7 @@ const AddDoctor = () => {
               <input
                 onChange={(e) => setAddress1(e.target.value)}
                 value={address1}
-                className='w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-sky-500 text-slate-900'
+                className='w-full min-h-[44px] border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 text-slate-900'
                 type='text'
                 placeholder='Clinic wing or street address'
                 required
@@ -365,7 +365,7 @@ const AddDoctor = () => {
               <input
                 onChange={(e) => setAddress2(e.target.value)}
                 value={address2}
-                className='w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-sky-500 text-slate-900'
+                className='w-full min-h-[44px] border border-slate-200 rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none focus:border-sky-500 text-slate-900'
                 type='text'
                 placeholder='Suite, City, State'
                 required
@@ -375,23 +375,23 @@ const AddDoctor = () => {
 
           {/* About / Clinical Bio */}
           <div>
-            <div className='flex items-center justify-between mb-1.5'>
+            <div className='flex flex-wrap items-center justify-between gap-2 mb-1.5'>
               <label className='text-xs font-bold text-slate-700'>
                 Doctor Biography & Clinical Focus *
               </label>
               <button
                 type='button'
                 onClick={generateSmartBio}
-                className='text-xs font-bold text-sky-600 hover:text-sky-700 inline-flex items-center gap-1 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200 cursor-pointer'
+                className='min-h-[36px] text-xs font-bold text-sky-600 hover:text-sky-700 inline-flex items-center gap-1 bg-sky-50 px-3 py-1.5 rounded-lg border border-sky-200 cursor-pointer'
               >
                 <Sparkles className='w-3.5 h-3.5' />
-                <span>Auto-Write Professional Bio</span>
+                <span>Auto-Write Bio</span>
               </button>
             </div>
             <textarea
               onChange={(e) => setAbout(e.target.value)}
               value={about}
-              className='w-full p-3.5 border border-slate-200 rounded-2xl text-sm outline-none focus:border-sky-500 text-slate-800 leading-relaxed'
+              className='w-full p-3.5 border border-slate-200 rounded-2xl text-base sm:text-sm outline-none focus:border-sky-500 text-slate-800 leading-relaxed'
               rows={4}
               placeholder='Describe the doctor’s clinical expertise, patient care philosophy, and specializations...'
               required
@@ -402,7 +402,7 @@ const AddDoctor = () => {
             <button
               type='submit'
               disabled={submitting}
-              className='px-7 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md shadow-sky-600/20 transition-all cursor-pointer disabled:opacity-50'
+              className='w-full sm:w-auto min-h-[48px] px-7 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-600/20 transition-all cursor-pointer disabled:opacity-50'
             >
               <UserPlus className='w-4 h-4' />
               <span>{submitting ? 'Onboarding Specialist...' : 'Add Doctor to Clinic Directory'}</span>

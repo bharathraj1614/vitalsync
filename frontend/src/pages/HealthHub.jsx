@@ -201,9 +201,9 @@ const HealthHub = () => {
     const scoreBadge = getScoreBadge(score)
 
     return (
-        <div className="min-h-[85vh] py-6 max-w-6xl mx-auto space-y-6">
+        <div className="min-h-[85vh] py-4 sm:py-6 max-w-6xl mx-auto space-y-5 sm:space-y-6 overflow-x-hidden">
             {/* Patient Identity & Welcome Banner */}
-            <header className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden shadow-xs">
+            <header className="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-xs">
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="space-y-3 max-w-2xl">
                         <div className="flex flex-wrap items-center gap-2">
@@ -252,24 +252,24 @@ const HealthHub = () => {
                     </div>
 
                     {/* Quick 1-Click Action Buttons */}
-                    <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 lg:flex lg:flex-col gap-2 shrink-0 w-full lg:w-auto">
                         <button
                             onClick={() => navigate('/doctors')}
-                            className="px-4 py-2.5 bg-primary hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                            className="min-h-[44px] px-4 py-2.5 bg-primary hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                         >
-                            <Stethoscope className="w-4 h-4" /> Book Consultation
+                            <Stethoscope className="w-4 h-4 shrink-0" /> Book Consultation
                         </button>
                         <button
                             onClick={() => handleTabChange('vitals')}
-                            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                            className="min-h-[44px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
                         >
-                            <HeartPulse className="w-4 h-4 text-rose-400" /> Measure Pulse
+                            <HeartPulse className="w-4 h-4 text-rose-400 shrink-0" /> Measure Pulse
                         </button>
                         <button
                             onClick={() => handleTabChange('records')}
-                            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                            className="min-h-[44px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
                         >
-                            <UploadCloud className="w-4 h-4 text-sky-400" /> Upload Lab Report
+                            <UploadCloud className="w-4 h-4 text-sky-400 shrink-0" /> Upload Lab Report
                         </button>
                     </div>
                 </div>
@@ -277,11 +277,11 @@ const HealthHub = () => {
                 <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
             </header>
 
-            {/* Accessible Tab Navigation */}
+            {/* Accessible Tab Navigation: Horizontally-scrollable segmented pill bar on mobile */}
             <nav
                 role="tablist"
                 aria-label="Patient Health Hub Sections"
-                className="bg-slate-100/90 border border-slate-200/90 p-2 rounded-2xl grid grid-cols-2 lg:grid-cols-4 gap-2"
+                className="bg-slate-100/90 border border-slate-200/90 p-1.5 sm:p-2 rounded-2xl flex lg:grid lg:grid-cols-4 gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
                 {tabs.map((tab) => {
                     const Icon = tab.icon
@@ -294,14 +294,14 @@ const HealthHub = () => {
                             aria-selected={isActive}
                             aria-controls={`panel-${tab.id}`}
                             onClick={() => handleTabChange(tab.id)}
-                            className={`flex items-start gap-3 p-3.5 rounded-xl text-left transition-all cursor-pointer ${
+                            className={`min-h-[44px] shrink-0 lg:shrink flex items-center lg:items-start gap-2.5 lg:gap-3 px-3.5 py-2 lg:p-3.5 rounded-xl text-left transition-all cursor-pointer whitespace-nowrap lg:whitespace-normal ${
                                 isActive
                                     ? 'bg-white text-slate-900 shadow-xs border border-slate-200/90'
                                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 border border-transparent'
                             }`}
                         >
                             <div
-                                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                                className={`w-8 h-8 lg:w-9 lg:h-9 rounded-lg lg:rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                                     isActive
                                         ? 'bg-primary text-white shadow-xs'
                                         : 'bg-slate-200/80 text-slate-500'
@@ -310,12 +310,12 @@ const HealthHub = () => {
                                 <Icon className="w-4 h-4" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="flex items-center justify-between gap-1">
+                                <div className="flex items-center justify-between gap-2">
                                     <span className="text-xs font-bold tracking-tight truncate">
                                         {tab.label}
                                     </span>
                                     <span
-                                        className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
+                                        className={`hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
                                             isActive
                                                 ? 'bg-sky-50 text-sky-700 border border-sky-200'
                                                 : 'bg-slate-200 text-slate-600'
@@ -324,7 +324,7 @@ const HealthHub = () => {
                                         {tab.badge}
                                     </span>
                                 </div>
-                                <p className="text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-1">
+                                <p className="hidden lg:block text-[11px] text-slate-500 leading-snug mt-0.5 line-clamp-1">
                                     {tab.sublabel}
                                 </p>
                             </div>

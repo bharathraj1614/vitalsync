@@ -7,8 +7,8 @@ const Banner = () => {
     const navigate = useNavigate()
 
     return (
-        <section className='relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950 border border-slate-800 text-white my-14 shadow-xl'>
-            <div className='relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-10'>
+        <section className='relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950 border border-slate-800 text-white my-8 sm:my-14 shadow-xl'>
+            <div className='relative max-w-7xl mx-auto px-5 sm:px-10 lg:px-16 py-8 sm:py-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-10'>
                 
                 {/* Left Side Content */}
                 <div className='flex-1 space-y-5 text-center md:text-left z-10'>

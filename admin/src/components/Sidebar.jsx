@@ -34,8 +34,8 @@ const Sidebar = () => {
     }`
 
   const mobileNavItemClass = ({ isActive }) =>
-    `relative flex flex-col items-center justify-center gap-0.5 px-2 py-1 rounded-xl text-[10px] font-semibold transition-colors min-w-0 flex-1 ${
-      isActive ? 'text-sky-600 font-bold' : 'text-slate-500 hover:text-slate-800'
+    `relative flex flex-col items-center justify-center gap-1 px-1.5 py-1.5 min-h-[52px] rounded-2xl text-[10px] font-semibold transition-all min-w-0 flex-1 active:scale-95 ${
+      isActive ? 'text-sky-600 font-bold bg-sky-50/80' : 'text-slate-500 hover:text-slate-800'
     }`
 
   return (
@@ -242,68 +242,121 @@ const Sidebar = () => {
       {/* Mobile Bottom Navigation Bar */}
       <nav
         aria-label='Mobile navigation'
-        className='md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 flex items-center justify-around py-1.5 px-1 shadow-lg select-none'
+        className='md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur-xl border-t border-slate-200/80 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)] select-none'
       >
-        {aToken && (
-          <>
-            <NavLink to={'/admin-dashboard'} className={mobileNavItemClass}>
-              <LayoutDashboard className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Overview</span>
-            </NavLink>
-            <NavLink to={'/all-appointments'} className={mobileNavItemClass}>
-              <CalendarCheck className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Visits</span>
-              {upcomingAdminVisits > 0 && (
-                <span className='absolute top-0.5 right-2 px-1 rounded-full bg-sky-600 text-white text-[9px] font-bold leading-tight'>
-                  {upcomingAdminVisits}
-                </span>
-              )}
-            </NavLink>
-            <NavLink to={'/doctor-list'} className={mobileNavItemClass}>
-              <Stethoscope className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Doctors</span>
-            </NavLink>
-            <NavLink to={'/add-doctor'} className={mobileNavItemClass}>
-              <UserPlus className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Add</span>
-            </NavLink>
-            <NavLink to={'/patients-list'} className={mobileNavItemClass}>
-              <Users className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Patients</span>
-            </NavLink>
-          </>
-        )}
+        <div className='flex items-center justify-around gap-1 px-2 py-1.5'>
+          {aToken && (
+            <>
+              <NavLink to={'/admin-dashboard'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <LayoutDashboard className='w-5 h-5 shrink-0' />
+                    <span className='truncate'>Overview</span>
+                  </>
+                )}
+              </NavLink>
+              <NavLink to={'/all-appointments'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <span className='relative inline-flex'>
+                      <CalendarCheck className='w-5 h-5 shrink-0' />
+                      {upcomingAdminVisits > 0 && (
+                        <span className='absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-sky-600 text-white text-[9px] font-extrabold tabular-nums flex items-center justify-center ring-2 ring-white'>
+                          {upcomingAdminVisits > 99 ? '99+' : upcomingAdminVisits}
+                        </span>
+                      )}
+                    </span>
+                    <span className='truncate'>Visits</span>
+                  </>
+                )}
+              </NavLink>
+              <NavLink to={'/doctor-list'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <Stethoscope className='w-5 h-5 shrink-0' />
+                    <span className='truncate'>Doctors</span>
+                  </>
+                )}
+              </NavLink>
+              <NavLink to={'/add-doctor'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <UserPlus className='w-5 h-5 shrink-0' />
+                    <span className='truncate'>Add</span>
+                  </>
+                )}
+              </NavLink>
+              <NavLink to={'/patients-list'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <Users className='w-5 h-5 shrink-0' />
+                    <span className='truncate'>Patients</span>
+                  </>
+                )}
+              </NavLink>
+            </>
+          )}
 
-        {dToken && (
-          <>
-            <NavLink to={'/doctor-dashboard'} className={mobileNavItemClass}>
-              <LayoutDashboard className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Home</span>
-            </NavLink>
-            <NavLink to={'/doctor-appointments'} className={mobileNavItemClass}>
-              <CalendarCheck className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Visits</span>
-              {upcomingDoctorVisits > 0 && (
-                <span className='absolute top-0.5 right-3 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold leading-tight'>
-                  {upcomingDoctorVisits}
-                </span>
-              )}
-            </NavLink>
-            <NavLink to={'/doctor-chat'} className={mobileNavItemClass}>
-              <MessageSquare className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Messages</span>
-              {unreadChatCount > 0 && (
-                <span className='absolute top-0.5 right-3 px-1 rounded-full bg-sky-600 text-white text-[9px] font-bold leading-tight'>
-                  {unreadChatCount}
-                </span>
-              )}
-            </NavLink>
-            <NavLink to={'/doctor-profile'} className={mobileNavItemClass}>
-              <UserCog className='w-4 h-4 shrink-0' />
-              <span className='truncate'>Profile</span>
-            </NavLink>
-          </>
-        )}
+          {dToken && (
+            <>
+              <NavLink to={'/doctor-dashboard'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <LayoutDashboard className='w-5 h-5 shrink-0' />
+                    <span className='truncate'>Home</span>
+                  </>
+                )}
+              </NavLink>
+              <NavLink to={'/doctor-appointments'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <span className='relative inline-flex'>
+                      <CalendarCheck className='w-5 h-5 shrink-0' />
+                      {upcomingDoctorVisits > 0 && (
+                        <span className='absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-extrabold tabular-nums flex items-center justify-center ring-2 ring-white'>
+                          {upcomingDoctorVisits > 99 ? '99+' : upcomingDoctorVisits}
+                        </span>
+                      )}
+                    </span>
+                    <span className='truncate'>Visits</span>
+                  </>
+                )}
+              </NavLink>
+              <NavLink to={'/doctor-chat'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <span className='relative inline-flex'>
+                      <MessageSquare className='w-5 h-5 shrink-0' />
+                      {unreadChatCount > 0 && (
+                        <span className='absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-sky-600 text-white text-[9px] font-extrabold tabular-nums flex items-center justify-center ring-2 ring-white'>
+                          {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                        </span>
+                      )}
+                    </span>
+                    <span className='truncate'>Messages</span>
+                  </>
+                )}
+              </NavLink>
+              <NavLink to={'/doctor-profile'} className={mobileNavItemClass}>
+                {({ isActive }) => (
+                  <>
+                    {isActive && <span className='absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-sky-600' />}
+                    <UserCog className='w-5 h-5 shrink-0' />
+                    <span className='truncate'>Profile</span>
+                  </>
+                )}
+              </NavLink>
+            </>
+          )}
+        </div>
       </nav>
     </>
   )

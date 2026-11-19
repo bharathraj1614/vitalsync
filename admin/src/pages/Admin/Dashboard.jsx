@@ -158,13 +158,13 @@ const Dashboard = () => {
       />
 
       {/* Executive Command Header */}
-      <div className='bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950 border border-slate-800 rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6'>
+      <div className='bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950 border border-slate-800 rounded-3xl p-5 sm:p-8 text-white shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6'>
         <div className='space-y-2 max-w-2xl'>
           <div className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/15 border border-sky-400/25 text-sky-300 text-xs font-semibold'>
             <span className='w-2 h-2 rounded-full bg-emerald-400 animate-pulse' />
             <span>Hospital & Clinic Command Center</span>
           </div>
-          <h1 className='text-2xl sm:text-3xl font-extrabold tracking-tight text-white'>
+          <h1 className='text-xl sm:text-3xl font-extrabold tracking-tight text-white'>
             Clinic Administration Overview
           </h1>
           <p className='text-slate-300 text-xs sm:text-sm leading-relaxed'>
@@ -172,159 +172,159 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <div className='flex flex-wrap items-center gap-2.5 shrink-0'>
+        <div className='grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 shrink-0'>
           <button
             onClick={() => navigate('/add-doctor')}
-            className='px-4 py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer'
+            className='col-span-2 sm:col-span-1 min-h-[44px] px-4 py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer'
           >
             <UserPlus className='w-4 h-4' />
             <span>Onboard New Doctor</span>
           </button>
           <button
             onClick={() => navigate('/doctor-list')}
-            className='px-4 py-2.5 bg-white/10 hover:bg-white/15 text-white border border-white/15 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer'
+            className='min-h-[44px] px-3.5 sm:px-4 py-2.5 bg-white/10 hover:bg-white/15 text-white border border-white/15 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
           >
-            <Stethoscope className='w-4 h-4 text-sky-300' />
-            <span>Manage Doctors</span>
+            <Stethoscope className='w-4 h-4 text-sky-300 shrink-0' />
+            <span className='truncate'>Doctors</span>
           </button>
           <button
             onClick={exportDashboardCSV}
-            className='px-3.5 py-2.5 bg-white/10 hover:bg-white/15 text-slate-200 border border-white/15 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer'
+            className='min-h-[44px] px-3.5 py-2.5 bg-white/10 hover:bg-white/15 text-slate-200 border border-white/15 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
             title='Export all bookings to CSV'
           >
-            <Download className='w-4 h-4 text-emerald-300' />
-            <span>Export CSV</span>
+            <Download className='w-4 h-4 text-emerald-300 shrink-0' />
+            <span className='truncate'>Export CSV</span>
           </button>
         </div>
       </div>
 
       {/* Executive Telemedicine KPI Cards */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4'>
         {/* Revenue Card */}
         <div
           onClick={() => navigate('/all-appointments')}
-          className='bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-emerald-300 transition-all cursor-pointer flex items-center justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-emerald-300 transition-all cursor-pointer flex items-start sm:items-center justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-400'>Clinic Revenue</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate'>Clinic Revenue</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums truncate'>
               {currency}{totalRevenue.toLocaleString()}
             </p>
-            <p className='text-xs text-emerald-600 font-semibold mt-1'>
-              {dashData.paidAppointments || 0} online payments verified
+            <p className='text-[10px] sm:text-xs text-emerald-600 font-semibold mt-1 truncate'>
+              {dashData.paidAppointments || 0} online verified
             </p>
           </div>
-          <div className='w-12 h-12 bg-emerald-50 border border-emerald-200/70 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform'>
-            <IndianRupee className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 bg-emerald-50 border border-emerald-200/70 text-emerald-600 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <IndianRupee className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Telemedicine Online Resolution Rate */}
         <div
           onClick={() => navigate('/all-appointments')}
-          className='bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-teal-300 transition-all cursor-pointer flex items-center justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-teal-300 transition-all cursor-pointer flex items-start sm:items-center justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-400'>Resolved Fully Online</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-teal-600 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate'>Online Resolved</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-teal-600 mt-1 tabular-nums'>
               {dashData.onlineResolutionRate ?? 100}%
             </p>
-            <p className='text-xs text-slate-500 font-medium mt-1'>
-              {dashData.onlineResolvedCount ?? completedCount} queue-skipped • {dashData.inPersonReferralsCount ?? 0} referred
+            <p className='text-[10px] sm:text-xs text-slate-500 font-medium mt-1 truncate'>
+              {dashData.onlineResolvedCount ?? completedCount} online • {dashData.inPersonReferralsCount ?? 0} ref
             </p>
           </div>
-          <div className='w-12 h-12 bg-teal-50 border border-teal-200/70 text-teal-600 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform'>
-            <Video className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 bg-teal-50 border border-teal-200/70 text-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <Video className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Registered Doctors Card */}
         <div
           onClick={() => navigate('/doctor-list')}
-          className='bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-sky-300 transition-all cursor-pointer flex items-center justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-sky-300 transition-all cursor-pointer flex items-start sm:items-center justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-400'>Medical Specialists</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate'>Specialists</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
               {dashData.doctors}
             </p>
-            <p className='text-xs text-sky-600 font-semibold mt-1'>
-              {dashData.availableDoctors ?? dashData.doctors} currently accepting bookings
+            <p className='text-[10px] sm:text-xs text-sky-600 font-semibold mt-1 truncate'>
+              {dashData.availableDoctors ?? dashData.doctors} accepting
             </p>
           </div>
-          <div className='w-12 h-12 bg-sky-50 border border-sky-200/70 text-sky-600 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform'>
-            <Stethoscope className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 bg-sky-50 border border-sky-200/70 text-sky-600 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <Stethoscope className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Total Appointments Card */}
         <div
           onClick={() => navigate('/all-appointments')}
-          className='bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-indigo-300 transition-all cursor-pointer flex items-center justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-indigo-300 transition-all cursor-pointer flex items-start sm:items-center justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-400'>Total Bookings</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate'>Total Bookings</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
               {dashData.appointments}
             </p>
-            <p className='text-xs text-indigo-600 font-semibold mt-1'>
-              {activeCount} upcoming • {completedCount} completed
+            <p className='text-[10px] sm:text-xs text-indigo-600 font-semibold mt-1 truncate'>
+              {activeCount} active • {completedCount} done
             </p>
           </div>
-          <div className='w-12 h-12 bg-indigo-50 border border-indigo-200/70 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform'>
-            <CalendarCheck className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 bg-indigo-50 border border-indigo-200/70 text-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <CalendarCheck className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Registered Patients Card */}
         <div
           onClick={() => navigate('/patients-list')}
-          className='bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-teal-300 transition-all cursor-pointer flex items-center justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-teal-300 transition-all cursor-pointer flex items-start sm:items-center justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-400'>Registered Patients</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate'>Patients</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
               {dashData.patients}
             </p>
-            <p className='text-xs text-teal-600 font-semibold mt-1 inline-flex items-center gap-1'>
-              <span>View patient directory & allergies</span>
-              <ArrowUpRight className='w-3.5 h-3.5' />
+            <p className='text-[10px] sm:text-xs text-teal-600 font-semibold mt-1 inline-flex items-center gap-0.5 truncate max-w-full'>
+              <span className='truncate'>Directory</span>
+              <ArrowUpRight className='w-3 h-3 shrink-0' />
             </p>
           </div>
-          <div className='w-12 h-12 bg-teal-50 border border-teal-200/70 text-teal-600 rounded-2xl flex items-center justify-center group-hover:scale-105 transition-transform'>
-            <Users className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 bg-teal-50 border border-teal-200/70 text-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <Users className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Digital Prescriptions & AI Safety Card */}
-        <div className='bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between'>
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-400'>Digital Prescriptions</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+        <div className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-start sm:items-center justify-between gap-2 min-w-0'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate'>Prescriptions</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
               {dashData.prescriptionsCount || 0}
             </p>
-            <p className='text-xs text-rose-600 font-semibold mt-1'>
-              {dashData.safetyAlertsCaught || 0} allergy / drug conflicts caught by AI
+            <p className='text-[10px] sm:text-xs text-rose-600 font-semibold mt-1 truncate'>
+              {dashData.safetyAlertsCaught || 0} AI alerts caught
             </p>
           </div>
-          <div className='w-12 h-12 bg-rose-50 border border-rose-200/70 text-rose-600 rounded-2xl flex items-center justify-center'>
-            <ShieldAlert className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 bg-rose-50 border border-rose-200/70 text-rose-600 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0'>
+            <ShieldAlert className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Patient Satisfaction Rating Card */}
-        <div className='bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between'>
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-400'>Clinic Satisfaction</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+        <div className='col-span-2 sm:col-span-1 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between gap-2 min-w-0'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate'>Clinic Satisfaction</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
               {reviewStats?.avgRating || '4.9'}
             </p>
-            <p className='text-xs text-amber-600 font-semibold mt-1'>
+            <p className='text-[10px] sm:text-xs text-amber-600 font-semibold mt-1 truncate'>
               {reviewStats?.totalReviews || 0} verified patient reviews
             </p>
           </div>
-          <div className='w-12 h-12 bg-amber-50 border border-amber-200/70 text-amber-500 rounded-2xl flex items-center justify-center'>
-            <Star className='w-6 h-6 fill-amber-400' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 bg-amber-50 border border-amber-200/70 text-amber-500 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0'>
+            <Star className='w-4 h-4 sm:w-6 sm:h-6 fill-amber-400' />
           </div>
         </div>
       </div>
@@ -379,7 +379,7 @@ const Dashboard = () => {
           <div className='space-y-3'>
             {specStats.map((spec, i) => (
               <div key={i} className='flex items-center gap-3'>
-                <div className='w-32 text-xs font-semibold text-slate-700 truncate'>{spec.name}</div>
+                <div className='w-24 sm:w-32 text-xs font-semibold text-slate-700 truncate shrink-0'>{spec.name}</div>
                 <div className='flex-1 h-6 bg-slate-100 rounded-lg overflow-hidden'>
                   <div
                     className='h-full rounded-lg flex items-center px-2.5 text-xs text-white font-bold transition-all duration-700'
@@ -472,27 +472,27 @@ const Dashboard = () => {
         <div className='divide-y divide-slate-100'>
           {dashData.latestAppointments.slice(0, 8).map((item, index) => (
             <div
-              className='flex flex-wrap items-center justify-between px-6 py-4 gap-3 hover:bg-slate-50/70 transition-colors'
+              className='flex flex-col md:flex-row md:items-center justify-between px-4 sm:px-6 py-4 gap-3.5 hover:bg-slate-50/70 transition-colors'
               key={item._id || index}
             >
-              <div className='flex items-center gap-3.5 min-w-0'>
+              <div className='flex items-start sm:items-center gap-3.5 min-w-0'>
                 <img
-                  className='rounded-2xl w-11 h-11 object-cover border border-slate-200 bg-slate-100'
+                  className='rounded-2xl w-11 h-11 object-cover border border-slate-200 bg-slate-100 shrink-0'
                   src={item.docData?.image}
                   alt={item.docData?.name}
                 />
-                <div className='min-w-0'>
-                  <div className='flex items-center gap-2'>
+                <div className='min-w-0 flex-1'>
+                  <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
                     <p className='text-slate-900 font-bold text-sm truncate'>{item.docData?.name}</p>
-                    <span className='text-[11px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 font-semibold'>
+                    <span className='text-[11px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 font-semibold shrink-0'>
                       {item.docData?.speciality}
                     </span>
                   </div>
-                  <p className='text-slate-500 text-xs flex flex-wrap items-center gap-2 mt-0.5'>
+                  <p className='text-slate-500 text-xs flex flex-wrap items-center gap-x-2 gap-y-1 mt-1'>
                     <span>
                       Patient: <strong className='text-slate-700'>{item.userData?.name}</strong>
                     </span>
-                    <span>•</span>
+                    <span className='hidden sm:inline'>•</span>
                     <span className='inline-flex items-center gap-1'>
                       <Calendar className='w-3 h-3 text-sky-600' />
                       {slotDateFormat(item.slotDate)}
@@ -503,12 +503,11 @@ const Dashboard = () => {
                         {item.slotTime}
                       </span>
                     )}
-                    <span>•</span>
-                    <span className='font-bold text-slate-800'>
+                    <span className='font-bold text-slate-800 tabular-nums'>
                       {currency}{item.amount}
                     </span>
                     <span
-                      className={`px-2 py-0.2 rounded-full text-[10px] font-bold border ${
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                         item.payment
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -517,7 +516,7 @@ const Dashboard = () => {
                       {item.payment ? 'Paid Online' : 'Payment Pending'}
                     </span>
                     {item.inPersonReferral?.urgency && (
-                      <span className='px-2 py-0.2 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200'>
+                      <span className='px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200'>
                         Referral: {item.inPersonReferral.urgency}
                       </span>
                     )}
@@ -526,17 +525,17 @@ const Dashboard = () => {
               </div>
 
               {item.cancelled ? (
-                <span className='inline-flex items-center gap-1.5 text-rose-700 text-xs font-bold px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-xl'>
+                <span className='inline-flex items-center justify-center gap-1.5 text-rose-700 text-xs font-bold px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-xl self-start md:self-auto shrink-0'>
                   <XCircle className='w-3.5 h-3.5' />
                   <span>Cancelled</span>
                 </span>
               ) : item.isCompleted ? (
-                <span className='inline-flex items-center gap-1.5 text-emerald-700 text-xs font-bold px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl'>
+                <span className='inline-flex items-center justify-center gap-1.5 text-emerald-700 text-xs font-bold px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl self-start md:self-auto shrink-0'>
                   <CheckCircle2 className='w-3.5 h-3.5' />
                   <span>Completed</span>
                 </span>
               ) : (
-                <div className='flex items-center gap-2'>
+                <div className='grid grid-cols-2 md:flex items-center gap-2 w-full md:w-auto shrink-0'>
                   <button
                     type='button'
                     onClick={() =>
@@ -546,7 +545,7 @@ const Dashboard = () => {
                         appointment: item
                       })
                     }
-                    className='px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer'
+                    className='min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer'
                   >
                     <Check className='w-3.5 h-3.5' />
                     <span>Complete</span>
@@ -560,7 +559,7 @@ const Dashboard = () => {
                         appointment: item
                       })
                     }
-                    className='px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer'
+                    className='min-h-[44px] md:min-h-0 px-3 py-2 md:py-1.5 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer'
                   >
                     <X className='w-3.5 h-3.5' />
                     <span>Cancel</span>

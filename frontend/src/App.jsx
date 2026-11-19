@@ -90,7 +90,7 @@ const App = () => {
   const isImmersive = immersivePaths.some(path => location.pathname.startsWith(path))
 
   return (
-    <div className='min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900'>
+    <div className='min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 overflow-x-hidden pb-24 md:pb-0'>
       <ToastContainer position="top-right" autoClose={3500} hideProgressBar={false} />
       <Navbar />
       <main className='flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>

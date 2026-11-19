@@ -196,10 +196,9 @@ const ChatWindow = ({ appointmentId, doctorName, doctorImage, onClose }) => {
     }
 
     return (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4'>
+        <div className='fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs p-0 sm:p-4'>
             <div
-                className='w-full max-w-md bg-white rounded-3xl shadow-2xl flex flex-col overflow-clip border border-slate-200'
-                style={{ maxHeight: '84dvh' }}
+                className='w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-clip border border-slate-200 h-[calc(100dvh-10.5rem)] md:h-[640px]'
             >
                 {/* Header */}
                 <div className='px-5 py-3.5 flex items-center justify-between bg-slate-900 border-b border-slate-800 text-white shrink-0'>
@@ -241,7 +240,7 @@ const ChatWindow = ({ appointmentId, doctorName, doctorImage, onClose }) => {
                 </div>
 
                 {/* Messages Body */}
-                <div ref={messagesContainerRef} className='flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-3 bg-slate-50/60' style={{ minHeight: '300px', maxHeight: '54dvh' }}>
+                <div ref={messagesContainerRef} className='flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-3 bg-slate-50/60'>
                     {loading ? (
                         <div className='text-center py-12 text-slate-500 text-xs flex items-center justify-center gap-2'>
                             <Loader2 className='w-4 h-4 text-sky-600 animate-spin' />
@@ -301,7 +300,7 @@ const ChatWindow = ({ appointmentId, doctorName, doctorImage, onClose }) => {
                 </div>
 
                 {/* Input Controls */}
-                <div className='px-4 py-3 border-t border-slate-200 bg-white shrink-0'>
+                <div className='px-3 sm:px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-3 border-t border-slate-200 bg-white shrink-0'>
                     <div className='flex items-center gap-2'>
                         <input
                             ref={fileInputRef}
@@ -313,7 +312,7 @@ const ChatWindow = ({ appointmentId, doctorName, doctorImage, onClose }) => {
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={uploading}
-                            className='p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-sky-600 hover:bg-slate-50 transition-colors cursor-pointer'
+                            className='min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-sky-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0'
                             title="Attach Image or Report"
                         >
                             {uploading ? <Loader2 className='w-4 h-4 animate-spin' /> : <Paperclip className='w-4 h-4' />}
@@ -338,12 +337,12 @@ const ChatWindow = ({ appointmentId, doctorName, doctorImage, onClose }) => {
                                 }
                             }}
                             placeholder="Write a message..."
-                            className='flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none focus:border-sky-500 focus:bg-white transition-all'
+                            className='flex-1 min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm sm:text-xs text-slate-900 placeholder-slate-400 outline-none focus:border-sky-500 focus:bg-white transition-all'
                         />
                         <button
                             onClick={() => sendPayload({ text: input })}
                             disabled={!input.trim()}
-                            className='p-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-colors disabled:opacity-40 shadow-xs cursor-pointer'
+                            className='min-w-[44px] min-h-[44px] flex items-center justify-center bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-colors disabled:opacity-40 shadow-xs cursor-pointer shrink-0'
                             title="Send Message"
                         >
                             <Send className="w-4 h-4" />

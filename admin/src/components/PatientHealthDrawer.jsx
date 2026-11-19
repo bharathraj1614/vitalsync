@@ -119,61 +119,62 @@ const PatientHealthDrawer = ({ isOpen, onClose, userId, patientFallback = null, 
         className='fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-xs animate-fadeIn overscroll-contain'
       >
         <div
-          className='relative w-full max-w-3xl bg-slate-50 h-full shadow-2xl border-l border-slate-200 flex flex-col overflow-hidden overscroll-contain'
+          className='relative w-full max-w-3xl bg-slate-50 h-[100dvh] sm:h-full shadow-2xl border-l border-slate-200 flex flex-col overflow-hidden overscroll-contain'
           onClick={(e) => e.stopPropagation()}
         >
           {/* Drawer Header */}
-          <div className='bg-slate-900 text-white px-6 py-5 flex items-start justify-between gap-4 shrink-0'>
-            <div className='flex items-center gap-4 min-w-0'>
+          <div className='bg-slate-900 text-white px-4 sm:px-6 py-4 sm:py-5 flex items-start justify-between gap-3 sm:gap-4 shrink-0'>
+            <div className='flex items-center gap-3 sm:gap-4 min-w-0'>
               {patient.image ? (
                 <img
                   src={patient.image}
                   alt={patient.name}
-                  className='w-14 h-14 rounded-2xl object-cover border-2 border-white/20 bg-slate-800 shrink-0'
+                  className='w-11 h-11 sm:w-14 sm:h-14 rounded-2xl object-cover border-2 border-white/20 bg-slate-800 shrink-0'
                 />
               ) : (
-                <div className='w-14 h-14 rounded-2xl bg-sky-600 text-white font-black text-xl flex items-center justify-center shrink-0'>
+                <div className='w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-sky-600 text-white font-black text-lg sm:text-xl flex items-center justify-center shrink-0'>
                   {(patient.name || 'P').charAt(0).toUpperCase()}
                 </div>
               )}
               <div className='min-w-0'>
-                <div className='flex flex-wrap items-center gap-2'>
-                  <h2 className='text-lg font-extrabold tracking-tight truncate'>
+                <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
+                  <h2 className='text-base sm:text-lg font-extrabold tracking-tight truncate'>
                     {patient.name || 'Patient Health Dossier'}
                   </h2>
-                  <span className='px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-400/30'>
+                  <span className='px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-400/30 shrink-0'>
                     Clinical Records & Vitals
                   </span>
                 </div>
-                <div className='flex flex-wrap items-center gap-3 text-xs text-slate-300 mt-1'>
+                <div className='flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-300 mt-1'>
                   {patient.gender && <span>{patient.gender}</span>}
                   {Number.isFinite(age) && <span>• {age} yrs</span>}
                   {patient.phone && (
                     <span className='inline-flex items-center gap-1'>
-                      • <Phone className='w-3 h-3 text-sky-400' /> {patient.phone}
+                      • <Phone className='w-3 h-3 text-sky-400 shrink-0' /> {patient.phone}
                     </span>
                   )}
                   {patient.email && (
-                    <span className='inline-flex items-center gap-1 truncate'>
-                      • <Mail className='w-3 h-3 text-sky-400' /> {patient.email}
+                    <span className='inline-flex items-center gap-1 truncate max-w-full'>
+                      • <Mail className='w-3 h-3 text-sky-400 shrink-0' /> <span className='truncate'>{patient.email}</span>
                     </span>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className='flex items-center gap-2 shrink-0'>
+            <div className='flex items-center gap-1.5 sm:gap-2 shrink-0'>
               <button
                 onClick={fetchDossier}
                 disabled={loading}
                 title='Refresh Dossier'
-                className='p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition-colors cursor-pointer'
+                className='min-w-[40px] min-h-[40px] p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition-colors cursor-pointer flex items-center justify-center'
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </button>
               <button
                 onClick={onClose}
-                className='p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition-colors cursor-pointer'
+                aria-label='Close patient dossier'
+                className='min-w-[40px] min-h-[40px] p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 transition-colors cursor-pointer flex items-center justify-center'
               >
                 <X className='w-5 h-5' />
               </button>
@@ -181,7 +182,7 @@ const PatientHealthDrawer = ({ isOpen, onClose, userId, patientFallback = null, 
           </div>
 
           {/* Reason for Visit + Allergies & Regular Medications Banner */}
-          <div className='bg-white border-b border-slate-200 px-6 py-3.5 space-y-2.5 shrink-0'>
+          <div className='bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-3.5 space-y-2.5 shrink-0'>
             {reasonForVisit && (
               <div className='flex items-start gap-2.5 bg-sky-50/90 border border-sky-200/80 rounded-xl px-3.5 py-2 text-xs'>
                 <ClipboardList className='w-4 h-4 text-sky-600 shrink-0 mt-0.5' />
@@ -230,7 +231,7 @@ const PatientHealthDrawer = ({ isOpen, onClose, userId, patientFallback = null, 
           </div>
 
           {/* Navigation Tabs */}
-          <div className='bg-white border-b border-slate-200 px-6 py-2.5 flex items-center gap-2 shrink-0 overflow-x-auto'>
+          <div className='bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center gap-2 shrink-0 overflow-x-auto'>
             {[
               {
                 id: 'reports',
@@ -278,7 +279,7 @@ const PatientHealthDrawer = ({ isOpen, onClose, userId, patientFallback = null, 
           </div>
 
           {/* Drawer Body */}
-          <div className='flex-1 overflow-y-auto p-6 space-y-5'>
+          <div className='flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 sm:space-y-5'>
             {loading ? (
               <div className='py-20 text-center space-y-3'>
                 <div className='w-9 h-9 border-3 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto' />
@@ -355,7 +356,7 @@ const PatientHealthDrawer = ({ isOpen, onClose, userId, patientFallback = null, 
                                 </p>
                               </div>
 
-                              <div className='flex items-center gap-2'>
+                              <div className='flex flex-wrap items-center gap-2'>
                                 <button
                                   onClick={() => setLightboxRecord(rec)}
                                   className='px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer'
@@ -713,41 +714,44 @@ const PatientHealthDrawer = ({ isOpen, onClose, userId, patientFallback = null, 
       {lightboxRecord && (
         <div
           onClick={() => setLightboxRecord(null)}
-          className='fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-xs flex items-center justify-center p-4'
+          className='fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 overscroll-contain'
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className='relative max-w-5xl w-full max-h-[92vh] bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden flex flex-col'
+            className='relative max-w-5xl w-full max-h-[88dvh] bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden flex flex-col'
           >
-            <div className='px-5 py-3.5 border-b border-slate-800 flex items-center justify-between text-white'>
+            <div className='px-4 sm:px-5 py-3.5 border-b border-slate-800 flex items-center justify-between gap-2 text-white shrink-0'>
               <div className='min-w-0'>
                 <p className='text-sm font-bold truncate'>{lightboxRecord.fileName}</p>
-                <p className='text-[11px] text-slate-400'>
+                <p className='text-[11px] text-slate-400 truncate'>
                   {lightboxRecord.aiExtractedData?.reportType || 'Patient Uploaded Lab Report'}
                 </p>
               </div>
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2 shrink-0'>
                 <a
                   href={lightboxRecord.fileUrl}
                   target='_blank'
                   rel='noreferrer'
-                  className='px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold inline-flex items-center gap-1.5'
+                  className='px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold inline-flex items-center gap-1.5 whitespace-nowrap'
                 >
-                  Open Original <ExternalLink className='w-3.5 h-3.5' />
+                  <span className='hidden sm:inline'>Open Original</span>
+                  <span className='sm:hidden'>Open</span>
+                  <ExternalLink className='w-3.5 h-3.5' />
                 </a>
                 <button
                   onClick={() => setLightboxRecord(null)}
-                  className='p-1.5 rounded-lg bg-white/10 hover:bg-white/20 cursor-pointer'
+                  aria-label='Close lightbox'
+                  className='min-w-[36px] min-h-[36px] p-1.5 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer'
                 >
                   <X className='w-5 h-5' />
                 </button>
               </div>
             </div>
-            <div className='flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-950'>
+            <div className='flex-1 overflow-auto p-3 sm:p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex items-center justify-center bg-slate-950'>
               <img
                 src={lightboxRecord.fileUrl}
                 alt={lightboxRecord.fileName}
-                className='max-w-full max-h-[80vh] object-contain rounded-lg'
+                className='max-w-full max-h-[75dvh] object-contain rounded-lg'
               />
             </div>
           </div>

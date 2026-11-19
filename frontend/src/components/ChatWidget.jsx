@@ -113,31 +113,32 @@ const ChatWidget = () => {
       {/* Floating Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 h-12 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/25 border border-slate-700 flex items-center justify-center gap-2 transition-all duration-200 hover:scale-105 cursor-pointer ${
-          isOpen ? 'px-4' : 'w-12 sm:w-auto sm:pl-2 sm:pr-4'
+        className={`fixed bottom-20 right-3.5 md:bottom-6 md:right-6 z-40 h-11 md:h-12 rounded-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/25 border border-slate-700 flex items-center justify-center gap-1.5 md:gap-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${
+          isOpen ? 'px-3.5 md:px-4' : 'pl-2 pr-3 md:pl-2 md:pr-4'
         }`}
         aria-label='Ask Health Assistant'
       >
         {isOpen ? (
           <>
-            <X className='w-5 h-5 text-white' />
+            <X className='w-4 h-4 md:w-5 md:h-5 text-white' />
             <span className='text-xs font-semibold'>Close</span>
           </>
         ) : (
           <>
             <MedBotAvatar mood={assistantLoading ? 'thinking' : 'welcome'} size='xs' />
-            <span className='hidden sm:inline text-xs font-semibold'>Ask MedBot</span>
+            <span className='md:hidden text-xs font-semibold'>MedBot</span>
+            <span className='hidden md:inline text-xs font-semibold'>Ask MedBot</span>
           </>
         )}
       </button>
 
       {/* Synchronized Chat Window */}
       <div
-        className={`fixed bottom-20 right-4 sm:right-6 z-50 transition-all duration-200 origin-bottom-right ${
+        className={`fixed inset-x-2 bottom-20 md:bottom-24 md:right-6 md:left-auto w-auto md:w-96 max-h-[75dvh] rounded-3xl z-50 transition-all duration-200 origin-bottom md:origin-bottom-right ${
           isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
         }`}
       >
-        <div className='w-[calc(100vw-2rem)] sm:w-[400px] max-h-[min(620px,82dvh)] bg-white rounded-2xl shadow-2xl border border-slate-200/90 flex flex-col overflow-clip'>
+        <div className='w-full max-h-[75dvh] md:max-h-[min(620px,82dvh)] bg-white rounded-3xl shadow-2xl border border-slate-200/90 flex flex-col overflow-clip'>
           {/* Clean Single-Row Header */}
           <div className='px-4 py-3 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0'>
             <div className='flex items-center gap-2.5 min-w-0'>

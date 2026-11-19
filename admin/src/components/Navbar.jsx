@@ -136,7 +136,7 @@ const Navbar = () => {
             <div className='flex items-center gap-2.5 pt-1'>
               <button
                 onClick={declineIncomingCall}
-                className='flex-1 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
+                className='flex-1 min-h-[44px] py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
               >
                 <PhoneOff className='w-4 h-4' />
                 <span>Decline</span>
@@ -147,7 +147,7 @@ const Navbar = () => {
                   setIncomingCall(null)
                   navigate(`/doctor-video-call/${aptId}`)
                 }}
-                className='flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/25 transition-all cursor-pointer'
+                className='flex-1 min-h-[44px] py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shadow-emerald-600/25 transition-all cursor-pointer'
               >
                 <Video className='w-4 h-4' />
                 <span>Join room</span>
@@ -157,11 +157,11 @@ const Navbar = () => {
         </div>
       )}
 
-      <header className='flex justify-between items-center h-16 px-4 sm:px-8 border-b border-slate-200/90 bg-white/95 backdrop-blur-md sticky top-0 z-30'>
-        <div className='flex items-center gap-3 text-xs'>
+      <header className='flex justify-between items-center h-16 px-3 sm:px-8 border-b border-slate-200/90 bg-white/95 backdrop-blur-md sticky top-0 z-30 gap-2'>
+        <div className='flex items-center gap-2 sm:gap-3 text-xs min-w-0'>
           <div
             onClick={() => navigate('/')}
-            className='inline-flex items-center gap-2.5 cursor-pointer select-none group'
+            className='inline-flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none group shrink-0'
           >
             <div className='relative w-9 h-9 rounded-xl bg-gradient-to-br from-sky-600 via-sky-700 to-teal-600 flex items-center justify-center shadow-xs ring-1 ring-white/20 group-hover:scale-[1.02] transition-transform'>
               <svg className='w-5 h-5 text-white' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
@@ -181,33 +181,35 @@ const Navbar = () => {
               <span className='absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-white' />
             </div>
             <div className='flex flex-col leading-none'>
-              <span className='text-lg font-extrabold tracking-tight text-slate-900'>
+              <span className='text-base sm:text-lg font-extrabold tracking-tight text-slate-900'>
                 Vital<span className='text-sky-600'>Sync</span>
               </span>
-              <span className='text-[8.5px] font-bold tracking-[0.16em] text-slate-400 uppercase mt-0.5'>
+              <span className='text-[8px] sm:text-[8.5px] font-bold tracking-[0.14em] sm:tracking-[0.16em] text-slate-400 uppercase mt-0.5'>
                 Clinical Portal
               </span>
             </div>
           </div>
 
-          <span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 font-bold text-xs whitespace-nowrap'>
-            <span className='w-1.5 h-1.5 rounded-full bg-sky-600' />
-            {aToken ? 'Admin workspace' : 'Doctor workspace'}
+          <span className='inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 font-bold text-[11px] sm:text-xs whitespace-nowrap'>
+            <span className='w-1.5 h-1.5 rounded-full bg-sky-600 shrink-0' />
+            <span className='sm:hidden'>{aToken ? 'Admin' : 'Doctor'}</span>
+            <span className='hidden sm:inline'>{aToken ? 'Admin workspace' : 'Doctor workspace'}</span>
           </span>
         </div>
 
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-1.5 sm:gap-2 shrink-0'>
           {dToken && (
             <>
               {/* Quick Patient Messages Button */}
               <button
                 onClick={() => navigate('/doctor-chat')}
-                className='relative p-2.5 rounded-xl text-slate-600 hover:text-sky-600 hover:bg-slate-100 transition-colors cursor-pointer'
+                className='relative min-w-[40px] min-h-[40px] sm:min-w-[42px] sm:min-h-[42px] flex items-center justify-center rounded-xl text-slate-600 hover:text-sky-600 hover:bg-slate-100 active:bg-slate-200/70 transition-colors cursor-pointer'
                 title='Patient messages'
+                aria-label='Patient messages'
               >
                 <MessageSquare className='w-4 h-4' />
                 {unreadChatCount > 0 && (
-                  <span className='absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-sky-600 text-white text-[10px] font-bold tabular-nums flex items-center justify-center ring-2 ring-white'>
+                  <span className='absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-sky-600 text-white text-[10px] font-bold tabular-nums flex items-center justify-center ring-2 ring-white'>
                     {unreadChatCount > 9 ? '9+' : unreadChatCount}
                   </span>
                 )}
@@ -217,19 +219,20 @@ const Navbar = () => {
               <div className='relative' ref={notifRef}>
                 <button
                   onClick={() => setShowNotifDropdown(!showNotifDropdown)}
-                  className='relative p-2.5 rounded-xl text-slate-600 hover:text-sky-600 hover:bg-slate-100 transition-colors cursor-pointer'
+                  className='relative min-w-[40px] min-h-[40px] sm:min-w-[42px] sm:min-h-[42px] flex items-center justify-center rounded-xl text-slate-600 hover:text-sky-600 hover:bg-slate-100 active:bg-slate-200/70 transition-colors cursor-pointer'
                   title='Clinical alerts'
+                  aria-label='Clinical alerts'
                 >
                   <Bell className='w-4 h-4' />
                   {unreadNotifCount > 0 && (
-                    <span className='absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold tabular-nums flex items-center justify-center ring-2 ring-white animate-pulse'>
+                    <span className='absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold tabular-nums flex items-center justify-center ring-2 ring-white animate-pulse'>
                       {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
                     </span>
                   )}
                 </button>
 
                 {showNotifDropdown && (
-                  <div className='absolute right-0 top-full mt-2 w-80 sm:w-96 z-50 animate-in fade-in slide-in-from-top-2 duration-150'>
+                  <div className='fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-[4.25rem] sm:top-full sm:mt-2 sm:w-96 z-50 animate-in fade-in slide-in-from-top-2 duration-150'>
                     <div className='bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden'>
                       <div className='px-4 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between'>
                         <div className='flex items-center gap-2'>
@@ -243,7 +246,7 @@ const Navbar = () => {
                         {unreadNotifCount > 0 && (
                           <button
                             onClick={() => markDoctorNotificationRead(null)}
-                            className='text-[11px] font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 cursor-pointer'
+                            className='text-[11px] font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 cursor-pointer min-h-[32px] px-1'
                           >
                             <CheckCheck className='w-3.5 h-3.5' />
                             <span>Mark all read</span>
@@ -251,7 +254,7 @@ const Navbar = () => {
                         )}
                       </div>
 
-                      <div className='max-h-96 overflow-y-auto overscroll-contain divide-y divide-slate-100'>
+                      <div className='max-h-[70dvh] sm:max-h-96 overflow-y-auto overscroll-contain divide-y divide-slate-100'>
                         {notifications.length === 0 ? (
                           <div className='py-10 px-4 text-center'>
                             <Bell className='w-6 h-6 text-slate-300 mx-auto mb-2' />
@@ -305,7 +308,7 @@ const Navbar = () => {
 
           <button
             onClick={() => logout()}
-            className='bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 sm:px-4.5 py-2 rounded-xl transition-colors cursor-pointer whitespace-nowrap shadow-2xs'
+            className='bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white text-xs font-semibold min-h-[40px] px-3 sm:px-4 py-2 rounded-xl transition-colors cursor-pointer whitespace-nowrap shadow-xs'
           >
             Sign out
           </button>

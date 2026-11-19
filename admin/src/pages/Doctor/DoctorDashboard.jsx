@@ -225,28 +225,28 @@ const DoctorDashboard = () => {
       />
 
       {/* Clinical Command Header */}
-      <section className='bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-950/10 mb-7 relative overflow-hidden border border-slate-700/50'>
+      <section className='bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 text-white rounded-3xl p-5 sm:p-8 shadow-xl shadow-slate-950/10 mb-6 sm:mb-7 relative overflow-hidden border border-slate-700/50'>
         {/* Subtle background glow */}
         <div className='absolute -right-20 -top-20 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none' />
 
-        <div className='relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6'>
-          <div className='flex items-start sm:items-center gap-4'>
+        <div className='relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 sm:gap-6'>
+          <div className='flex items-start sm:items-center gap-3.5 sm:gap-4 min-w-0'>
             {profileData?.image ? (
               <img
                 src={profileData.image}
                 alt={profileData.name}
-                className='w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white/20 bg-slate-800 shadow-md shrink-0'
+                className='w-14 h-14 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white/20 bg-slate-800 shadow-md shrink-0'
               />
             ) : (
-              <div className='w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-sky-600/30 border border-sky-400/40 text-sky-200 font-extrabold text-2xl flex items-center justify-center shrink-0'>
-                <Stethoscope className='w-8 h-8' />
+              <div className='w-14 h-14 sm:w-20 sm:h-20 rounded-2xl bg-sky-600/30 border border-sky-400/40 text-sky-200 font-extrabold text-2xl flex items-center justify-center shrink-0'>
+                <Stethoscope className='w-7 h-7 sm:w-8 sm:h-8' />
               </div>
             )}
 
-            <div className='space-y-1.5'>
-              <div className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-200 text-xs font-bold'>
-                <Sparkles className='w-3.5 h-3.5 text-sky-300' />
-                <span>Physician Consultation Workstation</span>
+            <div className='space-y-1.5 min-w-0'>
+              <div className='inline-flex flex-wrap items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-200 text-[11px] sm:text-xs font-bold'>
+                <Sparkles className='w-3.5 h-3.5 text-sky-300 shrink-0' />
+                <span>Physician Workstation</span>
                 {profileData?.speciality && (
                   <>
                     <span className='w-1 h-1 rounded-full bg-sky-400' />
@@ -255,7 +255,7 @@ const DoctorDashboard = () => {
                 )}
               </div>
 
-              <h1 className='text-2xl sm:text-3xl font-extrabold tracking-tight'>
+              <h1 className='text-xl sm:text-3xl font-extrabold tracking-tight truncate'>
                 {profileData?.name ? `Dr. ${profileData.name.replace(/^Dr\.\s*/i, '')}` : 'Clinical Overview'}
               </h1>
 
@@ -266,30 +266,32 @@ const DoctorDashboard = () => {
           </div>
 
           {/* Quick Action Station */}
-          <div className='flex flex-wrap items-center gap-3 shrink-0'>
+          <div className='grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 sm:gap-3 shrink-0'>
             {/* Quick Availability Switch */}
             {profileData && (
               <button
                 type='button'
                 onClick={handleToggleAvailability}
                 disabled={togglingAvailability}
-                className={`px-4 py-2.5 rounded-2xl border text-xs font-bold flex items-center gap-2.5 transition-all cursor-pointer shadow-sm ${
+                className={`col-span-2 sm:col-span-1 min-h-[48px] px-4 py-2.5 rounded-2xl border text-xs font-bold flex items-center justify-between sm:justify-start gap-2.5 transition-all cursor-pointer shadow-sm ${
                   profileData.available
                     ? 'bg-emerald-500/20 border-emerald-400/50 text-emerald-100 hover:bg-emerald-500/30'
                     : 'bg-amber-500/20 border-amber-400/50 text-amber-100 hover:bg-amber-500/30'
                 }`}
                 title='Click to toggle whether patients can book new appointments with you'
               >
-                {profileData.available ? (
-                  <ToggleRight className='w-5 h-5 text-emerald-300' />
-                ) : (
-                  <ToggleLeft className='w-5 h-5 text-amber-300' />
-                )}
-                <div className='text-left'>
-                  <span className='block text-[10px] uppercase tracking-wider text-slate-300 font-semibold'>
-                    Availability Status
-                  </span>
-                  <span>{profileData.available ? 'Accepting Patients' : 'Bookings Paused'}</span>
+                <div className='flex items-center gap-2.5'>
+                  {profileData.available ? (
+                    <ToggleRight className='w-5 h-5 text-emerald-300 shrink-0' />
+                  ) : (
+                    <ToggleLeft className='w-5 h-5 text-amber-300 shrink-0' />
+                  )}
+                  <div className='text-left'>
+                    <span className='block text-[10px] uppercase tracking-wider text-slate-300 font-semibold'>
+                      Availability Status
+                    </span>
+                    <span>{profileData.available ? 'Accepting Patients' : 'Bookings Paused'}</span>
+                  </div>
                 </div>
               </button>
             )}
@@ -297,12 +299,12 @@ const DoctorDashboard = () => {
             <button
               type='button'
               onClick={() => navigate('/doctor-chat')}
-              className='px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer'
+              className='min-h-[44px] px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer'
             >
-              <MessageSquare className='w-4 h-4 text-sky-300' />
-              <span>Patient Messages</span>
+              <MessageSquare className='w-4 h-4 text-sky-300 shrink-0' />
+              <span className='truncate'>Messages</span>
               {unreadChatCount > 0 && (
-                <span className='px-2 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-extrabold tabular-nums animate-pulse'>
+                <span className='px-1.5 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-extrabold tabular-nums animate-pulse'>
                   {unreadChatCount}
                 </span>
               )}
@@ -311,87 +313,87 @@ const DoctorDashboard = () => {
             <button
               type='button'
               onClick={() => navigate('/doctor-appointments')}
-              className='px-4 py-3 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-sky-600/30 transition-all cursor-pointer'
+              className='min-h-[44px] px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-sky-600/30 transition-all cursor-pointer'
             >
-              <span>All Appointments</span>
-              <ArrowRight className='w-4 h-4' />
+              <span className='truncate'>Appointments</span>
+              <ArrowRight className='w-4 h-4 shrink-0' />
             </button>
           </div>
         </div>
       </section>
 
       {/* 4 Key Clinical Metrics Grid */}
-      <section className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7'>
+      <section className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-7'>
         {/* Total Earnings */}
         <div
           onClick={() => navigate('/doctor-appointments')}
-          className='bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer flex items-start justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer flex items-start justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-500'>Clinical Revenue</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 truncate'>Revenue</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums truncate'>
               {currency}{dashData.earnings}
             </p>
-            <p className='text-[11px] text-slate-500 mt-1 font-medium'>From completed & paid visits</p>
+            <p className='text-[10px] sm:text-[11px] text-slate-500 mt-1 font-medium truncate'>Completed & paid</p>
           </div>
-          <div className='w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
-            <Wallet className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <Wallet className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Upcoming Consultations */}
         <div
           onClick={() => setFilterStatus('upcoming')}
-          className='bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-amber-300 transition-all cursor-pointer flex items-start justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-amber-300 transition-all cursor-pointer flex items-start justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-500'>Upcoming Visits</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 truncate'>Upcoming</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
               {upcomingCount}
             </p>
-            <p className='text-[11px] text-amber-700 font-semibold mt-1 flex items-center gap-1'>
-              <span className={`w-1.5 h-1.5 rounded-full ${upcomingCount > 0 ? 'bg-amber-500 animate-ping' : 'bg-slate-400'}`} />
-              {upcomingCount > 0 ? 'Awaiting consultation' : 'Queue clear'}
+            <p className='text-[10px] sm:text-[11px] text-amber-700 font-semibold mt-1 flex items-center gap-1 truncate'>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${upcomingCount > 0 ? 'bg-amber-500 animate-ping' : 'bg-slate-400'}`} />
+              <span className='truncate'>{upcomingCount > 0 ? 'Awaiting visit' : 'Queue clear'}</span>
             </p>
           </div>
-          <div className='w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
-            <CalendarClock className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <CalendarClock className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Total Bookings / Completed Visits */}
         <div
           onClick={() => setFilterStatus('completed')}
-          className='bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-sky-300 transition-all cursor-pointer flex items-start justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-sky-300 transition-all cursor-pointer flex items-start justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-500'>Total Consultations</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 truncate'>Consultations</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
               {dashData.appointments}
             </p>
-            <p className='text-[11px] text-sky-700 font-semibold mt-1 tabular-nums'>
-              {completedCount} completed recently
+            <p className='text-[10px] sm:text-[11px] text-sky-700 font-semibold mt-1 tabular-nums truncate'>
+              {completedCount} completed
             </p>
           </div>
-          <div className='w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200/80 text-sky-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
-            <Calendar className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-sky-50 border border-sky-200/80 text-sky-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <Calendar className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
 
         {/* Unique Patients */}
         <div
           onClick={() => navigate('/doctor-appointments')}
-          className='bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex items-start justify-between group'
+          className='bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex items-start justify-between gap-2 group min-w-0'
         >
-          <div>
-            <p className='text-xs font-bold uppercase tracking-wider text-slate-500'>Active Patients</p>
-            <p className='text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
+          <div className='min-w-0'>
+            <p className='text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 truncate'>Patients</p>
+            <p className='text-xl sm:text-3xl font-extrabold text-slate-900 mt-1 tabular-nums'>
               {dashData.patients}
             </p>
-            <p className='text-[11px] text-slate-500 mt-1 font-medium'>Under your primary care</p>
+            <p className='text-[10px] sm:text-[11px] text-slate-500 mt-1 font-medium truncate'>Under your care</p>
           </div>
-          <div className='w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
-            <Users className='w-6 h-6' />
+          <div className='w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform'>
+            <Users className='w-4 h-4 sm:w-6 sm:h-6' />
           </div>
         </div>
       </section>
@@ -454,7 +456,7 @@ const DoctorDashboard = () => {
             </div>
 
             {/* Spotlight Quick Actions */}
-            <div className='flex flex-wrap items-center gap-2.5 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100'>
+            <div className='grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100'>
               <button
                 type='button'
                 onClick={() =>
@@ -465,36 +467,36 @@ const DoctorDashboard = () => {
                     reasonForVisit: nextUpPatient.reasonForVisit || ''
                   })
                 }
-                className='h-10 px-3.5 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/80 text-indigo-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer'
+                className='min-h-[44px] sm:min-h-[40px] px-3.5 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/80 text-indigo-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
               >
-                <HeartPulse className='w-4 h-4 text-indigo-600' />
-                <span>Health Dossier</span>
+                <HeartPulse className='w-4 h-4 text-indigo-600 shrink-0' />
+                <span>Patient Chart</span>
               </button>
 
               <button
                 type='button'
                 onClick={() => navigate(`/doctor-chat/${nextUpPatient._id}`)}
-                className='h-10 px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer'
+                className='min-h-[44px] sm:min-h-[40px] px-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
               >
-                <MessageSquare className='w-4 h-4 text-slate-500' />
+                <MessageSquare className='w-4 h-4 text-slate-500 shrink-0' />
                 <span>Chat</span>
               </button>
 
               <button
                 type='button'
                 onClick={() => navigate(`/doctor-video-call/${nextUpPatient._id}`)}
-                className='h-10 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold inline-flex items-center gap-2 shadow-sm shadow-sky-600/30 transition-all cursor-pointer'
+                className='min-h-[44px] sm:min-h-[40px] px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold inline-flex items-center justify-center gap-2 shadow-sm shadow-sky-600/30 transition-all cursor-pointer'
               >
-                <Video className='w-4 h-4' />
-                <span>Start Video Call</span>
+                <Video className='w-4 h-4 shrink-0' />
+                <span>Video Call</span>
               </button>
 
               <button
                 type='button'
                 onClick={() => openConfirmModal('complete', nextUpPatient)}
-                className='h-10 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer'
+                className='min-h-[44px] sm:min-h-[40px] px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer'
               >
-                <Check className='w-4 h-4 stroke-[2.5]' />
+                <Check className='w-4 h-4 stroke-[2.5] shrink-0' />
                 <span>Complete</span>
               </button>
             </div>
@@ -505,7 +507,7 @@ const DoctorDashboard = () => {
       {/* Recent Bookings & Action Queue */}
       <section className='bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden'>
         {/* Table Header + Filter Segmented Control */}
-        <div className='px-6 py-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50/60'>
+        <div className='px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 sm:gap-4 bg-slate-50/60'>
           <div>
             <h2 className='text-base sm:text-lg font-extrabold text-slate-900'>
               Recent Patient Appointments
@@ -515,36 +517,38 @@ const DoctorDashboard = () => {
             </p>
           </div>
 
-          <div className='inline-flex flex-wrap items-center gap-1 p-1 bg-slate-100 border border-slate-200/80 rounded-xl'>
-            {[
-              { id: 'all', label: 'All', count: latestList.length },
-              { id: 'upcoming', label: 'Upcoming', count: upcomingCount },
-              { id: 'completed', label: 'Completed', count: completedCount },
-              { id: 'cancelled', label: 'Cancelled', count: cancelledCount }
-            ].map((tab) => {
-              const active = filterStatus === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  type='button'
-                  onClick={() => setFilterStatus(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer ${
-                    active
-                      ? 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={`px-1.5 py-0.2 rounded-md text-[10px] font-extrabold tabular-nums ${
-                      active ? 'bg-sky-50 text-sky-700' : 'bg-slate-200 text-slate-600'
+          <div className='overflow-x-auto no-scrollbar -mx-1 px-1'>
+            <div className='inline-flex flex-nowrap items-center gap-1 p-1 bg-slate-100 border border-slate-200/80 rounded-xl whitespace-nowrap'>
+              {[
+                { id: 'all', label: 'All', count: latestList.length },
+                { id: 'upcoming', label: 'Upcoming', count: upcomingCount },
+                { id: 'completed', label: 'Completed', count: completedCount },
+                { id: 'cancelled', label: 'Cancelled', count: cancelledCount }
+              ].map((tab) => {
+                const active = filterStatus === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    type='button'
+                    onClick={() => setFilterStatus(tab.id)}
+                    className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                      active
+                        ? 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200'
+                        : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    {tab.count}
-                  </span>
-                </button>
-              )
-            })}
+                    <span>{tab.label}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold tabular-nums ${
+                        active ? 'bg-sky-50 text-sky-700' : 'bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
 
@@ -635,10 +639,69 @@ const DoctorDashboard = () => {
                   </div>
 
                   {/* Right: Consultation Shortcuts + Explicit Status / Confirmed Decision Buttons */}
-                  <div className='flex flex-wrap items-center justify-between xl:justify-end gap-2.5 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100'>
-                    {/* Quick Clinical Tools — Segmented Bar */}
+                  <div className='flex flex-col md:flex-row md:flex-wrap md:items-center justify-between xl:justify-end gap-2.5 pt-3 xl:pt-0 border-t xl:border-t-0 border-slate-100'>
+                    {/* Mobile Touch-Friendly Action Grid (< 768px) */}
                     {!item.cancelled && (
-                      <div className='inline-flex items-center rounded-xl border border-slate-200 bg-white shadow-2xs divide-x divide-slate-200 overflow-hidden'>
+                      <div className='md:hidden grid grid-cols-2 gap-2 w-full'>
+                        {!item.isCompleted && (
+                          <button
+                            type='button'
+                            onClick={() => navigate(`/doctor-video-call/${item._id}`)}
+                            className='min-h-[44px] px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-xs cursor-pointer'
+                          >
+                            <Video className='w-4 h-4' />
+                            <span>Video Call</span>
+                          </button>
+                        )}
+                        <button
+                          type='button'
+                          onClick={() => navigate(`/doctor-chat/${item._id}`)}
+                          className='min-h-[44px] px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer'
+                        >
+                          <MessageSquare className='w-4 h-4 text-sky-600' />
+                          <span>Chat</span>
+                        </button>
+                        <button
+                          type='button'
+                          onClick={() => navigate(`/doctor-prescription/${item._id}`)}
+                          className='min-h-[44px] px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer'
+                        >
+                          <FileText className='w-4 h-4 text-slate-500' />
+                          <span>Write e-Rx</span>
+                        </button>
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setHealthDrawer({
+                              isOpen: true,
+                              userId: item.userId,
+                              patientFallback: item.userData,
+                              reasonForVisit: item.reasonForVisit || ''
+                            })
+                          }
+                          className='min-h-[44px] px-3 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer'
+                        >
+                          <HeartPulse className='w-4 h-4 text-indigo-600' />
+                          <span>Patient Chart</span>
+                        </button>
+                        <button
+                          type='button'
+                          onClick={() => setReferralModal({ isOpen: true, appointment: item })}
+                          className={`col-span-2 min-h-[42px] px-3 rounded-xl border text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer ${
+                            item.inPersonReferral
+                              ? 'bg-amber-50 border-amber-200 text-amber-900'
+                              : 'bg-slate-50 border-slate-200 text-slate-700'
+                          }`}
+                        >
+                          <Building2 className='w-4 h-4 text-amber-600' />
+                          <span>{item.inPersonReferral ? 'Referral Sent' : 'Hospital Referral'}</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Quick Clinical Tools — Desktop Segmented Bar (md+) */}
+                    {!item.cancelled && (
+                      <div className='hidden md:inline-flex items-center rounded-xl border border-slate-200 bg-white shadow-2xs divide-x divide-slate-200 overflow-hidden'>
                         <button
                           type='button'
                           onClick={() =>
@@ -705,7 +768,7 @@ const DoctorDashboard = () => {
                     )}
 
                     {/* Status Badge OR Explicit Action Buttons (Safe confirmation) */}
-                    <div className='flex items-center gap-2'>
+                    <div className='flex flex-wrap items-center gap-2 w-full md:w-auto'>
                       {item.inPersonReferral && (
                         <span
                           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${
@@ -731,11 +794,11 @@ const DoctorDashboard = () => {
                           <span>Completed</span>
                         </span>
                       ) : (
-                        <div className='flex items-center gap-1.5 pl-1 xl:border-l xl:border-slate-200'>
+                        <div className='grid grid-cols-2 md:flex items-center gap-2 md:gap-1.5 w-full md:w-auto md:pl-1 xl:border-l xl:border-slate-200'>
                           <button
                             type='button'
                             onClick={() => openConfirmModal('complete', item)}
-                            className='h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer'
+                            className='min-h-[44px] md:min-h-0 md:h-8 px-3 rounded-xl md:rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold md:font-semibold inline-flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer'
                             title='Mark this consultation as completed'
                           >
                             <Check className='w-3.5 h-3.5 stroke-[2.5]' />
@@ -745,7 +808,7 @@ const DoctorDashboard = () => {
                           <button
                             type='button'
                             onClick={() => openConfirmModal('cancel', item)}
-                            className='h-8 px-2.5 rounded-lg border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-200 text-slate-600 hover:text-rose-600 text-xs font-medium inline-flex items-center gap-1 transition-colors cursor-pointer'
+                            className='min-h-[44px] md:min-h-0 md:h-8 px-2.5 rounded-xl md:rounded-lg border border-rose-200 md:border-slate-200 bg-rose-50/70 md:bg-white hover:bg-rose-50 hover:border-rose-200 text-rose-700 md:text-slate-600 hover:text-rose-600 text-xs font-bold md:font-medium inline-flex items-center justify-center gap-1 transition-colors cursor-pointer'
                             title='Cancel this appointment'
                           >
                             <span>Cancel</span>

@@ -543,11 +543,16 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
     }
   }, [onActiveSessionChange])
 
+  const canScreenShare = useMemo(
+    () => typeof navigator !== 'undefined' && typeof navigator.mediaDevices?.getDisplayMedia === 'function',
+    []
+  )
+
   const qualityBadgeStyle = {
-    excellent: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    good: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-    fair: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    poor: 'bg-rose-500/25 text-rose-300 border-rose-500/50'
+    excellent: 'bg-slate-950/[0.88] text-emerald-300 border-emerald-400/50 shadow-lg backdrop-blur-md',
+    good: 'bg-slate-950/[0.88] text-sky-300 border-sky-400/50 shadow-lg backdrop-blur-md',
+    fair: 'bg-slate-950/[0.88] text-amber-300 border-amber-400/50 shadow-lg backdrop-blur-md',
+    poor: 'bg-slate-950/[0.88] text-rose-300 border-rose-400/50 shadow-lg backdrop-blur-md'
   }[networkStats.qualityGrade || 'good']
 
   return (
@@ -555,7 +560,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
       className={
         isMinimized
           ? 'fixed bottom-5 right-5 z-50 w-80 sm:w-96 rounded-2xl overflow-hidden shadow-2xl border-2 border-sky-500/70 bg-slate-950 select-none'
-          : 'min-h-[85vh] py-5 max-w-7xl mx-auto px-2 sm:px-4'
+          : 'min-h-[85vh] py-2.5 sm:py-5 max-w-7xl mx-auto px-2 sm:px-4'
       }
     >
       {/* Native Light-Dismissable Audio/Video Device Settings Dialog */}
@@ -563,7 +568,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
         ref={settingsDialogRef}
         {...{ closedby: 'any' }}
         aria-labelledby={settingsTitleId}
-        className='m-auto w-full max-w-lg rounded-3xl bg-slate-900 text-slate-100 border border-slate-700/80 p-0 shadow-2xl'
+        className='m-auto w-[calc(100%-1.5rem)] max-w-lg max-h-[88dvh] overflow-y-auto rounded-3xl bg-slate-900 text-slate-100 border border-slate-700/80 p-0 shadow-2xl'
       >
         <div className='p-5 sm:p-6 space-y-5'>
           <div className='flex items-center justify-between border-b border-slate-800 pb-3.5'>
@@ -721,7 +726,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
         onClose={() => {
           if (incomingRecordingRequest) respondRecordingConsent(false)
         }}
-        className='m-auto w-full max-w-md rounded-3xl bg-slate-900 text-slate-100 border border-slate-700 p-6 shadow-2xl'
+        className='m-auto w-[calc(100%-1.5rem)] max-w-md max-h-[88dvh] overflow-y-auto rounded-3xl bg-slate-900 text-slate-100 border border-slate-700 p-5 sm:p-6 shadow-2xl'
       >
         <div className='space-y-4'>
           <div className='w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400'>
@@ -761,11 +766,11 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
         className={
           isMinimized
             ? 'hidden'
-            : 'flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 mb-5 border-b border-slate-200'
+            : 'flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-4 pb-3 mb-3 sm:pb-5 sm:mb-5 border-b border-slate-200'
         }
       >
-        <div>
-          <div className='flex flex-wrap items-center gap-2 mb-1.5'>
+        <div className='min-w-0'>
+          <div className='hidden sm:flex flex-wrap items-center gap-2 mb-1.5'>
             <span className='inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20'>
               <Lock className='w-3.5 h-3.5' /> DTLS-SRTP Encrypted Teleconsultation
             </span>
@@ -780,46 +785,59 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
               </span>
             )}
           </div>
-          <h1 className='text-xl md:text-2xl font-bold text-slate-900 tracking-tight'>
-            Video Consultation Room
-          </h1>
+          <div className='flex items-center justify-between gap-2'>
+            <h1 className='text-base sm:text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate'>
+              Video Consultation Room
+            </h1>
+            {recordingState === 'active' && (
+              <span className='sm:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 shrink-0 tabular-nums'>
+                <span className='w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping' /> REC •{' '}
+                {formatDuration(recordingDuration)}
+              </span>
+            )}
+          </div>
           {appointment && (
-            <p className='text-sm text-slate-600 mt-0.5 flex flex-wrap items-center gap-2'>
-              Doctor: <span className='font-semibold text-slate-900'>{appointment.docData?.name}</span>
+            <p className='text-xs sm:text-sm text-slate-600 mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5'>
+              <span className='text-slate-500'>Doctor:</span>
+              <span className='font-semibold text-slate-900'>{appointment.docData?.name}</span>
               <span className='text-slate-400'>•</span>
               <span className='text-primary font-medium'>{appointment.docData?.speciality}</span>
             </p>
           )}
         </div>
 
-        <div className='flex flex-wrap items-center gap-2.5'>
-          {callStatus === 'connected' && (
-            <div className='flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold tabular-nums'>
-              <span className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse' />
-              <span>LIVE • {formatDuration(callDuration)}</span>
-            </div>
-          )}
-          {(callStatus === 'connecting' || callStatus === 'reconnecting') && (
-            <div className='flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold'>
-              <span className='w-2 h-2 rounded-full bg-amber-500 animate-ping' />
-              <span>{callStatus === 'reconnecting' ? 'Reconnecting Media...' : 'Ringing Doctor...'}</span>
-            </div>
-          )}
-          <button
-            type='button'
-            onClick={openSettingsModal}
-            className='inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer'
-          >
-            <Settings className='w-3.5 h-3.5' /> Devices
-          </button>
-          <button
-            type='button'
-            onClick={() => navigate('/my-appointments')}
-            className='inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-medium transition-colors cursor-pointer'
-            title={isInActiveSession ? 'Minimize call to floating PiP & view appointments' : 'Back to appointments'}
-          >
-            <ArrowLeft className='w-3.5 h-3.5' /> {isInActiveSession ? 'Minimize' : 'Appointments'}
-          </button>
+        <div className='flex flex-wrap items-center justify-between sm:justify-end gap-1.5 sm:gap-2.5 shrink-0'>
+          <div className='flex items-center gap-1.5'>
+            {callStatus === 'connected' && (
+              <div className='flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] sm:text-xs font-bold tabular-nums whitespace-nowrap'>
+                <span className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0' />
+                <span>LIVE • {formatDuration(callDuration)}</span>
+              </div>
+            )}
+            {(callStatus === 'connecting' || callStatus === 'reconnecting') && (
+              <div className='flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] sm:text-xs font-semibold whitespace-nowrap'>
+                <span className='w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0' />
+                <span>{callStatus === 'reconnecting' ? 'Reconnecting...' : 'Ringing Doctor...'}</span>
+              </div>
+            )}
+          </div>
+          <div className='flex items-center gap-1.5 sm:gap-2'>
+            <button
+              type='button'
+              onClick={openSettingsModal}
+              className='inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50 text-[11px] sm:text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap'
+            >
+              <Settings className='w-3.5 h-3.5' /> Devices
+            </button>
+            <button
+              type='button'
+              onClick={() => navigate('/my-appointments')}
+              className='inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50 text-[11px] sm:text-xs font-medium transition-colors cursor-pointer whitespace-nowrap'
+              title={isInActiveSession ? 'Minimize call to floating PiP & view appointments' : 'Back to appointments'}
+            >
+              <ArrowLeft className='w-3.5 h-3.5' /> {isInActiveSession ? 'Minimize' : 'Appointments'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1012,7 +1030,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
         /* Main Consultation Workspace: Video Stage (Left 8 cols) + Multi-Tab Sidebar (Right 4 cols) */
         <div className={isMinimized ? 'block' : 'grid grid-cols-1 lg:grid-cols-12 gap-5 items-start'}>
           {/* Primary Video Stage & Control Dock */}
-          <div className={isMinimized ? 'w-full' : 'lg:col-span-8 space-y-4'}>
+          <div className={isMinimized ? 'w-full' : 'lg:col-span-8 space-y-3 sm:space-y-4'}>
             <div
               ref={stageContainerRef}
               className={`relative bg-slate-950 overflow-hidden aspect-[4/3] sm:aspect-video min-h-[250px] sm:min-h-0 select-none ${
@@ -1264,10 +1282,10 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
 
               {/* Top-Left HUD: Connection Status & Remote Peer Media State Badges */}
               {isInActiveSession && (
-                <div className='absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-[60%]'>
-                  <div className='bg-slate-900/85 backdrop-blur-md border border-slate-700/70 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs text-slate-100 flex items-center gap-1.5 sm:gap-2 shadow-sm'>
+                <div className='absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-[52%] sm:max-w-[58%]'>
+                  <div className='bg-slate-950/[0.88] backdrop-blur-md border border-slate-700/80 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs text-slate-100 flex items-center gap-1.5 sm:gap-2 shadow-lg max-w-full'>
                     <span
-                      className={`w-2 h-2 rounded-full ${
+                      className={`w-2 h-2 rounded-full shrink-0 ${
                         remoteConnected
                           ? 'bg-emerald-400'
                           : callStatus === 'reconnecting'
@@ -1275,7 +1293,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                           : 'bg-amber-400 animate-pulse'
                       }`}
                     />
-                    <span className='font-semibold'>
+                    <span className='font-semibold truncate'>
                       {remoteConnected
                         ? peerInfo?.name || appointment?.docData?.name || 'Doctor Connected'
                         : callStatus === 'reconnecting'
@@ -1285,36 +1303,36 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                   </div>
 
                   {remoteConnected && !peerMediaState.audio && (
-                    <span className='bg-rose-950/85 border border-rose-500/40 text-rose-200 px-2.5 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1'>
-                      <MicOff className='w-3 h-3' /> Doctor Muted
+                    <span className='bg-rose-950/90 border border-rose-500/40 text-rose-200 px-2.5 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1 shadow-md'>
+                      <MicOff className='w-3 h-3 shrink-0' /> Doctor Muted
                     </span>
                   )}
                   {remoteConnected && peerMediaState.screen && (
-                    <span className='bg-sky-950/85 border border-sky-500/40 text-sky-200 px-2.5 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1'>
-                      <Monitor className='w-3 h-3' /> Doctor Sharing Screen
+                    <span className='bg-sky-950/90 border border-sky-500/40 text-sky-200 px-2.5 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1 shadow-md'>
+                      <Monitor className='w-3 h-3 shrink-0' /> Doctor Sharing Screen
                     </span>
                   )}
                   {remoteConnected && peerMediaState.handRaised && (
-                    <span className='bg-amber-500 text-slate-950 px-2.5 py-1 rounded-xl text-[11px] font-extrabold'>
+                    <span className='bg-amber-500 text-slate-950 px-2.5 py-1 rounded-xl text-[11px] font-extrabold shadow-md'>
                       ✋ Doctor Raised Hand
                     </span>
                   )}
                 </div>
               )}
 
-              {/* Top-Right HUD: Network Quality Pill, Diagnostics Popover & Contactless rPPG Vitals */}
+              {/* Top-Right HUD: High-Contrast Network Quality Pill & Diagnostics Popover */}
               {isInActiveSession && !isMinimized && (
-                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-2'>
+                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-2 max-w-[46%] sm:max-w-none'>
                   <div className='flex items-center gap-2'>
                     {remoteConnected && (
                       <button
                         type='button'
                         onClick={() => setShowStatsPopover((s) => !s)}
-                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border backdrop-blur-md text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer ${qualityBadgeStyle}`}
+                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap transition-opacity hover:opacity-95 ${qualityBadgeStyle}`}
                         title='View Live WebRTC Network Telemetry'
                       >
-                        <Gauge className='w-3.5 h-3.5' />
-                        <span>
+                        <Gauge className='w-3.5 h-3.5 shrink-0' />
+                        <span className='truncate'>
                           {networkStats.rttMs !== null ? `${networkStats.rttMs} ms` : 'Net'} •{' '}
                           {networkStats.candidateType}
                         </span>
@@ -1323,46 +1341,63 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                   </div>
 
                   {showStatsPopover && remoteConnected && (
-                    <div className='w-64 p-3.5 rounded-2xl bg-slate-950/95 border border-slate-700/80 backdrop-blur-md text-slate-200 text-[11px] shadow-2xl space-y-2'>
-                      <div className='flex items-center justify-between border-b border-slate-800 pb-1.5'>
-                        <span className='font-extrabold uppercase tracking-wider text-slate-400'>
-                          WebRTC Telemetry
-                        </span>
-                        <span className='uppercase font-bold text-emerald-400'>{networkStats.qualityGrade}</span>
+                    <>
+                      <div
+                        className='fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm md:hidden'
+                        onClick={() => setShowStatsPopover(false)}
+                        aria-hidden='true'
+                      />
+                      <div className='fixed inset-x-3 bottom-4 z-50 md:absolute md:inset-auto md:top-11 md:right-0 w-auto md:w-64 p-4 md:p-3.5 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-3.5 rounded-2xl bg-slate-950/[0.96] border border-slate-700/90 backdrop-blur-md text-slate-200 text-xs md:text-[11px] shadow-2xl space-y-2.5 md:space-y-2'>
+                        <div className='flex items-center justify-between border-b border-slate-800 pb-2 md:pb-1.5'>
+                          <span className='font-extrabold uppercase tracking-wider text-slate-300'>
+                            WebRTC Diagnostics
+                          </span>
+                          <div className='flex items-center gap-2'>
+                            <span className='uppercase font-bold text-emerald-400'>{networkStats.qualityGrade}</span>
+                            <button
+                              type='button'
+                              onClick={() => setShowStatsPopover(false)}
+                              aria-label='Close WebRTC diagnostics'
+                              className='p-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer'
+                            >
+                              <X className='w-3.5 h-3.5' />
+                            </button>
+                          </div>
+                        </div>
+                        <div className='grid grid-cols-2 gap-y-1.5 text-slate-300'>
+                          <span className='text-slate-400'>Round-Trip:</span>
+                          <span className='font-mono text-right'>{networkStats.rttMs ?? '--'} ms</span>
+                          <span className='text-slate-400'>Packet Loss:</span>
+                          <span className='font-mono text-right'>{networkStats.packetLossPct}%</span>
+                          <span className='text-slate-400'>Bitrate (↓/↑):</span>
+                          <span className='font-mono text-right'>
+                            {networkStats.rxBitrateKbps}/{networkStats.txBitrateKbps} kbps
+                          </span>
+                          <span className='text-slate-400'>Video Stream:</span>
+                          <span className='font-mono text-right'>
+                            {networkStats.resolution || 'Audio'} {networkStats.fps ? `@${networkStats.fps}fps` : ''}
+                          </span>
+                          <span className='text-slate-400'>ICE Route:</span>
+                          <span className='font-semibold text-sky-300 text-right'>{networkStats.candidateType}</span>
+                        </div>
+                        <div className='pt-2 md:pt-1.5 border-t border-slate-800 flex items-center justify-between gap-2'>
+                          <button
+                            type='button'
+                            onClick={toggleDataSaver}
+                            className='px-3 py-1.5 md:px-2.5 md:py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold cursor-pointer'
+                          >
+                            {isDataSaver ? 'Restore HD' : 'Data Saver'}
+                          </button>
+                          <button
+                            type='button'
+                            onClick={triggerIceRestart}
+                            className='px-3 py-1.5 md:px-2.5 md:py-1 rounded-lg bg-sky-600/30 hover:bg-sky-600/50 text-sky-200 font-semibold flex items-center gap-1 cursor-pointer'
+                          >
+                            <RefreshCw className='w-3 h-3' /> Repair ICE
+                          </button>
+                        </div>
                       </div>
-                      <div className='grid grid-cols-2 gap-y-1.5 text-slate-300'>
-                        <span className='text-slate-400'>Round-Trip:</span>
-                        <span className='font-mono text-right'>{networkStats.rttMs ?? '--'} ms</span>
-                        <span className='text-slate-400'>Packet Loss:</span>
-                        <span className='font-mono text-right'>{networkStats.packetLossPct}%</span>
-                        <span className='text-slate-400'>Bitrate (↓/↑):</span>
-                        <span className='font-mono text-right'>
-                          {networkStats.rxBitrateKbps}/{networkStats.txBitrateKbps} kbps
-                        </span>
-                        <span className='text-slate-400'>Video Stream:</span>
-                        <span className='font-mono text-right'>
-                          {networkStats.resolution || 'Audio'} {networkStats.fps ? `@${networkStats.fps}fps` : ''}
-                        </span>
-                        <span className='text-slate-400'>ICE Route:</span>
-                        <span className='font-semibold text-sky-300 text-right'>{networkStats.candidateType}</span>
-                      </div>
-                      <div className='pt-1.5 border-t border-slate-800 flex items-center justify-between gap-2'>
-                        <button
-                          type='button'
-                          onClick={toggleDataSaver}
-                          className='px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold cursor-pointer'
-                        >
-                          {isDataSaver ? 'Restore HD' : 'Data Saver'}
-                        </button>
-                        <button
-                          type='button'
-                          onClick={triggerIceRestart}
-                          className='px-2.5 py-1 rounded-lg bg-sky-600/30 hover:bg-sky-600/50 text-sky-200 font-semibold flex items-center gap-1 cursor-pointer'
-                        >
-                          <RefreshCw className='w-3 h-3' /> Repair ICE
-                        </button>
-                      </div>
-                    </div>
+                    </>
                   )}
 
                   {networkStats.qualityGrade === 'poor' && !isDataSaver && remoteConnected && (
@@ -1374,22 +1409,21 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                       Unstable Network — Switch to Data Saver
                     </button>
                   )}
-
-                  {showVitals && (
-                    <div className='max-w-xs'>
-                      <VitalsOverlay
-                        vitals={vitalsData}
-                        isSpotCheckRunning={isSpotCheckRunning}
-                        onStartSpotCheck={startSpotCheck}
-                        onStopSpotCheck={stopSpotCheck}
-                        onSaveClinicalVitals={saveClinicalVitalsToEHR}
-                        onStreamPreview={emitVitalsUpdate}
-                        onClose={toggleVitals}
-                        isSaving={isSavingVitals}
-                      />
-                    </div>
-                  )}
                 </div>
+              )}
+
+              {/* Clinical Vitals & NEWS2 Drawer (Native Mobile Bottom Sheet / Desktop Floating HUD) */}
+              {isInActiveSession && !isMinimized && showVitals && (
+                <VitalsOverlay
+                  vitals={vitalsData}
+                  isSpotCheckRunning={isSpotCheckRunning}
+                  onStartSpotCheck={startSpotCheck}
+                  onStopSpotCheck={stopSpotCheck}
+                  onSaveClinicalVitals={saveClinicalVitalsToEHR}
+                  onStreamPreview={emitVitalsUpdate}
+                  onClose={toggleVitals}
+                  isSaving={isSavingVitals}
+                />
               )}
 
               {/* Floating Quick Reactions */}
@@ -1476,7 +1510,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
               className={
                 isMinimized
                   ? 'hidden'
-                  : 'bg-slate-900 border border-slate-800 rounded-2xl p-2.5 sm:p-4 flex flex-wrap items-center justify-center sm:justify-between gap-2 sm:gap-3 shadow-sm'
+                  : 'relative bg-slate-900 border border-slate-800 rounded-2xl p-3 sm:p-3.5 shadow-lg'
               }
             >
               {callStatus === 'idle' && (
@@ -1485,18 +1519,18 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                     <ShieldCheck className='w-4 h-4 text-emerald-400 shrink-0' />
                     <span>Peer-to-peer encrypted video, live captions, screen sharing & optical pulse ready.</span>
                   </div>
-                  <div className='flex flex-wrap items-center gap-2'>
+                  <div className='flex flex-wrap items-center gap-2 w-full sm:w-auto'>
                     <button
                       type='button'
                       onClick={() => handleJoinConsultation(true)}
-                      className='inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs cursor-pointer'
+                      className='flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs cursor-pointer'
                     >
                       <Mic className='w-3.5 h-3.5 text-sky-400' /> Audio-Only
                     </button>
                     <button
                       type='button'
                       onClick={() => handleJoinConsultation(false)}
-                      className='inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-sky-500 text-white font-bold text-xs sm:text-sm shadow-sm transition-all cursor-pointer'
+                      className='flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-sky-500 text-white font-bold text-xs sm:text-sm shadow-sm transition-all cursor-pointer'
                     >
                       <PhoneCall className='w-4 h-4' /> Join Video Call
                     </button>
@@ -1505,68 +1539,145 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
               )}
 
               {isInActiveSession && (
-                <>
-                  <div className='flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2'>
-                    {/* Mic */}
+                <div className='w-full space-y-2.5'>
+                  {/* Floating Quick Reactions Tray (anchored outside horizontal scroll strip so never clipped) */}
+                  {showReactionMenu && (
+                    <div className='absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-40 px-2 py-1.5 rounded-2xl bg-slate-950/95 border border-slate-700/90 backdrop-blur-md shadow-2xl flex items-center gap-1'>
+                      {QUICK_REACTIONS.map((item) => (
+                        <button
+                          key={item.emoji}
+                          type='button'
+                          onClick={() => {
+                            sendReaction(item.emoji, item.label)
+                            setShowReactionMenu(false)
+                          }}
+                          title={item.label}
+                          aria-label={item.label}
+                          className='w-11 h-11 sm:w-9 sm:h-9 rounded-xl hover:bg-slate-800 flex items-center justify-center text-lg sm:text-base cursor-pointer transition-transform active:scale-95'
+                        >
+                          {item.emoji}
+                        </button>
+                      ))}
+                      <button
+                        type='button'
+                        onClick={() => setShowReactionMenu(false)}
+                        aria-label='Close reactions'
+                        className='w-9 h-9 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer ml-0.5'
+                      >
+                        <X className='w-3.5 h-3.5' />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Row 1: Primary Call Bar (Native Mobile Call Controls — 44px+ Touch Targets) */}
+                  <div className='flex items-center justify-between gap-1.5 sm:gap-2'>
+                    <div className='flex items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none justify-between sm:justify-start'>
+                      {/* Mic */}
+                      <button
+                        type='button'
+                        onClick={toggleMute}
+                        aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+                        className={`h-11 w-11 sm:w-auto sm:px-3.5 rounded-full sm:rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold transition-all border shrink-0 cursor-pointer ${
+                          isMuted
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : 'bg-slate-800 text-slate-100 hover:bg-slate-700 border-slate-700'
+                        }`}
+                        title='Toggle Microphone (M)'
+                      >
+                        {isMuted ? <MicOff className='w-4 h-4' /> : <Mic className='w-4 h-4' />}
+                        <span className='hidden sm:inline'>{isMuted ? 'Unmute' : 'Mic'}</span>
+                      </button>
+
+                      {/* Camera */}
+                      <button
+                        type='button'
+                        onClick={toggleVideo}
+                        aria-label={isVideoOff ? 'Turn camera on' : 'Turn camera off'}
+                        className={`h-11 w-11 sm:w-auto sm:px-3.5 rounded-full sm:rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold transition-all border shrink-0 cursor-pointer ${
+                          isVideoOff
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : 'bg-slate-800 text-slate-100 hover:bg-slate-700 border-slate-700'
+                        }`}
+                        title='Toggle Camera (V)'
+                      >
+                        {isVideoOff ? <VideoOff className='w-4 h-4' /> : <Video className='w-4 h-4' />}
+                        <span className='hidden sm:inline'>{isVideoOff ? 'Start Cam' : 'Cam'}</span>
+                      </button>
+
+                      {/* Clinical Vitals & 15s Pulse Spot-Check */}
+                      <button
+                        type='button'
+                        onClick={toggleVitals}
+                        aria-label={showVitals ? 'Hide clinical vitals' : 'Open clinical vitals'}
+                        className={`relative h-11 px-3 sm:px-3.5 rounded-full sm:rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold transition-all border shrink-0 cursor-pointer ${
+                          showVitals
+                            ? 'bg-sky-600 text-white border-sky-400/70 shadow-sm'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-100 border-slate-700'
+                        }`}
+                        title='Log Home Vitals (BP, SpO₂, Temp, HR + NEWS2) or Run 15s Pulse Spot-Check'
+                      >
+                        <Heart
+                          className={`w-4 h-4 shrink-0 ${
+                            isSpotCheckRunning
+                              ? 'text-rose-300 animate-ping'
+                              : showVitals
+                              ? 'text-white'
+                              : 'text-rose-400'
+                          }`}
+                        />
+                        <span>{isSpotCheckRunning ? '15s...' : 'Vitals'}</span>
+                        {showVitals && (
+                          <span className='w-1.5 h-1.5 rounded-full bg-emerald-300 shrink-0' aria-hidden='true' />
+                        )}
+                      </button>
+
+                      {/* Flip / Swap View */}
+                      <button
+                        type='button'
+                        onClick={() => setIsSwappedView((v) => !v)}
+                        aria-label='Swap main and picture-in-picture video'
+                        className={`h-11 w-11 sm:w-auto sm:px-3 rounded-full sm:rounded-xl border flex items-center justify-center gap-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                          isSwappedView
+                            ? 'bg-sky-600/25 text-sky-200 border-sky-500/50'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                        }`}
+                        title='Swap Main / PiP Video'
+                      >
+                        <ArrowLeftRight className='w-4 h-4' />
+                        <span className='hidden sm:inline'>Swap</span>
+                      </button>
+                    </div>
+
+                    {/* Prominent Red End Call Button */}
                     <button
                       type='button'
-                      onClick={toggleMute}
-                      className={`h-10 px-3 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all border cursor-pointer ${
-                        isMuted
-                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                          : 'bg-slate-800 text-slate-100 hover:bg-slate-700 border-slate-700'
-                      }`}
-                      title='Toggle Microphone (M)'
+                      onClick={() => endCall(true)}
+                      aria-label='End consultation'
+                      className='inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 h-11 rounded-full sm:rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-xs shadow-md shadow-rose-950/40 transition-all shrink-0 cursor-pointer'
+                      title='End Consultation'
                     >
-                      {isMuted ? <MicOff className='w-4 h-4' /> : <Mic className='w-4 h-4' />}
-                      <span className='hidden sm:inline'>{isMuted ? 'Unmute' : 'Mic'}</span>
+                      <PhoneOff className='w-4 h-4' />
+                      <span>End</span>
                     </button>
+                  </div>
 
-                    {/* Camera */}
-                    <button
-                      type='button'
-                      onClick={toggleVideo}
-                      className={`h-10 px-3 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all border cursor-pointer ${
-                        isVideoOff
-                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                          : 'bg-slate-800 text-slate-100 hover:bg-slate-700 border-slate-700'
-                      }`}
-                      title='Toggle Camera (V)'
-                    >
-                      {isVideoOff ? <VideoOff className='w-4 h-4' /> : <Video className='w-4 h-4' />}
-                      <span className='hidden sm:inline'>{isVideoOff ? 'Start Cam' : 'Cam'}</span>
-                    </button>
-
-                    {/* Screen Share */}
+                  {/* Row 2: Secondary Tools Strip (Single Non-Wrapping Scrollable Strip — Zero Orphan Rows) */}
+                  <div className='pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto flex-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
+                    {/* Screen Share (hidden on mobile when getDisplayMedia is unavailable) */}
                     <button
                       type='button'
                       onClick={toggleScreenShare}
-                      className={`h-10 px-3 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all border cursor-pointer ${
+                      className={`${
+                        canScreenShare ? 'inline-flex' : 'hidden md:inline-flex'
+                      } shrink-0 h-9 px-3 rounded-full sm:rounded-xl items-center gap-1.5 text-[11px] font-semibold transition-all border whitespace-nowrap cursor-pointer ${
                         isScreenSharing
                           ? 'bg-sky-600 text-white border-sky-500'
-                          : 'bg-slate-800 text-slate-200 hover:bg-slate-700 border-slate-700'
+                          : 'bg-slate-800/90 text-slate-200 hover:bg-slate-700 border-slate-700/80'
                       }`}
                       title='Share Screen / Reports (S)'
                     >
-                      <Monitor className='w-4 h-4' />
-                      <span className='hidden md:inline'>{isScreenSharing ? 'Stop Share' : 'Share'}</span>
-                    </button>
-
-                    {/* Clinical Vitals & 15s Pulse Spot-Check */}
-                    <button
-                      type='button'
-                      onClick={toggleVitals}
-                      className={`h-10 px-3 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all border cursor-pointer ${
-                        showVitals
-                          ? 'bg-sky-600 text-white border-sky-500'
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
-                      }`}
-                      title='Log Home Vitals (BP, SpO₂, Temp, HR + NEWS2) or Run 15s Pulse Spot-Check'
-                    >
-                      <Heart className={`w-4 h-4 ${isSpotCheckRunning ? 'text-rose-300 animate-ping' : 'text-rose-400'}`} />
-                      <span className='hidden md:inline'>
-                        {isSpotCheckRunning ? '15s Pulse...' : showVitals ? 'Hide Vitals' : 'Vitals'}
-                      </span>
+                      <Monitor className='w-3.5 h-3.5 shrink-0' />
+                      <span>{isScreenSharing ? 'Stop Share' : 'Share'}</span>
                     </button>
 
                     {/* Live Captions (CC) */}
@@ -1574,14 +1685,14 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                       <button
                         type='button'
                         onClick={toggleCaptions}
-                        className={`h-10 px-3 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all border cursor-pointer ${
+                        className={`shrink-0 h-9 px-3 rounded-full sm:rounded-xl inline-flex items-center gap-1.5 text-[11px] font-bold transition-all border whitespace-nowrap cursor-pointer ${
                           captionsEnabled
                             ? 'bg-indigo-600 text-white border-indigo-500'
-                            : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                            : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700/80'
                         }`}
                         title='Live Speech-to-Text Captions'
                       >
-                        <span>CC</span>
+                        <span>{captionsEnabled ? 'CC On' : 'Live CC'}</span>
                       </button>
                     )}
 
@@ -1589,109 +1700,85 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
                     <button
                       type='button'
                       onClick={toggleRaiseHand}
-                      className={`h-10 px-2.5 rounded-xl flex items-center gap-1 text-xs font-semibold transition-all border cursor-pointer ${
+                      className={`shrink-0 h-9 px-3 rounded-full sm:rounded-xl inline-flex items-center gap-1.5 text-[11px] font-semibold transition-all border whitespace-nowrap cursor-pointer ${
                         handRaised
                           ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                          : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700/80'
                       }`}
                       title='Raise Hand (H)'
                     >
-                      <Hand className='w-4 h-4' />
+                      <Hand className='w-3.5 h-3.5 shrink-0' />
+                      <span>{handRaised ? 'Lower Hand' : 'Hand'}</span>
                     </button>
 
-                    {/* Reactions Popover */}
-                    <div className='relative'>
-                      <button
-                        type='button'
-                        onClick={() => setShowReactionMenu((prev) => !prev)}
-                        className='h-10 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center cursor-pointer'
-                        title='Send Quick Reaction'
-                      >
-                        <Smile className='w-4 h-4' />
-                      </button>
-                      {showReactionMenu && (
-                        <div className='absolute bottom-12 left-0 z-30 p-1.5 rounded-2xl bg-slate-900 border border-slate-700 shadow-xl flex items-center gap-1'>
-                          {QUICK_REACTIONS.map((item) => (
-                            <button
-                              key={item.emoji}
-                              type='button'
-                              onClick={() => {
-                                sendReaction(item.emoji, item.label)
-                                setShowReactionMenu(false)
-                              }}
-                              title={item.label}
-                              className='w-9 h-9 rounded-xl hover:bg-slate-800 flex items-center justify-center text-base cursor-pointer'
-                            >
-                              {item.emoji}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    {/* Reactions Trigger */}
+                    <button
+                      type='button'
+                      onClick={() => setShowReactionMenu((prev) => !prev)}
+                      className={`shrink-0 h-9 px-3 rounded-full sm:rounded-xl inline-flex items-center gap-1.5 text-[11px] font-semibold transition-all border whitespace-nowrap cursor-pointer ${
+                        showReactionMenu
+                          ? 'bg-sky-600 text-white border-sky-500'
+                          : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700/80'
+                      }`}
+                      title='Send Quick Reaction'
+                    >
+                      <Smile className='w-3.5 h-3.5 shrink-0' />
+                      <span>React</span>
+                    </button>
 
                     {/* Two-Party Consent Recording */}
                     <button
                       type='button'
                       onClick={recordingState === 'active' ? stopRecording : requestRecording}
                       disabled={recordingState === 'requesting'}
-                      className={`h-10 px-3 rounded-xl flex items-center gap-1.5 text-xs font-semibold transition-all border cursor-pointer disabled:opacity-50 ${
+                      className={`shrink-0 h-9 px-3 rounded-full sm:rounded-xl inline-flex items-center gap-1.5 text-[11px] font-semibold transition-all border whitespace-nowrap cursor-pointer disabled:opacity-50 ${
                         recordingState === 'active'
                           ? 'bg-rose-600 text-white border-rose-500'
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                          : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700/80'
                       }`}
                       title='Two-Party Consented Local Recording'
                     >
-                      <Radio className='w-3.5 h-3.5' />
-                      <span className='hidden xl:inline'>
+                      <Radio className='w-3.5 h-3.5 shrink-0' />
+                      <span>
                         {recordingState === 'active'
                           ? 'Stop Rec'
                           : recordingState === 'requesting'
-                          ? 'Awaiting Consent...'
+                          ? 'Consent...'
                           : 'Record'}
                       </span>
                     </button>
-                  </div>
 
-                  {/* Viewport & End Controls */}
-                  <div className='flex flex-wrap items-center justify-center gap-1.5 sm:gap-2'>
-                    <button
-                      type='button'
-                      onClick={() => setIsSwappedView((v) => !v)}
-                      className='h-10 w-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center justify-center cursor-pointer'
-                      title='Swap Main / PiP Video'
-                    >
-                      <ArrowLeftRight className='w-4 h-4' />
-                    </button>
+                    {/* Picture-in-Picture */}
                     <button
                       type='button'
                       onClick={togglePiP}
-                      className={`h-10 w-10 rounded-xl border flex items-center justify-center cursor-pointer ${
+                      className={`shrink-0 h-9 px-3 rounded-full sm:rounded-xl inline-flex items-center gap-1.5 text-[11px] font-semibold transition-all border whitespace-nowrap cursor-pointer ${
                         isPiP
                           ? 'bg-sky-600 text-white border-sky-500'
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                          : 'bg-slate-800/90 hover:bg-slate-700 text-slate-200 border-slate-700/80'
                       }`}
                       title='Picture-in-Picture Floating Window'
                     >
-                      <PictureInPicture2 className='w-4 h-4' />
+                      <PictureInPicture2 className='w-3.5 h-3.5 shrink-0' />
+                      <span>PiP</span>
                     </button>
+
+                    {/* Fullscreen */}
                     <button
                       type='button'
                       onClick={toggleFullscreen}
-                      className='h-10 w-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center justify-center cursor-pointer'
+                      className='shrink-0 h-9 px-3 rounded-full sm:rounded-xl inline-flex items-center gap-1.5 text-[11px] font-semibold bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 whitespace-nowrap cursor-pointer transition-all'
                       title='Fullscreen Stage (F)'
                     >
-                      {isFullscreen ? <Minimize2 className='w-4 h-4' /> : <Maximize2 className='w-4 h-4' />}
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => endCall(true)}
-                      className='inline-flex items-center gap-1.5 px-4 h-10 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all cursor-pointer'
-                      title='End Consultation'
-                    >
-                      <PhoneOff className='w-4 h-4' /> <span>End</span>
+                      {isFullscreen ? (
+                        <Minimize2 className='w-3.5 h-3.5 shrink-0' />
+                      ) : (
+                        <Maximize2 className='w-3.5 h-3.5 shrink-0' />
+                      )}
+                      <span>{isFullscreen ? 'Exit' : 'Fullscreen'}</span>
                     </button>
                   </div>
-                </>
+                </div>
               )}
 
               {callStatus === 'ended' && (

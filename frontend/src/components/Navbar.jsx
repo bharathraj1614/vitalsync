@@ -225,11 +225,11 @@ const Navbar = () => {
         className={`sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/80 ${
           location.pathname.startsWith('/chat') || location.pathname.startsWith('/symptom-checker')
             ? 'mb-2'
-            : 'mb-6'
+            : 'mb-3 sm:mb-6'
         }`}
       >
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex items-center justify-between h-16 sm:h-[70px] gap-3'>
+          <div className='flex items-center justify-between h-14 sm:h-[70px] gap-3'>
             
             {/* Brand Logo */}
             <div
@@ -689,6 +689,84 @@ const Navbar = () => {
             </div>
           </div>
         </div>
+
+        {/* Native Mobile Bottom Navigation Bar (< 768px) */}
+        {!(
+          location.pathname.startsWith('/video-call') ||
+          /^\/chat\/[^/]+/.test(location.pathname) ||
+          location.pathname.startsWith('/symptom-checker')
+        ) && (
+          <nav
+            aria-label='Mobile bottom navigation'
+            className='fixed bottom-0 inset-x-0 z-40 md:hidden bg-white/95 backdrop-blur-lg border-t border-slate-200/80 shadow-[0_-4px_20px_rgba(15,23,42,0.06)] pb-[env(safe-area-inset-bottom)]'
+          >
+            <div className='grid grid-cols-5 items-center h-16 px-1.5 max-w-md mx-auto'>
+              {[
+                {
+                  label: 'Home',
+                  to: '/',
+                  icon: Home,
+                  isActive: location.pathname === '/'
+                },
+                {
+                  label: 'Doctors',
+                  to: '/doctors',
+                  icon: Stethoscope,
+                  isActive: location.pathname.startsWith('/doctors') || location.pathname.startsWith('/appointment')
+                },
+                {
+                  label: 'Bookings',
+                  to: token ? '/my-appointments' : '/login',
+                  icon: Calendar,
+                  isActive: location.pathname.startsWith('/my-appointments')
+                },
+                {
+                  label: 'Health Hub',
+                  to: token ? '/health' : '/login?redirect=%2Fhealth',
+                  icon: HeartPulse,
+                  isActive:
+                    location.pathname.startsWith('/health') ||
+                    location.pathname.startsWith('/medical-records')
+                },
+                {
+                  label: 'Messages',
+                  to: token ? '/chat' : '/login?redirect=%2Fchat',
+                  icon: MessageSquare,
+                  badge: token ? unreadChatCount : 0,
+                  isActive: location.pathname.startsWith('/chat')
+                }
+              ].map((item) => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.label}
+                    type='button'
+                    onClick={() => navigate(item.to)}
+                    className={`flex flex-col items-center justify-center gap-0.5 py-1 rounded-xl transition-all active:scale-95 cursor-pointer ${
+                      item.isActive ? 'text-sky-600' : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <div
+                      className={`relative px-3 py-1 rounded-full transition-colors ${
+                        item.isActive ? 'bg-sky-50 text-sky-600' : 'bg-transparent'
+                      }`}
+                    >
+                      <Icon className='w-5 h-5 stroke-[2.1]' />
+                      {item.badge > 0 && (
+                        <span className='absolute -top-0.5 right-1 min-w-[16px] h-4 px-1 rounded-full bg-sky-600 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white'>
+                          {item.badge > 9 ? '9+' : item.badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className='text-[10px] font-bold leading-none tracking-tight'>
+                      {item.label}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </nav>
+        )}
     </>
   )
 }

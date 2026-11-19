@@ -368,15 +368,15 @@ const MyAppointments = () => {
     const countCancelled = appointments.filter(a => a.cancelled).length
 
     return (
-        <div className='py-6 space-y-6 max-w-7xl mx-auto'>
+        <div className='py-4 sm:py-6 space-y-5 sm:space-y-6 max-w-7xl mx-auto overflow-x-hidden'>
             {/* Header Banner */}
-            <div className='bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-6'>
+            <div className='bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-8 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6'>
                 <div className='space-y-1.5 max-w-xl'>
                     <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-xs font-semibold text-primary border border-sky-100'>
                         <Calendar className='w-3.5 h-3.5 text-primary' />
                         <span>Care Scheduling & Records</span>
                     </div>
-                    <h1 className='text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight'>
+                    <h1 className='text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight'>
                         My Consultations & Appointments
                     </h1>
                     <p className='text-xs sm:text-sm text-slate-500 leading-relaxed'>
@@ -384,43 +384,44 @@ const MyAppointments = () => {
                     </p>
                 </div>
 
-                <div className='flex flex-wrap items-center gap-2.5 shrink-0'>
+                <div className='grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2.5 shrink-0 w-full sm:w-auto'>
                     <button
                         onClick={() => navigate('/chat')}
-                        className='px-4 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer'
+                        className='min-h-[44px] px-3 sm:px-4 py-2.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 active:scale-[0.98] transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer'
                     >
-                        <MessageSquare className='w-4 h-4 text-primary' />
-                        <span>Doctor Messages</span>
+                        <MessageSquare className='w-4 h-4 text-primary shrink-0' />
+                        <span className='truncate'>Messages</span>
                     </button>
                     <button
                         onClick={() => navigate('/doctors')}
-                        className='px-4 py-2.5 text-xs font-semibold text-white bg-primary hover:bg-sky-600 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer'
+                        className='min-h-[44px] px-3 sm:px-4 py-2.5 text-xs font-semibold text-white bg-primary hover:bg-sky-600 active:scale-[0.98] rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer'
                     >
-                        <Plus className='w-4 h-4' />
-                        <span>Book New Visit</span>
+                        <Plus className='w-4 h-4 shrink-0' />
+                        <span className='truncate'>Book Visit</span>
                     </button>
                 </div>
             </div>
 
             {/* Filter Tabs Bar with Search */}
-            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
-                <div className='flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none'>
+            <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4'>
+                <div className='flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
                     {[
-                        { id: 'all', label: 'All Consultations', count: appointments.length },
-                        { id: 'upcoming', label: 'Upcoming', count: countUpcoming },
-                        { id: 'completed', label: 'Completed', count: countCompleted },
-                        { id: 'cancelled', label: 'Cancelled', count: countCancelled }
+                        { id: 'all', label: 'All', fullLabel: 'All Consultations', count: appointments.length },
+                        { id: 'upcoming', label: 'Upcoming', fullLabel: 'Upcoming', count: countUpcoming },
+                        { id: 'completed', label: 'Completed', fullLabel: 'Completed', count: countCompleted },
+                        { id: 'cancelled', label: 'Cancelled', fullLabel: 'Cancelled', count: countCancelled }
                     ].map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setFilter(tab.id)}
-                            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer whitespace-nowrap ${
+                            className={`min-h-[40px] px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 border cursor-pointer whitespace-nowrap shrink-0 ${
                                 filter === tab.id
                                     ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
                                     : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                             }`}
                         >
-                            <span>{tab.label}</span>
+                            <span className='sm:hidden'>{tab.label}</span>
+                            <span className='hidden sm:inline'>{tab.fullLabel}</span>
                             <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
                                 filter === tab.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                             }`}>
@@ -432,20 +433,21 @@ const MyAppointments = () => {
 
                 {/* Search Bar */}
                 <div className='relative w-full sm:w-72'>
-                    <Search className='w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none' />
+                    <Search className='w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none' />
                     <input
                         type='text'
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder='Search doctor or specialty...'
-                        className='w-full pl-8 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none focus:border-primary shadow-2xs'
+                        className='w-full min-h-[44px] pl-10 pr-9 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-primary shadow-2xs'
                     />
                     {searchQuery && (
                         <button
                             onClick={() => setSearchQuery('')}
-                            className='absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600'
+                            className='absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600'
+                            aria-label='Clear search'
                         >
-                            <X className='w-3.5 h-3.5' />
+                            <X className='w-4 h-4' />
                         </button>
                     )}
                 </div>
@@ -489,39 +491,44 @@ const MyAppointments = () => {
                         return (
                             <div
                                 key={item._id}
-                                className='bg-white rounded-3xl border border-slate-200/90 p-6 shadow-xs hover:border-slate-300 transition-all flex flex-col lg:flex-row gap-6 items-start justify-between'
+                                className='bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-6 shadow-xs hover:border-slate-300 transition-all flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch lg:items-start justify-between'
                             >
                                 {/* Left Section: Doctor Avatar & Status */}
-                                <div className='flex items-start gap-4 w-full lg:w-auto shrink-0'>
-                                    <div className='relative w-24 h-28 sm:w-28 sm:h-32 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0'>
+                                <div className='flex items-start gap-3.5 sm:gap-4 w-full lg:w-72 shrink-0'>
+                                    <div className='relative w-16 h-16 sm:w-24 sm:h-28 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0'>
                                         <img
                                             className='w-full h-full object-cover object-top'
                                             src={item.docData?.image}
                                             alt={item.docData?.name}
                                         />
+                                        {isOnline && (
+                                            <span className='absolute bottom-1.5 right-1.5 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white' title='Online' />
+                                        )}
                                     </div>
 
                                     {/* Doctor Details */}
-                                    <div className='space-y-1.5 flex-1 min-w-0'>
-                                        <div className='flex flex-wrap items-center gap-2'>
-                                            <h3 className='text-base font-extrabold text-slate-900 truncate'>{item.docData?.name}</h3>
-                                            <span className='text-[11px] bg-sky-50 text-primary px-2.5 py-0.5 rounded-md font-semibold border border-sky-100'>
-                                                {item.docData?.speciality}
-                                            </span>
+                                    <div className='space-y-1 flex-1 min-w-0'>
+                                        <div className='flex items-start justify-between gap-2'>
+                                            <h3 className='text-sm sm:text-base font-extrabold text-slate-900 truncate'>{item.docData?.name}</h3>
                                             {isOnline && (
-                                                <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold border border-emerald-200'>
+                                                <span className='hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold border border-emerald-200 shrink-0'>
                                                     <span className='w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse' />
                                                     Online
                                                 </span>
                                             )}
                                         </div>
 
-                                        <p className='text-xs text-slate-500'>
-                                            {item.docData?.degree || 'MBBS'} &bull; {item.docData?.experience || 'Specialist'}
-                                        </p>
+                                        <div className='flex flex-wrap items-center gap-1.5'>
+                                            <span className='text-[11px] bg-sky-50 text-primary px-2 py-0.5 rounded-md font-semibold border border-sky-100 truncate max-w-full'>
+                                                {item.docData?.speciality}
+                                            </span>
+                                            <span className='text-[11px] text-slate-500 truncate'>
+                                                {item.docData?.degree || 'MBBS'}
+                                            </span>
+                                        </div>
 
                                         {/* Status Badge */}
-                                        <div className='pt-1'>
+                                        <div className='pt-1 flex flex-wrap items-center gap-1.5'>
                                             {item.cancelled ? (
                                                 <span className='inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold bg-rose-50 text-rose-700 rounded-full border border-rose-200'>
                                                     <XCircle className='w-3 h-3' /> Cancelled
@@ -539,53 +546,55 @@ const MyAppointments = () => {
                                                     <AlertCircle className='w-3 h-3 text-amber-600' /> Payment Pending
                                                 </span>
                                             )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Middle Section: Schedule & Clinical Notes */}
-                                <div className='flex-1 space-y-3 w-full text-xs'>
-                                    {/* Appointment Time Block */}
-                                    <div className='bg-slate-50 border border-slate-200/70 rounded-2xl p-4 space-y-2'>
-                                        <div className='flex flex-wrap items-center justify-between gap-2'>
-                                            <div className='flex items-center gap-2 text-slate-900 font-bold text-sm'>
-                                                <Calendar className='w-4 h-4 text-primary shrink-0' />
-                                                <span>{slotDateFormat(item.slotDate)}</span>
-                                                <span className='text-slate-400'>&bull;</span>
-                                                <Clock className='w-4 h-4 text-sky-600 shrink-0' />
-                                                <span className='font-mono'>{item.slotTime}</span>
-                                            </div>
                                             {item.rescheduledAt && (
                                                 <span className='px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold'>
                                                     Rescheduled
                                                 </span>
                                             )}
                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* Middle Section: Date/Time/Fee Badge Row & Clinical Notes */}
+                                <div className='flex-1 space-y-2.5 w-full text-xs min-w-0'>
+                                    <div className='bg-slate-50 border border-slate-200/70 rounded-2xl p-3 sm:p-4 space-y-2'>
+                                        <div className='flex flex-wrap items-center justify-between gap-2'>
+                                            <div className='flex flex-wrap items-center gap-1.5 sm:gap-2 text-slate-900 font-bold text-xs sm:text-sm'>
+                                                <span className='inline-flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200/80'>
+                                                    <Calendar className='w-3.5 h-3.5 text-primary shrink-0' />
+                                                    <span>{slotDateFormat(item.slotDate)}</span>
+                                                </span>
+                                                <span className='inline-flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200/80 font-mono'>
+                                                    <Clock className='w-3.5 h-3.5 text-sky-600 shrink-0' />
+                                                    <span>{item.slotTime}</span>
+                                                </span>
+                                            </div>
+                                            <span className='inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200/80 text-slate-900 font-mono font-bold text-xs'>
+                                                {currencySymbol}{item.amount}
+                                            </span>
+                                        </div>
 
                                         <div className='flex items-center gap-2 text-emerald-800 bg-emerald-50/90 border border-emerald-200/80 rounded-xl px-3 py-1.5 text-[11px] font-semibold'>
                                             <Video className='w-3.5 h-3.5 text-emerald-600 shrink-0' />
-                                            <span>Encrypted Teleconsultation &bull; Direct Physician Link</span>
+                                            <span className='truncate'>Encrypted Teleconsultation &bull; Direct Physician Link</span>
                                         </div>
 
                                         {item.reasonForVisit && (
-                                            <div className='text-slate-600 pt-1'>
+                                            <div className='text-slate-600 pt-0.5 break-words'>
                                                 <span className='font-semibold text-slate-800'>Reason:</span> {item.reasonForVisit}
                                             </div>
                                         )}
 
-                                        <div className='text-slate-500 pt-0.5 text-[11px] flex items-center justify-between'>
-                                            <span>Consultation Fee: <strong className='text-slate-900 font-mono'>{currencySymbol}{item.amount}</strong></span>
-                                            {item.docData?.address?.line1 && (
-                                                <span className='text-slate-400 truncate max-w-[200px]'>
-                                                    Clinic: {item.docData.address.line1}
-                                                </span>
-                                            )}
-                                        </div>
+                                        {item.docData?.address?.line1 && (
+                                            <div className='text-slate-400 text-[11px] truncate'>
+                                                Clinic: {item.docData.address.line1}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* In-Person Referral Urgency Notice */}
                                     {item.inPersonReferral && item.inPersonReferral.urgency && (
-                                        <div className={`rounded-2xl p-4 border text-xs space-y-2 ${
+                                        <div className={`rounded-2xl p-3.5 sm:p-4 border text-xs space-y-1.5 ${
                                             item.inPersonReferral.urgency === 'EMERGENCY'
                                                 ? 'bg-rose-50 border-rose-300 text-rose-950'
                                                 : item.inPersonReferral.urgency === 'URGENT'
@@ -593,60 +602,60 @@ const MyAppointments = () => {
                                                 : 'bg-purple-50 border-purple-200 text-purple-950'
                                         }`}>
                                             <div className='flex items-center justify-between gap-2'>
-                                                <div className='flex items-center gap-1.5 font-bold'>
+                                                <div className='flex items-center gap-1.5 font-bold min-w-0'>
                                                     <AlertTriangle className='w-4 h-4 text-rose-600 shrink-0' />
-                                                    <span>In-Person Clinical Evaluation Recommended</span>
+                                                    <span className='truncate'>In-Person Evaluation Recommended</span>
                                                 </div>
-                                                <span className='px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border bg-rose-600 text-white border-rose-600'>
+                                                <span className='px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border bg-rose-600 text-white border-rose-600 shrink-0'>
                                                     {item.inPersonReferral.urgency}
                                                 </span>
                                             </div>
-                                            <p className='text-slate-700'>
+                                            <p className='text-slate-700 break-words'>
                                                 <strong>Doctor's Note:</strong> {item.inPersonReferral.reason}
                                             </p>
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Right Section: High-Priority Actions */}
-                                <div className='w-full lg:w-60 space-y-2 shrink-0'>
-                                    {/* Video Call Action for Active Consultation */}
+                                {/* Right / Bottom Section: 2-Column Mobile Action Grid, Stacked Desktop */}
+                                <div className='w-full lg:w-60 grid grid-cols-2 lg:flex lg:flex-col gap-2 shrink-0 pt-1 lg:pt-0 border-t lg:border-t-0 border-slate-100'>
+                                    {/* Video Call / Pay Unlock Primary CTA (Full Width) */}
                                     {!item.cancelled && !item.isCompleted && (
                                         <>
                                             {item.payment ? (
                                                 windowStatus.status === 'OPEN' ? (
                                                     <button
                                                         onClick={() => navigate(`/video-call/${item._id}`)}
-                                                        className='w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer animate-pulse'
+                                                        className='col-span-2 w-full min-h-[44px] py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer animate-pulse'
                                                     >
-                                                        <Video className='w-4 h-4' />
-                                                        <span>Join Video Consultation</span>
+                                                        <Video className='w-4 h-4 shrink-0' />
+                                                        <span>Join Video Call</span>
                                                     </button>
                                                 ) : windowStatus.status === 'TOO_EARLY' ? (
                                                     <button
                                                         onClick={() => navigate(`/video-call/${item._id}`)}
-                                                        className='w-full py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer'
+                                                        className='col-span-2 w-full min-h-[44px] py-2.5 px-3 bg-sky-600 hover:bg-sky-500 active:scale-[0.98] text-white rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer'
                                                         title={`Opens 10m prior to slot (${item.slotTime})`}
                                                     >
-                                                        <Clock className='w-4 h-4' />
-                                                        <span>Waiting Room ({windowStatus.formattedRemaining})</span>
+                                                        <Clock className='w-4 h-4 shrink-0' />
+                                                        <span className='truncate'>Waiting Room ({windowStatus.formattedRemaining})</span>
                                                     </button>
                                                 ) : (
                                                     <button
                                                         onClick={() => openRescheduleModal(item)}
-                                                        className='w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer'
+                                                        className='col-span-2 w-full min-h-[44px] py-2.5 px-3 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-white rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer'
                                                     >
-                                                        <Clock className='w-4 h-4 text-amber-400' />
+                                                        <Clock className='w-4 h-4 text-amber-400 shrink-0' />
                                                         <span>Slot Expired &bull; Reschedule</span>
                                                     </button>
                                                 )
                                             ) : (
                                                 <button
                                                     onClick={() => setPaymentTarget(item._id)}
-                                                    className='w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer'
+                                                    className='col-span-2 w-full min-h-[44px] py-2.5 px-3 bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs'
                                                 >
-                                                    <Lock className='w-3.5 h-3.5 text-amber-600' />
-                                                    <span>Pay to Unlock Consultation</span>
+                                                    <CreditCard className='w-4 h-4 text-sky-400 shrink-0' />
+                                                    <span>Pay Online ({currencySymbol}{item.amount})</span>
                                                 </button>
                                             )}
 
@@ -657,10 +666,10 @@ const MyAppointments = () => {
                                                     doctorName: item.docData?.name,
                                                     doctorImage: item.docData?.image
                                                 })}
-                                                className='w-full py-2 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-slate-700 font-semibold text-xs flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors cursor-pointer shadow-2xs'
+                                                className='w-full min-h-[44px] py-2 px-2.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer shadow-2xs'
                                             >
-                                                <MessageSquare className='w-3.5 h-3.5 text-sky-600' />
-                                                <span>Quick Message</span>
+                                                <MessageSquare className='w-3.5 h-3.5 text-sky-600 shrink-0' />
+                                                <span className='truncate'>Message Doctor</span>
                                             </button>
                                         </>
                                     )}
@@ -668,56 +677,46 @@ const MyAppointments = () => {
                                     {/* Prescription Button (Visible for all stages) */}
                                     <button
                                         onClick={() => navigate(`/prescription/${item._id}`)}
-                                        className='w-full py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200/80 font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer'
+                                        className={`${item.cancelled || item.isCompleted ? 'col-span-2' : ''} w-full min-h-[44px] py-2 px-2.5 rounded-xl bg-sky-50 hover:bg-sky-100 active:scale-[0.98] text-sky-800 border border-sky-200/80 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer`}
                                     >
-                                        <FileText className='w-3.5 h-3.5 text-sky-600' />
-                                        <span>View Prescription</span>
+                                        <FileText className='w-3.5 h-3.5 text-sky-600 shrink-0' />
+                                        <span className='truncate'>View e-Rx</span>
                                     </button>
 
-                                    {/* Inline Payment Options when Unpaid */}
-                                    {!item.cancelled && !item.payment && !item.isCompleted && (
-                                        paymentTarget === item._id ? (
-                                            <div className='p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2 animate-in fade-in'>
-                                                <p className='text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center'>Select Payment Method</p>
-                                                <button
-                                                    onClick={() => appointmentRazorpay(item._id)}
-                                                    className='w-full py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer shadow-2xs'
-                                                >
-                                                    <img className='max-w-16 max-h-4 object-contain' src={assets.razorpay_logo} alt="Razorpay" />
-                                                </button>
-                                                {paymentConfig.stripeEnabled && (
-                                                    <button
-                                                        onClick={() => appointmentStripe(item._id)}
-                                                        className='w-full py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer shadow-2xs'
-                                                    >
-                                                        <img className='max-w-14 max-h-4 object-contain' src={assets.stripe_logo} alt="Stripe" />
-                                                    </button>
-                                                )}
-                                                {paymentConfig.testMode && (
-                                                    <button
-                                                        onClick={() => handleTestPaymentBypass(item._id)}
-                                                        className='w-full py-2 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer'
-                                                    >
-                                                        <Zap className='w-3.5 h-3.5 text-amber-600' />
-                                                        <span>Skip Payment (Test Mode)</span>
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => setPaymentTarget('')}
-                                                    className='w-full text-xs text-slate-400 hover:text-slate-600 text-center block pt-0.5 cursor-pointer'
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        ) : (
+                                    {/* Inline Payment Options when Unpaid & Expanded */}
+                                    {!item.cancelled && !item.payment && !item.isCompleted && paymentTarget === item._id && (
+                                        <div className='col-span-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2 animate-in fade-in'>
+                                            <p className='text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center'>Select Payment Method</p>
                                             <button
-                                                onClick={() => setPaymentTarget(item._id)}
-                                                className='w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer'
+                                                onClick={() => appointmentRazorpay(item._id)}
+                                                className='w-full min-h-[44px] py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer shadow-2xs'
                                             >
-                                                <CreditCard className='w-3.5 h-3.5' />
-                                                <span>Pay Online ({currencySymbol}{item.amount})</span>
+                                                <img className='max-w-16 max-h-4 object-contain' src={assets.razorpay_logo} alt="Razorpay" />
                                             </button>
-                                        )
+                                            {paymentConfig.stripeEnabled && (
+                                                <button
+                                                    onClick={() => appointmentStripe(item._id)}
+                                                    className='w-full min-h-[44px] py-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors flex items-center justify-center cursor-pointer shadow-2xs'
+                                                >
+                                                    <img className='max-w-14 max-h-4 object-contain' src={assets.stripe_logo} alt="Stripe" />
+                                                </button>
+                                            )}
+                                            {paymentConfig.testMode && (
+                                                <button
+                                                    onClick={() => handleTestPaymentBypass(item._id)}
+                                                    className='w-full min-h-[44px] py-2 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer'
+                                                >
+                                                    <Zap className='w-3.5 h-3.5 text-amber-600' />
+                                                    <span>Skip Payment (Test Mode)</span>
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => setPaymentTarget('')}
+                                                className='w-full min-h-[36px] text-xs text-slate-500 hover:text-slate-700 text-center block pt-0.5 cursor-pointer font-medium'
+                                            >
+                                                Cancel Payment
+                                            </button>
+                                        </div>
                                     )}
 
                                     {/* Rating for Completed Consultation */}
@@ -727,30 +726,31 @@ const MyAppointments = () => {
                                                 appointmentId: item._id,
                                                 doctorName: item.docData?.name
                                             })}
-                                            className='w-full py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl font-semibold text-xs hover:bg-amber-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer'
+                                            className='col-span-2 w-full min-h-[44px] py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl font-semibold text-xs hover:bg-amber-100 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer'
                                         >
-                                            <Star className='w-3.5 h-3.5 text-amber-500 fill-amber-400' />
+                                            <Star className='w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0' />
                                             <span>Rate & Review Doctor</span>
                                         </button>
                                     )}
 
                                     {/* Reschedule & Cancel Row for Upcoming Visits */}
                                     {!item.cancelled && !item.isCompleted && (
-                                        <div className='flex items-center justify-between gap-2 pt-2 border-t border-slate-100'>
+                                        <>
                                             <button
                                                 onClick={() => openRescheduleModal(item)}
-                                                className='flex-1 py-1.5 px-2 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-primary font-semibold text-xs transition-colors flex items-center justify-center gap-1 cursor-pointer'
+                                                className='w-full min-h-[44px] py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-primary font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer'
                                             >
-                                                <Calendar className='w-3.5 h-3.5' />
+                                                <Calendar className='w-3.5 h-3.5 shrink-0' />
                                                 <span>Reschedule</span>
                                             </button>
                                             <button
                                                 onClick={() => cancelAppointment(item._id)}
-                                                className='py-1.5 px-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs transition-colors cursor-pointer'
+                                                className='w-full min-h-[44px] py-2 px-2.5 rounded-xl border border-rose-200/80 bg-rose-50/40 text-rose-600 hover:bg-rose-50 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer'
                                             >
-                                                Cancel
+                                                <XCircle className='w-3.5 h-3.5 shrink-0' />
+                                                <span>Cancel</span>
                                             </button>
-                                        </div>
+                                        </>
                                     )}
                                 </div>
                             </div>
@@ -763,26 +763,27 @@ const MyAppointments = () => {
             <dialog
                 ref={rescheduleDialogRef}
                 aria-labelledby="reschedule-modal-title"
-                className="rounded-3xl p-0 backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs max-w-xl w-full shadow-2xl border border-slate-200/90 text-slate-900 m-auto"
+                className="fixed inset-x-0 bottom-0 sm:inset-auto m-0 mt-auto sm:m-auto w-full max-w-xl max-h-[85dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl p-0 backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs shadow-2xl border border-slate-200/90 text-slate-900"
                 onClick={(e) => {
                     if (e.target === rescheduleDialogRef.current && !rescheduling) closeRescheduleModal()
                 }}
             >
                 {rescheduleTarget && (
-                    <div className='p-6 sm:p-7 space-y-5'>
+                    <div className='p-5 sm:p-7 space-y-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]'>
+                        <div className='sm:hidden w-10 h-1 bg-slate-300 rounded-full mx-auto -mt-1 mb-2' />
                         {/* Modal Header */}
-                        <div className='flex items-start justify-between gap-4 pb-4 border-b border-slate-100'>
-                            <div className='flex items-center gap-3'>
+                        <div className='flex items-start justify-between gap-3 pb-4 border-b border-slate-100'>
+                            <div className='flex items-center gap-3 min-w-0'>
                                 <img
                                     src={rescheduleTarget.docData?.image}
                                     alt={rescheduleTarget.docData?.name}
-                                    className='w-12 h-12 rounded-2xl object-cover bg-slate-100 border border-slate-200'
+                                    className='w-12 h-12 rounded-2xl object-cover bg-slate-100 border border-slate-200 shrink-0'
                                 />
-                                <div>
-                                    <h3 id="reschedule-modal-title" className='text-base font-extrabold text-slate-900'>
+                                <div className='min-w-0'>
+                                    <h3 id="reschedule-modal-title" className='text-base font-extrabold text-slate-900 truncate'>
                                         Reschedule Consultation Slot
                                     </h3>
-                                    <p className='text-xs text-slate-500'>
+                                    <p className='text-xs text-slate-500 break-words'>
                                         {rescheduleTarget.docData?.name} &bull; Current:{' '}
                                         <strong className='text-slate-700 font-mono'>
                                             {slotDateFormat(rescheduleTarget.slotDate)} at {rescheduleTarget.slotTime}
@@ -793,7 +794,7 @@ const MyAppointments = () => {
                             <button
                                 type="button"
                                 onClick={closeRescheduleModal}
-                                className='p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer'
+                                className='min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer shrink-0'
                                 aria-label="Close"
                             >
                                 <X className='w-5 h-5' />
@@ -934,15 +935,15 @@ const MyAppointments = () => {
                         </div>
 
                         {/* Modal Footer */}
-                        <div className='pt-3 border-t border-slate-100 flex items-center justify-between gap-3'>
-                            <p className='text-[11px] text-slate-400'>
+                        <div className='pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3'>
+                            <p className='text-[11px] text-slate-400 text-center sm:text-left'>
                                 Payment status and consultation history will remain intact.
                             </p>
-                            <div className='flex items-center gap-2 shrink-0'>
+                            <div className='grid grid-cols-2 sm:flex items-center gap-2 shrink-0 w-full sm:w-auto'>
                                 <button
                                     type='button'
                                     onClick={closeRescheduleModal}
-                                    className='px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer'
+                                    className='min-h-[44px] px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer'
                                 >
                                     Cancel
                                 </button>
@@ -950,9 +951,9 @@ const MyAppointments = () => {
                                     type='button'
                                     disabled={!rescheduleTime || rescheduling}
                                     onClick={handleConfirmReschedule}
-                                    className='px-5 py-2 rounded-xl bg-primary hover:bg-sky-600 disabled:opacity-40 text-white text-xs font-bold shadow-xs cursor-pointer'
+                                    className='min-h-[44px] px-5 py-2 rounded-xl bg-primary hover:bg-sky-600 disabled:opacity-40 text-white text-xs font-bold shadow-xs cursor-pointer'
                                 >
-                                    {rescheduling ? 'Updating...' : 'Confirm New Slot'}
+                                    {rescheduling ? 'Updating...' : 'Confirm Slot'}
                                 </button>
                             </div>
                         </div>

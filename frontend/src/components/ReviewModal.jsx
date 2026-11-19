@@ -48,8 +48,8 @@ const ReviewModal = ({ appointmentId, doctorName, onClose, onSubmitted }) => {
     }
 
     return (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200'>
-            <div className='w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden'>
+        <div className='fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200'>
+            <div className='w-full max-w-md max-h-[88dvh] overflow-y-auto bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200/90'>
                 
                 {/* Modal Header */}
                 <div className='px-6 py-5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800'>

@@ -132,7 +132,7 @@ const DoctorChatPage = () => {
       if (data.success) {
         const list = data.threads || []
         setThreads(list)
-        if (!selectedAppointmentId && !routeAppointmentId && list.length > 0 && window.innerWidth >= 1024) {
+        if (!selectedAppointmentId && !routeAppointmentId && list.length > 0 && window.innerWidth >= 768) {
           setSelectedAppointmentId(list[0].appointmentId)
         }
       }
@@ -470,7 +470,7 @@ const DoctorChatPage = () => {
   const medications = activeThread?.patientMedications || []
 
   return (
-    <div className='w-full max-w-7xl m-2 sm:m-4 min-w-0'>
+    <div className='w-full max-w-7xl mx-auto p-2 sm:p-4 min-w-0'>
       {/* Lightbox Modal */}
       {lightboxImage && (
         <div
@@ -492,22 +492,22 @@ const DoctorChatPage = () => {
         </div>
       )}
 
-      {/* Split-Pane Clinical Messenger */}
-      <div className='bg-white rounded-3xl border border-slate-200 shadow-sm overflow-clip grid grid-cols-1 lg:grid-cols-12 grid-rows-[minmax(0,1fr)] h-[calc(100dvh-96px)] min-h-[480px] max-h-[860px]'>
+      {/* Master-Detail Mobile / Split-Pane Desktop Clinical Messenger */}
+      <div className='bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-clip grid grid-cols-1 md:grid-cols-12 grid-rows-[minmax(0,1fr)] h-[calc(100dvh-9.5rem)] md:h-[calc(100dvh-6rem)] min-h-[460px] md:max-h-[860px]'>
         
         {/* LEFT PANE: Patient Threads List */}
         <div
-          className={`lg:col-span-4 border-r border-slate-200 flex flex-col bg-slate-50/50 h-full min-h-0 overflow-hidden ${
-            selectedAppointmentId ? 'hidden lg:flex' : 'flex'
+          className={`md:col-span-4 md:border-r border-slate-200 flex flex-col bg-slate-50/50 h-full min-h-0 overflow-hidden ${
+            selectedAppointmentId ? 'hidden md:flex' : 'flex'
           }`}
         >
-          <div className='p-4 sm:p-5 border-b border-slate-200 bg-white space-y-3 shrink-0'>
-            <div className='flex items-center justify-between'>
-              <div>
-                <h1 className='text-lg font-bold text-slate-900 tracking-tight'>Patient messages</h1>
-                <p className='text-xs text-slate-500'>Real-time clinical chat & consultations</p>
+          <div className='p-3.5 sm:p-5 border-b border-slate-200 bg-white space-y-3 shrink-0'>
+            <div className='flex items-center justify-between gap-2'>
+              <div className='min-w-0'>
+                <h1 className='text-base sm:text-lg font-bold text-slate-900 tracking-tight truncate'>Patient messages</h1>
+                <p className='text-xs text-slate-500 truncate'>Real-time clinical chat & consultations</p>
               </div>
-              <span className='inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 text-[11px] font-semibold border border-sky-200'>
+              <span className='inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 text-[11px] font-semibold border border-sky-200 shrink-0'>
                 <Lock className='w-3 h-3' /> Encrypted
               </span>
             </div>
@@ -519,11 +519,11 @@ const DoctorChatPage = () => {
                 value={threadSearch}
                 onChange={(e) => setThreadSearch(e.target.value)}
                 placeholder='Search patient name or message...'
-                className='w-full pl-9 pr-3.5 py-2 bg-slate-100/90 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-sky-500 transition-all'
+                className='w-full min-h-[42px] pl-9 pr-3.5 py-2 bg-slate-100/90 border border-slate-200 rounded-xl text-base sm:text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-sky-500 transition-all'
               />
             </div>
 
-            <div className='flex items-center gap-1.5'>
+            <div className='flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5'>
               {[
                 { id: 'all', label: 'All patients' },
                 { id: 'unread', label: 'Unread' },
@@ -532,7 +532,7 @@ const DoctorChatPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setThreadFilter(tab.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  className={`px-3.5 py-1.5 min-h-[36px] rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     threadFilter === tab.id
                       ? 'bg-sky-600 text-white shadow-2xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
@@ -643,8 +643,8 @@ const DoctorChatPage = () => {
 
         {/* RIGHT PANE: Active Clinical Conversation */}
         <div
-          className={`lg:col-span-8 flex flex-col bg-white h-full min-h-0 overflow-hidden relative ${
-            selectedAppointmentId ? 'flex' : 'hidden lg:flex'
+          className={`md:col-span-8 flex flex-col bg-white h-full min-h-0 overflow-hidden relative ${
+            selectedAppointmentId ? 'flex' : 'hidden md:flex'
           }`}
         >
           {!selectedAppointmentId ? (
@@ -659,19 +659,58 @@ const DoctorChatPage = () => {
             </div>
           ) : (
             <>
-              {/* Clinical Chat Header */}
-              <div className='px-4 sm:px-6 py-3 border-b border-slate-200 bg-white flex items-center justify-between gap-3 shrink-0'>
-                <div className='flex items-center gap-3 min-w-0'>
-                  <button
-                    onClick={() => {
-                      setSelectedAppointmentId('')
-                      navigate('/doctor-chat')
-                    }}
-                    className='lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
-                  >
-                    <ArrowLeft className='w-4 h-4' />
-                  </button>
+              {/* Mobile Master-Detail Back Bar */}
+              <div className='md:hidden px-3 py-2 bg-slate-50/90 border-b border-slate-200 flex items-center justify-between gap-2 shrink-0'>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setSelectedAppointmentId('')
+                    navigate('/doctor-chat')
+                  }}
+                  className='inline-flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-sky-700 hover:border-sky-200 text-xs font-bold shadow-2xs active:scale-95 transition-all cursor-pointer'
+                >
+                  <ArrowLeft className='w-4 h-4 text-sky-600' />
+                  <span>Back to Patients</span>
+                </button>
 
+                <div className='flex items-center gap-1.5'>
+                  <button
+                    type='button'
+                    onClick={() => setShowMsgSearch(!showMsgSearch)}
+                    className={`min-w-[38px] min-h-[38px] flex items-center justify-center rounded-xl border transition-colors cursor-pointer ${
+                      showMsgSearch
+                        ? 'bg-sky-50 border-sky-200 text-sky-600'
+                        : 'bg-white border-slate-200 text-slate-600'
+                    }`}
+                    title='Search messages'
+                    aria-label='Search messages'
+                  >
+                    <Search className='w-4 h-4' />
+                  </button>
+                  {!activeThread?.cancelled && (
+                    <button
+                      type='button'
+                      onClick={() => navigate(`/doctor-video-call/${selectedAppointmentId}`)}
+                      className='min-h-[38px] px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs cursor-pointer'
+                    >
+                      <Video className='w-3.5 h-3.5' />
+                      <span>Call</span>
+                    </button>
+                  )}
+                  <button
+                    type='button'
+                    onClick={() => navigate(`/doctor-prescription/${selectedAppointmentId}`)}
+                    className='min-h-[38px] px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs cursor-pointer'
+                  >
+                    <FileText className='w-3.5 h-3.5' />
+                    <span>Rx</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Clinical Chat Header */}
+              <div className='px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200 bg-white flex items-center justify-between gap-3 shrink-0'>
+                <div className='flex items-center gap-3 min-w-0'>
                   <div className='relative shrink-0'>
                     <img
                       src={patientImage}
@@ -695,7 +734,7 @@ const DoctorChatPage = () => {
                         {patientName}
                       </h2>
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                           patientOnline
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                             : 'bg-slate-100 text-slate-500'
@@ -720,8 +759,8 @@ const DoctorChatPage = () => {
                   </div>
                 </div>
 
-                {/* Right Clinical Actions */}
-                <div className='flex items-center gap-2 shrink-0'>
+                {/* Right Clinical Actions (Desktop/Tablet) */}
+                <div className='hidden md:flex items-center gap-2 shrink-0'>
                   <button
                     onClick={() => setShowMsgSearch(!showMsgSearch)}
                     className={`p-2 rounded-xl border transition-colors cursor-pointer ${
@@ -740,7 +779,7 @@ const DoctorChatPage = () => {
                       className='px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer whitespace-nowrap'
                     >
                       <Video className='w-3.5 h-3.5' />
-                      <span className='hidden sm:inline'>Start call</span>
+                      <span>Start call</span>
                     </button>
                   )}
 
@@ -749,7 +788,7 @@ const DoctorChatPage = () => {
                     className='px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer whitespace-nowrap'
                   >
                     <FileText className='w-3.5 h-3.5' />
-                    <span className='hidden sm:inline'>Write / edit Rx</span>
+                    <span>Write / edit Rx</span>
                   </button>
                 </div>
               </div>
@@ -1058,7 +1097,7 @@ const DoctorChatPage = () => {
               )}
 
               {/* Composer Bar */}
-              <div className='p-3 sm:p-4 border-t border-slate-200 bg-white shrink-0'>
+              <div className='p-2.5 sm:p-4 border-t border-slate-200 bg-white shrink-0'>
                 <div className='flex items-center gap-2'>
                   <input
                     ref={fileInputRef}
@@ -1071,7 +1110,7 @@ const DoctorChatPage = () => {
                     type='button'
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className='p-2.5 rounded-xl border border-slate-200 hover:border-sky-300 text-slate-600 hover:text-sky-600 hover:bg-sky-50/50 transition-all cursor-pointer disabled:opacity-50'
+                    className='min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border border-slate-200 hover:border-sky-300 text-slate-600 hover:text-sky-600 hover:bg-sky-50/50 transition-all cursor-pointer disabled:opacity-50 shrink-0'
                     title='Share image or clinical attachment'
                   >
                     {uploading ? (
@@ -1092,17 +1131,17 @@ const DoctorChatPage = () => {
                       }
                     }}
                     placeholder={`Message ${patientName}...`}
-                    className='flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white transition-all'
+                    className='flex-1 min-w-0 min-h-[44px] px-3.5 sm:px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white transition-all'
                   />
 
                   <button
                     type='button'
                     onClick={handleSendText}
                     disabled={!input.trim()}
-                    className='px-4 sm:px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer'
+                    className='min-w-[44px] min-h-[44px] px-3.5 sm:px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer shrink-0'
                   >
-                    <span>Send</span>
-                    <Send className='w-3.5 h-3.5' />
+                    <span className='hidden sm:inline'>Send</span>
+                    <Send className='w-4 h-4 sm:w-3.5 sm:h-3.5' />
                   </button>
                 </div>
               </div>

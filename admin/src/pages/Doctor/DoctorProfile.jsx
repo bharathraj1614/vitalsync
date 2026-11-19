@@ -107,17 +107,17 @@ const DoctorProfile = () => {
   return (
     <div className='flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl min-w-0 mx-auto space-y-7'>
       {/* Top Header Card */}
-      <section className='bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 border border-slate-700/50 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl'>
+      <section className='bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 border border-slate-700/50 rounded-3xl p-5 sm:p-8 text-white relative overflow-hidden shadow-xl'>
         <div className='absolute -right-20 -top-20 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none' />
 
-        <div className='relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6'>
-          <div className='flex flex-col sm:flex-row sm:items-center gap-5'>
+        <div className='relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5 sm:gap-6'>
+          <div className='flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5'>
             <img
               className='w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover bg-slate-800 border-2 border-white/20 shadow-md shrink-0'
               src={profileData.image}
               alt={profileData.name}
             />
-            <div className='space-y-1.5'>
+            <div className='space-y-1.5 min-w-0'>
               <div className='inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-bold'>
                 <ShieldCheck className='w-3.5 h-3.5 text-emerald-400' />
                 <span>Verified Clinical Specialist</span>
@@ -127,7 +127,7 @@ const DoctorProfile = () => {
               </h1>
               <div className='flex flex-wrap items-center gap-2.5 text-xs sm:text-sm text-slate-300'>
                 <span className='inline-flex items-center gap-1.5 font-semibold text-sky-200'>
-                  <Stethoscope className='w-4 h-4 text-sky-400' />
+                  <Stethoscope className='w-4 h-4 text-sky-400 shrink-0' />
                   {profileData.degree} • {profileData.speciality}
                 </span>
                 <span className='px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-xs font-bold text-white inline-flex items-center gap-1 tabular-nums'>
@@ -138,7 +138,7 @@ const DoctorProfile = () => {
             </div>
           </div>
 
-          <div className='shrink-0 flex items-center gap-2.5'>
+          <div className='shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto'>
             {isEdit ? (
               <>
                 <button
@@ -148,7 +148,7 @@ const DoctorProfile = () => {
                     setIsEdit(false)
                     getProfileData()
                   }}
-                  className='px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors cursor-pointer'
+                  className='min-h-[44px] px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center justify-center transition-colors cursor-pointer'
                 >
                   Cancel
                 </button>
@@ -156,7 +156,7 @@ const DoctorProfile = () => {
                   type='button'
                   disabled={saving}
                   onClick={updateProfile}
-                  className='px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all cursor-pointer'
+                  className='min-h-[44px] px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all cursor-pointer'
                 >
                   <Check className='w-4 h-4 stroke-[2.5]' />
                   <span>{saving ? 'Saving...' : 'Save Settings'}</span>
@@ -166,7 +166,7 @@ const DoctorProfile = () => {
               <button
                 type='button'
                 onClick={() => setIsEdit(true)}
-                className='px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 text-xs font-bold flex items-center gap-2 shadow-sm transition-colors cursor-pointer'
+                className='min-h-[44px] w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer'
               >
                 <Edit3 className='w-4 h-4 text-sky-600' />
                 <span>Edit Profile & Fee</span>
@@ -177,18 +177,18 @@ const DoctorProfile = () => {
       </section>
 
       {/* Main Settings Grid */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6'>
         {/* Availability Control Card */}
-        <div className='bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4'>
-          <div className='flex items-center justify-between'>
-            <div className='space-y-0.5'>
+        <div className='bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4'>
+          <div className='flex items-center justify-between gap-3'>
+            <div className='space-y-0.5 min-w-0'>
               <h3 className='text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2'>
-                <Clock className='w-4 h-4 text-sky-600' />
+                <Clock className='w-4 h-4 text-sky-600 shrink-0' />
                 <span>Booking Availability Switch</span>
               </h3>
-              <p className='text-base font-extrabold text-slate-900 flex items-center gap-2 mt-1'>
+              <p className='text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2 mt-1'>
                 <span
-                  className={`w-2.5 h-2.5 rounded-full ${
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                     profileData.available ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                   }`}
                 />
@@ -199,13 +199,14 @@ const DoctorProfile = () => {
             <button
               type='button'
               onClick={quickToggleAvailability}
-              className='p-1 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer'
+              className='min-w-[44px] min-h-[44px] flex items-center justify-center rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer shrink-0'
               title='Toggle Availability'
+              aria-label='Toggle Booking Availability'
             >
               {profileData.available ? (
-                <ToggleRight className='w-9 h-9 text-emerald-500' />
+                <ToggleRight className='w-10 h-10 text-emerald-500' />
               ) : (
-                <ToggleLeft className='w-9 h-9 text-amber-500' />
+                <ToggleLeft className='w-10 h-10 text-amber-500' />
               )}
             </button>
           </div>
@@ -218,9 +219,9 @@ const DoctorProfile = () => {
         </div>
 
         {/* Consultation Fee Card */}
-        <div className='bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-3'>
+        <div className='bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-3'>
           <h3 className='text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2'>
-            <Wallet className='w-4 h-4 text-emerald-600' />
+            <Wallet className='w-4 h-4 text-emerald-600 shrink-0' />
             <span>Consultation Fee (Per Visit)</span>
           </h3>
 
@@ -232,7 +233,7 @@ const DoctorProfile = () => {
                 min='0'
                 onChange={(e) => setProfileData((prev) => ({ ...prev, fees: e.target.value }))}
                 value={profileData.fees}
-                className='w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-base font-bold text-slate-900 outline-none focus:border-sky-500'
+                className='w-full min-h-[44px] px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-base font-bold text-slate-900 outline-none focus:border-sky-500'
               />
             </div>
           ) : (
@@ -249,11 +250,11 @@ const DoctorProfile = () => {
       </div>
 
       {/* Clinic Address & Bio */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6'>
         {/* Clinic Location */}
-        <div className='bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4'>
+        <div className='bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4'>
           <h3 className='text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2'>
-            <MapPin className='w-4 h-4 text-sky-600' />
+            <MapPin className='w-4 h-4 text-sky-600 shrink-0' />
             <span>Clinic & Hospital Location</span>
           </h3>
 
@@ -269,7 +270,7 @@ const DoctorProfile = () => {
                   }))
                 }
                 value={profileData.address?.line1 || ''}
-                className='w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 outline-none focus:border-sky-500'
+                className='w-full min-h-[44px] px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-base sm:text-sm font-medium text-slate-900 outline-none focus:border-sky-500'
               />
               <input
                 type='text'
@@ -281,7 +282,7 @@ const DoctorProfile = () => {
                   }))
                 }
                 value={profileData.address?.line2 || ''}
-                className='w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 outline-none focus:border-sky-500'
+                className='w-full min-h-[44px] px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-base sm:text-sm font-medium text-slate-900 outline-none focus:border-sky-500'
               />
             </div>
           ) : (
@@ -293,16 +294,16 @@ const DoctorProfile = () => {
         </div>
 
         {/* Clinical Bio / About Doctor */}
-        <div className='bg-white border border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4'>
+        <div className='bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4'>
           <h3 className='text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-2'>
-            <FileText className='w-4 h-4 text-indigo-600' />
+            <FileText className='w-4 h-4 text-indigo-600 shrink-0' />
             <span>Professional Bio & Approach to Care</span>
           </h3>
 
           {isEdit ? (
             <textarea
               onChange={(e) => setProfileData((prev) => ({ ...prev, about: e.target.value }))}
-              className='w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm text-slate-800 leading-relaxed outline-none focus:border-sky-500'
+              className='w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-base sm:text-sm text-slate-800 leading-relaxed outline-none focus:border-sky-500'
               rows={4}
               value={profileData.about || ''}
               placeholder='Describe your clinical training, areas of focus, and patient communication philosophy...'

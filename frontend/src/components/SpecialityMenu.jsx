@@ -83,23 +83,23 @@ const SpecialityMenu = () => {
   const { doctors } = useContext(AppContext)
 
   return (
-    <section id='speciality' className='py-10 md:py-14'>
+    <section id='speciality' className='py-6 sm:py-10 md:py-14'>
       {/* Header */}
-      <div className='text-center max-w-2xl mx-auto mb-10 space-y-2.5'>
+      <div className='text-center max-w-2xl mx-auto mb-6 sm:mb-10 space-y-2'>
         <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-xs font-semibold text-primary'>
           <Stethoscope className='w-3.5 h-3.5' />
           <span>Browse by Specialty</span>
         </div>
-        <h2 className='text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight'>
+        <h2 className='text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight'>
           Find Doctors by Health Concern
         </h2>
-        <p className='text-sm text-slate-500 leading-relaxed'>
+        <p className='text-xs sm:text-sm text-slate-500 leading-relaxed'>
           Not sure where to start? Choose any of our 12 medical specializations below to see available specialists ready to help.
         </p>
       </div>
 
       {/* Speciality Grid */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+      <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4'>
         {SPECIALITIES_GRID.map((item, index) => {
           const IconComponent = item.icon
           const count = Array.isArray(doctors)
@@ -110,32 +110,32 @@ const SpecialityMenu = () => {
               key={index}
               to={`/doctors/${item.speciality}`}
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className='group bg-white rounded-2xl border border-slate-200/80 p-5 hover:border-primary hover:shadow-md transition-all duration-200 flex flex-col justify-between'
+              className='group bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-5 hover:border-primary hover:shadow-md active:scale-[0.98] transition-all duration-200 flex flex-col justify-between'
             >
-              <div className='flex items-start gap-3.5'>
-                <div className='w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0 group-hover:bg-sky-600 group-hover:text-white transition-colors'>
-                  <IconComponent className='w-6 h-6' />
+              <div className='flex flex-col sm:flex-row items-start gap-2.5 sm:gap-3.5'>
+                <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0 group-hover:bg-sky-600 group-hover:text-white transition-colors'>
+                  <IconComponent className='w-5 h-5 sm:w-6 sm:h-6' />
                 </div>
-                <div className='space-y-1 min-w-0 flex-1'>
-                  <div className='flex items-center justify-between gap-2'>
-                    <h3 className='font-bold text-slate-900 text-sm sm:text-base group-hover:text-primary transition-colors truncate'>
+                <div className='space-y-1 min-w-0 w-full flex-1'>
+                  <div className='flex items-center justify-between gap-1.5'>
+                    <h3 className='font-bold text-slate-900 text-xs sm:text-base group-hover:text-primary transition-colors truncate'>
                       {item.speciality}
                     </h3>
                     {count > 0 && (
-                      <span className='px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold shrink-0'>
+                      <span className='hidden sm:inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold shrink-0'>
                         {count} {count === 1 ? 'Doc' : 'Docs'}
                       </span>
                     )}
                   </div>
-                  <p className='text-xs text-slate-500 leading-relaxed line-clamp-2'>
+                  <p className='text-[11px] sm:text-xs text-slate-500 leading-relaxed line-clamp-2'>
                     {item.desc}
                   </p>
                 </div>
               </div>
 
-              <div className='mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-700 group-hover:text-primary transition-colors'>
-                <span>View Specialists</span>
-                <ArrowRight className='w-4 h-4 group-hover:translate-x-1 transition-transform' />
+              <div className='mt-3 sm:mt-4 pt-2.5 sm:pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] sm:text-xs font-semibold text-slate-700 group-hover:text-primary transition-colors'>
+                <span>{count > 0 ? `${count} ${count === 1 ? 'Doc' : 'Docs'}` : 'View'}</span>
+                <ArrowRight className='w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform' />
               </div>
             </Link>
           )

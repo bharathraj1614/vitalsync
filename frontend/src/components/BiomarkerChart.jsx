@@ -19,7 +19,7 @@ const BiomarkerChart = ({ trend }) => {
 
     const width = 480
     const height = 180
-    const padding = { top: 24, right: 36, bottom: 32, left: 52 }
+    const padding = { top: 24, right: 44, bottom: 32, left: 48 }
     const plotWidth = width - padding.left - padding.right
     const plotHeight = height - padding.top - padding.bottom
 
@@ -79,8 +79,8 @@ const BiomarkerChart = ({ trend }) => {
     const gradientId = `trend-grad-${trend.key || 'chart'}`
 
     return (
-        <div className="relative select-none">
-            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible font-mono">
+        <div className="relative select-none w-full overflow-hidden">
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto font-mono">
                 <defs>
                     <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#0284c7" stopOpacity="0.18" />

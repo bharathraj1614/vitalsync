@@ -186,7 +186,7 @@ const Login = () => {
   }, [token, navigate, redirectTarget])
 
   return (
-    <div className='min-h-[85vh] py-8 sm:py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center relative overflow-hidden'>
+    <div className='min-h-[75vh] sm:min-h-[85vh] py-4 sm:py-12 px-1 sm:px-6 lg:px-8 flex items-center justify-center relative overflow-hidden'>
       {/* Ambient Background Glows */}
       <div className='absolute top-1/4 -left-40 w-96 h-96 bg-sky-200/30 rounded-full blur-3xl pointer-events-none' />
       <div className='absolute bottom-1/4 -right-40 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl pointer-events-none' />

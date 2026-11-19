@@ -230,31 +230,33 @@ const DoctorAppointments = () => {
 
       {/* Filter Segmented Control + Search Bar */}
       <div className='bg-white border border-slate-200 rounded-2xl p-3 mb-5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs'>
-        <div className='inline-flex flex-wrap items-center gap-1 p-1 bg-slate-100 border border-slate-200/80 rounded-xl'>
-          {filterTabs.map((tab) => {
-            const active = statusFilter === tab.id
-            return (
-              <button
-                key={tab.id}
-                type='button'
-                onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer ${
-                  active
-                    ? 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span
-                  className={`px-1.5 py-0.2 rounded-md text-[10px] font-extrabold tabular-nums ${
-                    active ? 'bg-sky-50 text-sky-700' : 'bg-slate-200 text-slate-600'
+        <div className='overflow-x-auto no-scrollbar -mx-1 px-1'>
+          <div className='inline-flex flex-nowrap items-center gap-1 p-1 bg-slate-100 border border-slate-200/80 rounded-xl whitespace-nowrap'>
+            {filterTabs.map((tab) => {
+              const active = statusFilter === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type='button'
+                  onClick={() => setStatusFilter(tab.id)}
+                  className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                    active
+                      ? 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  {tab.count}
-                </span>
-              </button>
-            )
-          })}
+                  <span>{tab.label}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold tabular-nums ${
+                      active ? 'bg-sky-50 text-sky-700' : 'bg-slate-200 text-slate-600'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className='relative w-full md:w-80'>
@@ -264,22 +266,22 @@ const DoctorAppointments = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder='Search patient, date, or chief complaint...'
-            className='w-full h-9.5 pl-9 pr-8 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-sky-500 text-slate-800 placeholder-slate-400 transition-colors'
+            className='w-full min-h-[44px] sm:min-h-[38px] pl-9 pr-9 text-base sm:text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-sky-500 text-slate-800 placeholder-slate-400 transition-colors'
           />
           {searchQuery && (
             <button
               type='button'
               onClick={() => setSearchQuery('')}
-              className='absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5'
+              className='absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-1.5'
               title='Clear search'
             >
-              <X className='w-3.5 h-3.5' />
+              <X className='w-4 h-4' />
             </button>
           )}
         </div>
       </div>
 
-      {/* Appointments Table */}
+      {/* Appointments List: Mobile Cards (< md) + Desktop Table (md+) */}
       <div className='bg-white border border-slate-200 rounded-2xl overflow-clip shadow-2xs'>
         {filteredAppointments.length === 0 ? (
           <div className='py-16 px-6 text-center'>
@@ -294,19 +296,222 @@ const DoctorAppointments = () => {
               <button
                 type='button'
                 onClick={() => setSearchQuery('')}
-                className='mt-3 px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 text-xs font-bold hover:bg-sky-100 cursor-pointer transition-colors'
+                className='mt-3 min-h-[40px] px-4 py-1.5 rounded-xl bg-sky-50 text-sky-700 text-xs font-bold hover:bg-sky-100 cursor-pointer transition-colors'
               >
                 Clear Search
               </button>
             )}
           </div>
         ) : (
-          <div
-            role='region'
-            aria-labelledby='appointments-table-heading'
-            tabIndex={0}
-            className='overflow-x-auto max-h-[72dvh] overflow-y-auto overscroll-contain'
-          >
+          <>
+            {/* Mobile Actionable Cards (< 768px) */}
+            <div className='md:hidden divide-y divide-slate-100'>
+              {filteredAppointments.map((item, index) => {
+                const online = isPatientOnline && isPatientOnline(item.userId)
+                return (
+                  <div key={item._id || index} className='p-4 space-y-3.5'>
+                    {/* Card Header: Avatar + Name + Status */}
+                    <div className='flex items-start justify-between gap-2.5'>
+                      <div className='flex items-center gap-3 min-w-0'>
+                        <div className='relative shrink-0'>
+                          <img
+                            src={item.userData?.image}
+                            className='w-12 h-12 rounded-2xl object-cover border border-slate-200 bg-slate-100'
+                            alt={item.userData?.name}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null
+                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.userData?.name || 'Patient')}&background=0284c7&color=fff&bold=true`
+                            }}
+                          />
+                          <span
+                            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-white ${
+                              online ? 'bg-emerald-500' : 'bg-slate-300'
+                            }`}
+                          />
+                        </div>
+                        <div className='min-w-0'>
+                          <div className='flex items-center gap-1.5'>
+                            <p className='font-extrabold text-slate-900 text-sm truncate'>
+                              {item.userData?.name}
+                            </p>
+                            {online && (
+                              <span className='px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold shrink-0'>
+                                Live
+                              </span>
+                            )}
+                          </div>
+                          <p className='text-xs text-slate-500 truncate mt-0.5'>
+                            {formatPatientSubtext(item.userData)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {item.cancelled ? (
+                        <span className='inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold shrink-0'>
+                          <XCircle className='w-3.5 h-3.5' />
+                          Cancelled
+                        </span>
+                      ) : item.isCompleted ? (
+                        <span className='inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold shrink-0'>
+                          <CheckCircle2 className='w-3.5 h-3.5' />
+                          Completed
+                        </span>
+                      ) : (
+                        <span className='inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 border border-sky-200 text-sky-700 text-[11px] font-bold shrink-0'>
+                          Upcoming
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Slot, Fee & Payment Strip */}
+                    <div className='flex flex-wrap items-center gap-2 text-xs bg-slate-50 rounded-xl p-2.5 border border-slate-100 tabular-nums'>
+                      <span className='inline-flex items-center gap-1 font-bold text-slate-800'>
+                        <Calendar className='w-3.5 h-3.5 text-sky-600' />
+                        {slotDateFormat(item.slotDate)}
+                      </span>
+                      <span className='inline-flex items-center gap-1 text-slate-600 font-medium'>
+                        <Clock className='w-3.5 h-3.5 text-slate-400' />
+                        {item.slotTime}
+                      </span>
+                      <span className='ml-auto font-extrabold text-slate-900'>
+                        {currency}{item.amount}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          item.payment
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}
+                      >
+                        {item.payment ? 'Paid' : 'Pending'}
+                      </span>
+                    </div>
+
+                    {/* Reason / Rescheduled / Referral badges */}
+                    {(item.reasonForVisit || item.rescheduledAt || item.inPersonReferral) && (
+                      <div className='flex flex-wrap items-center gap-1.5'>
+                        {item.rescheduledAt && (
+                          <span className='px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold'>
+                            Rescheduled
+                          </span>
+                        )}
+                        {item.inPersonReferral && (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                              item.inPersonReferral.urgency === 'EMERGENCY'
+                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                : 'bg-amber-50 text-amber-800 border-amber-200'
+                            }`}
+                          >
+                            <Building2 className='w-3 h-3' />
+                            Hospital: {item.inPersonReferral.urgency}
+                          </span>
+                        )}
+                        {item.reasonForVisit && (
+                          <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200/80 text-[11px] font-medium max-w-full'>
+                            <ClipboardList className='w-3 h-3 text-sky-600 shrink-0' />
+                            <span className='truncate'>{item.reasonForVisit}</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Touch-Friendly Clinical Action Buttons */}
+                    {!item.cancelled && (
+                      <div className='grid grid-cols-2 gap-2 pt-0.5'>
+                        {!item.isCompleted && (
+                          <button
+                            type='button'
+                            onClick={() => navigate(`/doctor-video-call/${item._id}`)}
+                            className='min-h-[44px] px-3 rounded-xl bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer'
+                          >
+                            <Video className='w-4 h-4' />
+                            <span>Video Call</span>
+                          </button>
+                        )}
+
+                        <button
+                          type='button'
+                          onClick={() => navigate(`/doctor-chat/${item._id}`)}
+                          className='min-h-[44px] px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
+                        >
+                          <MessageSquare className='w-4 h-4 text-sky-600' />
+                          <span>Chat</span>
+                        </button>
+
+                        <button
+                          type='button'
+                          onClick={() => navigate(`/doctor-prescription/${item._id}`)}
+                          className='min-h-[44px] px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
+                        >
+                          <FileText className='w-4 h-4 text-slate-500' />
+                          <span>Write e-Rx</span>
+                        </button>
+
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setHealthDrawer({
+                              isOpen: true,
+                              userId: item.userId,
+                              patientFallback: item.userData,
+                              reasonForVisit: item.reasonForVisit || ''
+                            })
+                          }
+                          className='min-h-[44px] px-3 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
+                        >
+                          <HeartPulse className='w-4 h-4 text-indigo-600' />
+                          <span>Patient Chart</span>
+                        </button>
+
+                        <button
+                          type='button'
+                          onClick={() => setReferralModal({ isOpen: true, appointment: item })}
+                          className={`col-span-2 min-h-[42px] px-3 rounded-xl border text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                            item.inPersonReferral
+                              ? 'bg-amber-50 border-amber-200 text-amber-900'
+                              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-amber-50'
+                          }`}
+                        >
+                          <Building2 className='w-4 h-4 text-amber-600' />
+                          <span>{item.inPersonReferral ? 'Update Hospital Referral' : 'In-Person Hospital Referral'}</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Complete / Cancel Decision Row */}
+                    {!item.cancelled && !item.isCompleted && (
+                      <div className='grid grid-cols-2 gap-2 pt-2 border-t border-slate-100'>
+                        <button
+                          type='button'
+                          onClick={() => openConfirmModal('complete', item)}
+                          className='min-h-[44px] px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer'
+                        >
+                          <Check className='w-4 h-4 stroke-[2.5]' />
+                          <span>Complete</span>
+                        </button>
+                        <button
+                          type='button'
+                          onClick={() => openConfirmModal('cancel', item)}
+                          className='min-h-[44px] px-3 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer'
+                        >
+                          <XCircle className='w-4 h-4' />
+                          <span>Cancel</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop Table (md+) */}
+            <div
+              role='region'
+              aria-labelledby='appointments-table-heading'
+              tabIndex={0}
+              className='hidden md:block overflow-x-auto max-h-[72dvh] overflow-y-auto overscroll-contain'
+            >
             <table className='w-full border-collapse text-left'>
               <thead className='sticky top-0 z-10 bg-slate-50/95 backdrop-blur-xs border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider'>
                 <tr>
@@ -541,7 +746,8 @@ const DoctorAppointments = () => {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </div>
     </div>

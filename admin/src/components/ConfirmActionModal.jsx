@@ -189,12 +189,12 @@ const ConfirmActionModal = ({
         </div>
 
         {/* Action Buttons */}
-        <div className='mt-6 flex items-center justify-end gap-3'>
+        <div className='mt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3'>
           <button
             type='button'
             disabled={loading}
             onClick={() => dialogRef.current?.close()}
-            className='px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors cursor-pointer'
+            className='w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors cursor-pointer'
           >
             Go Back
           </button>
@@ -202,7 +202,7 @@ const ConfirmActionModal = ({
             type='button'
             disabled={loading}
             onClick={onConfirm}
-            className={`px-5 py-2.5 rounded-xl text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer ${
+            className={`w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer ${
               isComplete
                 ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20'
                 : 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/20'

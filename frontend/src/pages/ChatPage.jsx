@@ -504,7 +504,7 @@ const ChatPage = () => {
       )}
 
       {/* Main Split-Pane Messenger Container */}
-      <div className='bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-clip grid grid-cols-1 lg:grid-cols-12 grid-rows-[minmax(0,1fr)] h-[calc(100dvh-96px)] min-h-[480px] max-h-[860px]'>
+      <div className='bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm overflow-clip grid grid-cols-1 lg:grid-cols-12 grid-rows-[minmax(0,1fr)] h-[calc(100dvh-10.5rem)] md:h-[640px] lg:h-[calc(100dvh-110px)] lg:max-h-[780px]'>
         
         {/* LEFT PANE: Conversations Sidebar */}
         <div
@@ -537,7 +537,7 @@ const ChatPage = () => {
             </div>
 
             {/* Filter Pills */}
-            <div className='flex items-center gap-1.5'>
+            <div className='flex items-center gap-1.5 overflow-x-auto no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
               {[
                 { id: 'all', label: 'All Chats' },
                 { id: 'unread', label: 'Unread' },
@@ -546,7 +546,7 @@ const ChatPage = () => {
                 <button
                   key={tab.id}
                   onClick={() => setThreadFilter(tab.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  className={`min-h-[36px] px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     threadFilter === tab.id
                       ? 'bg-sky-600 text-white shadow-2xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
@@ -589,7 +589,7 @@ const ChatPage = () => {
                   <div
                     key={thread.appointmentId}
                     onClick={() => selectThread(thread.appointmentId)}
-                    className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all ${
+                    className={`p-3.5 sm:p-4 flex items-start gap-3.5 cursor-pointer transition-all active:scale-[0.99] active:bg-sky-50/70 ${
                       isSelected
                         ? 'bg-sky-50/90 border-l-4 border-l-sky-600'
                         : 'bg-white hover:bg-slate-50/90'
@@ -616,11 +616,11 @@ const ChatPage = () => {
 
                     {/* Thread Content */}
                     <div className='flex-1 min-w-0'>
-                      <div className='flex items-center justify-between gap-1'>
-                        <h3 className={`text-xs sm:text-sm truncate ${thread.unreadCount > 0 ? 'font-extrabold text-slate-950' : 'font-bold text-slate-900'}`}>
+                      <div className='flex items-center justify-between gap-2'>
+                        <h3 className={`text-sm truncate ${thread.unreadCount > 0 ? 'font-extrabold text-slate-950' : 'font-bold text-slate-900'}`}>
                           {thread.doctorName.startsWith('Dr.') ? thread.doctorName : `Dr. ${thread.doctorName}`}
                         </h3>
-                        <span className={`text-[11px] shrink-0 ${thread.unreadCount > 0 ? 'text-sky-600 font-bold' : 'text-slate-400'}`}>
+                        <span className={`text-[11px] font-mono tabular-nums shrink-0 ${thread.unreadCount > 0 ? 'text-sky-600 font-bold' : 'text-slate-400'}`}>
                           {thread.lastMessage
                             ? formatTimeShort(thread.lastMessage.timestamp)
                             : thread.slotDate?.replace(/_/g, '/')}
@@ -632,7 +632,7 @@ const ChatPage = () => {
                           {thread.doctorSpeciality}
                         </span>
                         <span className='text-slate-300'>•</span>
-                        <span className='text-[10px] text-slate-400 truncate'>
+                        <span className='text-[10px] font-mono tabular-nums text-slate-400 truncate'>
                           {thread.slotDate?.replace(/_/g, '/')} {thread.slotTime}
                         </span>
                       </div>
@@ -652,8 +652,8 @@ const ChatPage = () => {
                         </p>
 
                         {thread.unreadCount > 0 && (
-                          <span className='min-w-[20px] h-5 px-1.5 rounded-full bg-sky-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0'>
-                            {thread.unreadCount}
+                          <span className='min-w-[22px] h-5 px-1.5 rounded-full bg-sky-600 text-white text-[10px] font-extrabold shadow-2xs flex items-center justify-center shrink-0 tabular-nums'>
+                            {thread.unreadCount > 99 ? '99+' : thread.unreadCount}
                           </span>
                         )}
                       </div>
@@ -691,7 +691,8 @@ const ChatPage = () => {
                       setSelectedAppointmentId('')
                       navigate('/chat')
                     }}
-                    className='lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer'
+                    className='lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer shrink-0'
+                    aria-label='Back to conversations'
                   >
                     <ArrowLeft className='w-4 h-4' />
                   </button>
@@ -1075,7 +1076,7 @@ const ChatPage = () => {
               )}
 
               {/* Message Composer Bar */}
-              <div className='p-3 sm:p-4 border-t border-slate-200/80 bg-white shrink-0'>
+              <div className='p-2.5 sm:p-4 border-t border-slate-200/80 bg-white shrink-0'>
                 <div className='flex items-center gap-2'>
                   <input
                     ref={fileInputRef}
@@ -1088,7 +1089,7 @@ const ChatPage = () => {
                     type='button'
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className='p-2.5 rounded-xl border border-slate-200 hover:border-sky-300 text-slate-600 hover:text-sky-600 hover:bg-sky-50/50 transition-all cursor-pointer disabled:opacity-50'
+                    className='min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border border-slate-200 hover:border-sky-300 text-slate-600 hover:text-sky-600 hover:bg-sky-50/50 transition-all cursor-pointer disabled:opacity-50 shrink-0'
                     title='Share photo or medical report'
                   >
                     {uploading ? (
@@ -1109,17 +1110,17 @@ const ChatPage = () => {
                       }
                     }}
                     placeholder={`Message ${docName.startsWith('Dr.') ? docName : 'Dr. ' + docName}...`}
-                    className='flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white transition-all'
+                    className='flex-1 min-h-[44px] px-3.5 sm:px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:bg-white transition-all min-w-0'
                   />
 
                   <button
                     type='button'
                     onClick={handleSendText}
                     disabled={!input.trim()}
-                    className='px-4 sm:px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer'
+                    className='min-h-[44px] px-3.5 sm:px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer shrink-0'
                   >
-                    <span>Send</span>
-                    <Send className='w-3.5 h-3.5' />
+                    <span className='hidden sm:inline'>Send</span>
+                    <Send className='w-4 h-4 sm:w-3.5 sm:h-3.5' />
                   </button>
                 </div>
               </div>

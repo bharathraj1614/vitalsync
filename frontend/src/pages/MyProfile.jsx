@@ -1050,7 +1050,7 @@ const MyProfile = () => {
                     <span>None (No chronic medical conditions)</span>
                   </button>
 
-                  <div className='flex gap-2'>
+                  <div className='flex flex-col sm:flex-row gap-2'>
                     <input
                       type='text'
                       placeholder='Add condition (e.g. Diabetes, Asthma)...'
@@ -1062,14 +1062,14 @@ const MyProfile = () => {
                           addCondition(newCondition)
                         }
                       }}
-                      className='border border-slate-200 rounded-xl px-3.5 py-2 text-xs outline-none focus:border-sky-500 flex-1 max-w-sm bg-slate-50/50 focus:bg-white'
+                      className='border border-slate-200 rounded-xl px-3.5 py-2.5 min-h-[44px] text-sm sm:text-xs outline-none focus:border-sky-500 w-full sm:flex-1 sm:max-w-sm bg-slate-50/50 focus:bg-white'
                     />
                     <button
                       type='button'
                       onClick={() => addCondition(newCondition)}
-                      className='bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs px-3.5 py-2 rounded-xl border border-slate-200 font-bold cursor-pointer transition-colors'
+                      className='min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs px-4 py-2.5 rounded-xl border border-slate-200 font-bold cursor-pointer transition-colors shrink-0'
                     >
-                      <Plus className='w-3.5 h-3.5 inline mr-1' /> Add
+                      <Plus className='w-3.5 h-3.5 inline mr-1' /> Add Condition
                     </button>
                   </div>
 
@@ -1139,6 +1139,37 @@ const MyProfile = () => {
           </div>
         </div>
       </div>
+
+      {/* Sticky Bottom Save / Cancel Bar when Editing */}
+      {isEdit && (
+        <div className='sticky bottom-20 md:bottom-4 z-30 bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3'>
+          <span className='hidden sm:inline text-xs font-semibold text-slate-600'>
+            Unsaved profile changes
+          </span>
+          <div className='grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto sm:ml-auto'>
+            <button
+              type='button'
+              onClick={() => {
+                setIsEdit(false)
+                setImage(false)
+                loadUserProfileData()
+              }}
+              className='min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors cursor-pointer'
+            >
+              Cancel
+            </button>
+            <button
+              type='button'
+              disabled={saving}
+              onClick={updateUserProfileData}
+              className='min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition-all cursor-pointer disabled:opacity-50'
+            >
+              <Save className='w-4 h-4' />
+              <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

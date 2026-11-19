@@ -49,46 +49,46 @@ const Header = () => {
     ]
 
     return (
-        <div className='space-y-8 mb-14'>
+        <div className='space-y-6 sm:space-y-8 mb-10 sm:mb-14'>
             {/* Main Hero Card */}
             <div className='relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950 border border-slate-800 text-white shadow-xl'>
                 {/* Soft Decorative Glow */}
                 <div className='absolute -top-24 -right-24 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none' />
                 <div className='absolute -bottom-24 -left-24 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none' />
 
-                <div className='relative max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 py-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-10'>
+                <div className='relative max-w-7xl mx-auto px-5 sm:px-10 lg:px-14 py-8 sm:py-12 md:py-16 flex flex-col md:flex-row items-center justify-between gap-8 sm:gap-10'>
                     
                     {/* Left Content */}
-                    <div className='flex-1 space-y-6 text-center md:text-left z-10'>
+                    <div className='flex-1 space-y-4 sm:space-y-6 text-center md:text-left z-10'>
                         
                         {/* Friendly Trust Badge */}
-                        <div className='inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-500/15 border border-sky-400/25 text-xs font-semibold text-sky-300'>
-                            <ShieldCheck className='w-4 h-4 text-sky-400' />
+                        <div className='inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-sky-500/15 border border-sky-400/25 text-[11px] sm:text-xs font-semibold text-sky-300'>
+                            <ShieldCheck className='w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-400' />
                             <span>Trusted Doctors • 100% Online Telemedicine</span>
                         </div>
 
                         {/* Easy-to-understand Headline */}
-                        <h1 className='text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.15]'>
+                        <h1 className='text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.15]'>
                             Quality Healthcare from Licensed Specialists, Right from Home.
                         </h1>
 
                         {/* Plain-English Subtext */}
-                        <p className='text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl mx-auto md:mx-0 font-normal'>
+                        <p className='text-slate-300 text-xs sm:text-base leading-relaxed max-w-xl mx-auto md:mx-0 font-normal'>
                             Book doctor appointments in seconds, consult from home via video call, check your symptoms, and keep all your prescriptions and lab reports in one safe place.
                         </p>
 
                         {/* Action Buttons */}
-                        <div className='flex flex-wrap items-center justify-center md:justify-start gap-3.5 pt-1'>
+                        <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-center md:justify-start gap-2.5 sm:gap-3.5 pt-1'>
                             <button
                                 onClick={() => navigate('/doctors')}
-                                className='inline-flex items-center gap-2 px-6 py-3.5 bg-primary hover:bg-sky-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-sky-600/30 transition-all hover:translate-x-0.5 cursor-pointer'
+                                className='inline-flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-primary hover:bg-sky-500 active:scale-[0.98] text-white text-sm font-semibold rounded-xl shadow-lg shadow-sky-600/30 transition-all hover:translate-x-0.5 cursor-pointer'
                             >
                                 <span>Find a Doctor</span>
                                 <ArrowRight className='w-4 h-4' />
                             </button>
                             <button
                                 onClick={() => navigate('/symptom-checker')}
-                                className='inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white border border-white/15 text-sm font-semibold rounded-xl transition-all cursor-pointer'
+                                className='inline-flex items-center justify-center gap-2 px-6 py-3 sm:py-3.5 bg-white/10 hover:bg-white/15 active:scale-[0.98] text-white border border-white/15 text-sm font-semibold rounded-xl transition-all cursor-pointer'
                             >
                                 <Sparkles className='w-4 h-4 text-sky-400' />
                                 <span>Check My Symptoms</span>
@@ -150,26 +150,26 @@ const Header = () => {
             </div>
 
             {/* Quick Navigation Cards — "How can we help you today?" */}
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+            <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
                 {quickTools.map((tool, index) => {
                     const Icon = tool.icon
                     return (
                         <div
                             key={index}
                             onClick={() => navigate(tool.path)}
-                            className='group bg-white rounded-2xl border border-slate-200/90 p-5 hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between gap-3'
+                            className='group bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-5 hover:border-primary hover:shadow-md active:scale-[0.98] transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2.5 sm:gap-3'
                         >
-                            <div className='flex items-start justify-between gap-3'>
-                                <div className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 ${tool.color}`}>
-                                    <Icon className='w-5 h-5' />
+                            <div className='flex items-start justify-between gap-2'>
+                                <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center shrink-0 ${tool.color}`}>
+                                    <Icon className='w-4 h-4 sm:w-5 sm:h-5' />
                                 </div>
                                 <ArrowRight className='w-4 h-4 text-slate-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all' />
                             </div>
                             <div>
-                                <h3 className='font-bold text-slate-900 text-base group-hover:text-primary transition-colors'>
+                                <h3 className='font-bold text-slate-900 text-sm sm:text-base group-hover:text-primary transition-colors leading-snug'>
                                     {tool.title}
                                 </h3>
-                                <p className='text-xs text-slate-500 mt-1 leading-relaxed'>
+                                <p className='text-[11px] sm:text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2'>
                                     {tool.desc}
                                 </p>
                             </div>

@@ -501,7 +501,7 @@ const HealthDashboard = ({
             <dialog
                 ref={dialogRef}
                 aria-labelledby="add-reading-dialog-title"
-                className="rounded-2xl p-0 backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs max-w-lg w-full shadow-2xl border border-slate-200/90 text-slate-900 m-auto"
+                className="fixed inset-x-0 bottom-0 sm:inset-auto m-0 mt-auto sm:m-auto w-full max-w-lg max-h-[88dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl p-0 backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs shadow-2xl border border-slate-200/90 text-slate-900"
                 onClick={(e) => {
                     if (e.target === dialogRef.current) closeAddModal()
                 }}

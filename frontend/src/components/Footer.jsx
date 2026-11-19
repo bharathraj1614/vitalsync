@@ -5,7 +5,7 @@ import { BrandLogo } from './Navbar'
 
 const Footer = () => {
   return (
-    <footer className='mt-20 border-t border-slate-200/90 bg-white text-slate-600 text-sm'>
+    <footer className='mt-10 sm:mt-20 border-t border-slate-200/90 bg-white text-slate-600 text-sm'>
       {/* Top Reassurance Bar */}
       <div className='border-b border-slate-100 bg-slate-50/70 py-4'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>

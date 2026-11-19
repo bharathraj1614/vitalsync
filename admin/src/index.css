@@ -20,6 +20,24 @@
     font-variant-numeric: tabular-nums;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Smooth native touch feel */
+button,
+a,
+input,
+select,
+textarea {
+    -webkit-tap-highlight-color: transparent;
+}
+
 /* Disable native browser password reveal eye (Edge / Windows) to prevent double eye icon conflict */
 input::-ms-reveal,
 input::-ms-clear {

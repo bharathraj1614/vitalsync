@@ -8,6 +8,7 @@ import {
     MessageSquare,
     Send,
     X,
+    ArrowLeft,
     Paperclip,
     Check,
     CheckCheck,
@@ -198,41 +199,49 @@ const DoctorChatWindow = ({ appointmentId, patientName, patientImage, onClose })
     }
 
     return (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4'>
+        <div className='fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-xs p-0 sm:p-4'>
             <div
-                className='w-full max-w-md bg-white rounded-3xl shadow-2xl flex flex-col overflow-clip border border-slate-200'
-                style={{ maxHeight: '84dvh' }}
+                className='w-full sm:max-w-md bg-white rounded-none sm:rounded-3xl shadow-2xl flex flex-col overflow-clip border-0 sm:border sm:border-slate-200 h-[100dvh] sm:h-auto sm:max-h-[84dvh]'
             >
                 {/* Header */}
-                <div className='px-5 py-3.5 flex items-center justify-between bg-slate-900 border-b border-slate-800 text-white shrink-0'>
-                    <div className='flex items-center gap-3'>
+                <div className='px-3.5 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between bg-slate-900 border-b border-slate-800 text-white shrink-0 gap-2'>
+                    <div className='flex items-center gap-2.5 sm:gap-3 min-w-0'>
+                        <button
+                            type='button'
+                            onClick={onClose}
+                            className='sm:hidden min-w-[40px] min-h-[40px] rounded-xl border border-slate-700 text-slate-200 hover:text-white hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer shrink-0'
+                            title="Back"
+                            aria-label="Back"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                        </button>
                         <img
                             src={patientImage}
                             alt={patientName}
-                            className='w-10 h-10 rounded-xl bg-slate-800 object-cover border border-slate-700'
+                            className='w-10 h-10 rounded-xl bg-slate-800 object-cover border border-slate-700 shrink-0'
                         />
-                        <div>
-                            <p className='text-white font-bold text-sm truncate max-w-[180px]'>{patientName}</p>
-                            <p className='text-xs text-slate-300 flex items-center gap-1.5 mt-0.5'>
-                                <span className={`w-2 h-2 rounded-full ${socket?.connected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                                {otherTyping ? 'Patient is typing...' : socket?.connected ? 'Live Patient Chat' : 'Connecting...'}
+                        <div className='min-w-0'>
+                            <p className='text-white font-bold text-sm truncate'>{patientName}</p>
+                            <p className='text-xs text-slate-300 flex items-center gap-1.5 mt-0.5 truncate'>
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${socket?.connected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                                <span className='truncate'>{otherTyping ? 'Patient is typing...' : socket?.connected ? 'Live Patient Chat' : 'Connecting...'}</span>
                             </p>
                         </div>
                     </div>
-                    <div className='flex items-center gap-1.5'>
+                    <div className='flex items-center gap-1.5 shrink-0'>
                         <button
                             onClick={() => {
                                 onClose()
                                 navigate(`/doctor-chat/${appointmentId}`)
                             }}
-                            className='w-8 h-8 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer'
+                            className='min-w-[38px] min-h-[38px] rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer'
                             title="Open Full Clinical Messenger"
                         >
                             <Maximize2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                             onClick={onClose}
-                            className='w-8 h-8 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer'
+                            className='hidden sm:flex min-w-[38px] min-h-[38px] rounded-xl border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 items-center justify-center transition-colors cursor-pointer'
                             title="Close Chat"
                         >
                             <X className="w-4 h-4" />
@@ -241,7 +250,7 @@ const DoctorChatWindow = ({ appointmentId, patientName, patientImage, onClose })
                 </div>
 
                 {/* Messages */}
-                <div ref={messagesContainerRef} className='flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-3 bg-slate-50/60' style={{ minHeight: '300px', maxHeight: '54dvh' }}>
+                <div ref={messagesContainerRef} className='flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-3 bg-slate-50/60 sm:min-h-[300px] sm:max-h-[54dvh]'>
                     {loading ? (
                         <div className='text-center py-12 text-slate-500 text-xs flex items-center justify-center gap-2'>
                             <Loader2 className='w-4 h-4 text-sky-600 animate-spin' />
@@ -301,7 +310,7 @@ const DoctorChatWindow = ({ appointmentId, patientName, patientImage, onClose })
                 </div>
 
                 {/* Input */}
-                <div className='px-4 py-3 border-t border-slate-200 bg-white shrink-0'>
+                <div className='px-3.5 sm:px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-slate-200 bg-white shrink-0'>
                     <div className='flex items-center gap-2'>
                         <input
                             ref={fileInputRef}
@@ -313,7 +322,7 @@ const DoctorChatWindow = ({ appointmentId, patientName, patientImage, onClose })
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={uploading}
-                            className='p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-sky-600 hover:bg-slate-50 transition-colors cursor-pointer'
+                            className='min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-sky-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0'
                             title="Attach Image or Report"
                         >
                             {uploading ? <Loader2 className='w-4 h-4 animate-spin' /> : <Paperclip className='w-4 h-4' />}
@@ -338,12 +347,12 @@ const DoctorChatWindow = ({ appointmentId, patientName, patientImage, onClose })
                                 }
                             }}
                             placeholder="Write a message..."
-                            className='flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 outline-none focus:border-sky-500 focus:bg-white transition-all'
+                            className='flex-1 min-h-[44px] px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-xs text-slate-900 placeholder-slate-400 outline-none focus:border-sky-500 focus:bg-white transition-all'
                         />
                         <button
                             onClick={() => sendPayload({ text: input })}
                             disabled={!input.trim()}
-                            className='p-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-colors disabled:opacity-40 shadow-xs cursor-pointer'
+                            className='min-w-[44px] min-h-[44px] flex items-center justify-center bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-colors disabled:opacity-40 shadow-xs cursor-pointer shrink-0'
                         >
                             <Send className="w-4 h-4" />
                         </button>

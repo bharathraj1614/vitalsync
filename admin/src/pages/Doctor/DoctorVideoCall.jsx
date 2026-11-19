@@ -110,6 +110,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
   // UI Popovers & Chat Input
   const [chatInput, setChatInput] = useState('')
   const [showStatsPopover, setShowStatsPopover] = useState(false)
+  const [showMobileVitalsSheet, setShowMobileVitalsSheet] = useState(false)
   const [showCueMenu, setShowCueMenu] = useState(false)
 
   const handleToastNotify = useCallback((msg, type = 'info') => {
@@ -515,18 +516,18 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
   }, [onActiveSessionChange])
 
   const qualityBadgeStyle = {
-    excellent: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    good: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
-    fair: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    poor: 'bg-rose-500/25 text-rose-300 border-rose-500/50'
+    excellent: 'bg-slate-950/88 text-emerald-300 border-emerald-400/50 backdrop-blur-md shadow-lg',
+    good: 'bg-slate-950/88 text-teal-300 border-teal-400/50 backdrop-blur-md shadow-lg',
+    fair: 'bg-slate-950/88 text-amber-300 border-amber-400/50 backdrop-blur-md shadow-lg',
+    poor: 'bg-slate-950/88 text-rose-300 border-rose-400/60 backdrop-blur-md shadow-lg'
   }[networkStats.qualityGrade || 'good']
 
   return (
     <div
       className={
         isMinimized
-          ? 'fixed bottom-5 right-5 z-50 w-80 sm:w-96 rounded-2xl overflow-hidden shadow-2xl border-2 border-sky-500/70 bg-slate-950 select-none'
-          : 'flex-1 p-4 sm:p-6 lg:p-7 max-w-[1480px]'
+          ? 'fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-50 w-[calc(100vw-1.5rem)] max-w-80 sm:w-96 sm:max-w-none rounded-2xl overflow-hidden shadow-2xl border-2 border-sky-500/70 bg-slate-950 select-none'
+          : 'flex-1 p-2.5 sm:p-6 lg:p-7 max-w-[1480px] min-w-0'
       }
     >
       {/* Full Patient Health Dossier Modal */}
@@ -560,9 +561,9 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
         ref={settingsDialogRef}
         {...{ closedby: 'any' }}
         aria-labelledby={settingsTitleId}
-        className='m-auto w-full max-w-lg rounded-3xl bg-slate-900 text-slate-100 border border-slate-700/80 p-0 shadow-2xl'
+        className='m-auto w-[calc(100%-1.5rem)] max-w-lg max-h-[88dvh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-slate-900 text-slate-100 border border-slate-700/80 p-0 shadow-2xl overscroll-contain'
       >
-        <div className='p-5 sm:p-6 space-y-5'>
+        <div className='p-4 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom))] space-y-5'>
           <div className='flex items-center justify-between border-b border-slate-800 pb-3.5'>
             <div>
               <h2 id={settingsTitleId} className='text-base font-bold text-white flex items-center gap-2'>
@@ -704,7 +705,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
         onClose={() => {
           if (incomingRecordingRequest) respondRecordingConsent(false)
         }}
-        className='m-auto w-full max-w-md rounded-3xl bg-slate-900 text-slate-100 border border-slate-700 p-6 shadow-2xl'
+        className='m-auto w-[calc(100%-1.5rem)] max-w-md max-h-[88dvh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-slate-900 text-slate-100 border border-slate-700 p-5 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl overscroll-contain'
       >
         <div className='space-y-4'>
           <div className='w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400'>
@@ -743,7 +744,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
         className={
           isMinimized
             ? 'flex flex-col bg-slate-950'
-            : 'bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-2xs flex flex-col'
+            : 'bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-2 sm:p-6 shadow-2xs flex flex-col min-w-0'
         }
       >
         {/* Top Clinical Header */}
@@ -751,35 +752,35 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
           className={
             isMinimized
               ? 'hidden'
-              : 'flex flex-wrap justify-between items-center gap-4 mb-5 pb-4 border-b border-slate-200'
+              : 'flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4 mb-4 sm:mb-5 pb-3.5 sm:pb-4 border-b border-slate-200 min-w-0'
           }
         >
-          <div className='flex items-center gap-3.5'>
+          <div className='flex items-start sm:items-center gap-3 min-w-0'>
             <button
               onClick={() => navigate('/doctor-appointments')}
-              className='p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer'
+              className='min-w-[42px] min-h-[42px] p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer flex items-center justify-center shrink-0'
               title={isInActiveSession ? 'Minimize call to floating PiP & view appointments' : 'Back to appointments'}
             >
               <ArrowLeft className='w-4 h-4' />
             </button>
-            <div>
-              <div className='flex flex-wrap items-center gap-2'>
-                <h1 className='text-lg sm:text-xl font-bold text-slate-900'>
+            <div className='min-w-0 flex-1'>
+              <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
+                <h1 className='text-base sm:text-xl font-bold text-slate-900 leading-tight'>
                   Clinical video consultation console
                 </h1>
-                <span className='inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold'>
-                  <ShieldCheck className='w-3.5 h-3.5' />
+                <span className='inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] sm:text-[11px] font-bold shrink-0'>
+                  <ShieldCheck className='w-3 h-3 sm:w-3.5 sm:h-3.5' />
                   DTLS-SRTP encrypted
                 </span>
                 {recordingState === 'active' && (
-                  <span className='inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold tabular-nums'>
+                  <span className='inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-[10px] sm:text-[11px] font-bold tabular-nums shrink-0'>
                     <span className='w-2 h-2 rounded-full bg-rose-600 animate-ping' />
                     REC • {formatDuration(recordingDuration)}
                   </span>
                 )}
               </div>
               {appointment && (
-                <p className='text-xs text-slate-500 mt-0.5'>
+                <p className='text-xs text-slate-500 mt-0.5 truncate'>
                   Patient: <strong className='text-slate-900'>{appointment.userData?.name}</strong>
                   {appointment.slotDate
                     ? ` • ${slotDateFormat(appointment.slotDate)} at ${appointment.slotTime}`
@@ -794,11 +795,11 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
             </div>
           </div>
 
-          <div className='flex flex-wrap items-center gap-2'>
+          <div className='flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:pb-0 sm:flex-wrap sm:overflow-visible shrink-0'>
             <button
               type='button'
               onClick={openSettingsModal}
-              className='px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs'
+              className='min-h-[40px] sm:min-h-0 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs whitespace-nowrap shrink-0'
             >
               <Settings className='w-3.5 h-3.5 text-slate-500' />
               <span>AV devices</span>
@@ -806,7 +807,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
             <button
               type='button'
               onClick={() => setShowReferralModal(true)}
-              className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+              className={`min-h-[40px] sm:min-h-0 px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs whitespace-nowrap shrink-0 ${
                 appointment?.inPersonReferral
                   ? 'bg-amber-100 border-amber-300 text-amber-900 font-bold'
                   : 'bg-white border-slate-200 text-slate-700 hover:bg-amber-50 hover:border-amber-200'
@@ -818,7 +819,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
             <button
               type='button'
               onClick={() => setShowFullHealthDrawer(true)}
-              className='px-3.5 py-2 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs'
+              className='min-h-[40px] sm:min-h-0 px-3.5 py-2 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs whitespace-nowrap shrink-0'
             >
               <HeartPulse className='w-3.5 h-3.5 text-indigo-600' />
               <span>Full lab reports ({dossier.records.length})</span>
@@ -826,7 +827,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
             <button
               type='button'
               onClick={() => setSidePanelOpen((prev) => !prev)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border relative shadow-2xs ${
+              className={`min-h-[40px] sm:min-h-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border relative shadow-2xs whitespace-nowrap shrink-0 ${
                 sidePanelOpen
                   ? 'bg-sky-600 text-white border-sky-600'
                   : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'
@@ -1071,8 +1072,8 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
 
               {/* Top-Left HUD: Live Timer & Patient Media State Badges */}
               {isInActiveSession && (
-                <div className='absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-[60%]'>
-                  <div className='bg-slate-900/85 text-white px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold backdrop-blur-md border border-white/15 flex items-center gap-1.5 sm:gap-2 tabular-nums'>
+                <div className='absolute top-2.5 left-2.5 sm:top-3.5 sm:left-3.5 z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-[52%] sm:max-w-[58%]'>
+                  <div className='bg-slate-950/88 text-white px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold backdrop-blur-md border border-white/15 shadow-lg flex items-center gap-1.5 sm:gap-2 tabular-nums'>
                     <span
                       className={`w-2 h-2 rounded-full ${
                         callStatus === 'connected' ? 'bg-rose-500 animate-pulse' : 'bg-amber-400 animate-ping'
@@ -1083,23 +1084,23 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                         ? formatDuration(callDuration)
                         : callStatus === 'reconnecting'
                         ? 'Reconnecting...'
-                        : 'Ringing Patient...'}
+                        : 'Ringing...'}
                     </span>
                   </div>
 
                   {remoteConnected && !peerMediaState.audio && (
-                    <span className='bg-rose-950/85 border border-rose-500/40 text-rose-200 px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1'>
-                      <MicOff className='w-3 h-3' /> Patient Muted
+                    <span className='bg-rose-950/90 border border-rose-500/40 text-rose-200 px-2 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold flex items-center gap-1 shadow-md'>
+                      <MicOff className='w-3 h-3' /> <span className='hidden sm:inline'>Patient</span> Muted
                     </span>
                   )}
                   {remoteConnected && peerMediaState.screen && (
-                    <span className='bg-sky-950/85 border border-sky-500/40 text-sky-200 px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1'>
-                      <Monitor className='w-3 h-3' /> Patient Sharing Screen
+                    <span className='bg-sky-950/90 border border-sky-500/40 text-sky-200 px-2 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold flex items-center gap-1 shadow-md'>
+                      <Monitor className='w-3 h-3' /> <span className='hidden sm:inline'>Patient</span> Screen
                     </span>
                   )}
                   {remoteConnected && peerMediaState.handRaised && (
-                    <span className='bg-amber-500 text-slate-950 px-2.5 py-1 rounded-full text-[11px] font-extrabold animate-bounce'>
-                      ✋ Patient Raised Hand
+                    <span className='bg-amber-500 text-slate-950 px-2 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-[11px] font-extrabold animate-bounce shadow-md'>
+                      ✋ <span className='hidden sm:inline'>Patient</span> Hand Raised
                     </span>
                   )}
                 </div>
@@ -1107,16 +1108,16 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
 
               {/* Top-Right HUD: Network Quality Telemetry + Live Contactless rPPG Patient Pulse */}
               {isInActiveSession && !isMinimized && (
-                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-2'>
+                <div className='absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 flex flex-col items-end gap-1.5 sm:gap-2 max-w-[54%] md:max-w-none'>
                   {remoteConnected && (
                     <button
                       type='button'
                       onClick={() => setShowStatsPopover((s) => !s)}
-                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border backdrop-blur-md text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer ${qualityBadgeStyle}`}
+                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl border text-[10px] sm:text-[11px] font-bold flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${qualityBadgeStyle}`}
                       title='Inspect Live WebRTC Telemetry'
                     >
-                      <Gauge className='w-3.5 h-3.5' />
-                      <span>
+                      <Gauge className='w-3.5 h-3.5 shrink-0' />
+                      <span className='truncate'>
                         {networkStats.rttMs !== null ? `${networkStats.rttMs} ms` : 'Link'} •{' '}
                         {networkStats.candidateType}
                       </span>
@@ -1124,12 +1125,22 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                   )}
 
                   {showStatsPopover && remoteConnected && (
-                    <div className='w-64 p-3.5 rounded-2xl bg-slate-950/95 border border-slate-700/80 backdrop-blur-md text-slate-200 text-[11px] shadow-2xl space-y-2'>
+                    <div className='fixed inset-x-3 bottom-20 z-50 md:static md:w-64 p-3.5 rounded-2xl bg-slate-950/95 border border-slate-700/80 backdrop-blur-md text-slate-200 text-xs md:text-[11px] shadow-2xl space-y-2.5 md:space-y-2'>
                       <div className='flex items-center justify-between border-b border-slate-800 pb-1.5'>
                         <span className='font-extrabold uppercase tracking-wider text-slate-400'>
                           WebRTC Diagnostics
                         </span>
-                        <span className='uppercase font-bold text-emerald-400'>{networkStats.qualityGrade}</span>
+                        <div className='flex items-center gap-2'>
+                          <span className='uppercase font-bold text-emerald-400'>{networkStats.qualityGrade}</span>
+                          <button
+                            type='button'
+                            onClick={() => setShowStatsPopover(false)}
+                            className='md:hidden p-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white cursor-pointer'
+                            aria-label='Close diagnostics'
+                          >
+                            <X className='w-3.5 h-3.5' />
+                          </button>
+                        </div>
                       </div>
                       <div className='grid grid-cols-2 gap-y-1.5 text-slate-300'>
                         <span className='text-slate-400'>Latency (RTT):</span>
@@ -1151,14 +1162,14 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                         <button
                           type='button'
                           onClick={toggleDataSaver}
-                          className='px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold cursor-pointer'
+                          className='min-h-[36px] md:min-h-0 px-3 md:px-2.5 py-1.5 md:py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold cursor-pointer'
                         >
                           {isDataSaver ? 'Restore HD' : 'Data Saver'}
                         </button>
                         <button
                           type='button'
                           onClick={triggerIceRestart}
-                          className='px-2.5 py-1 rounded-lg bg-sky-600/30 hover:bg-sky-600/50 text-sky-200 font-semibold flex items-center gap-1 cursor-pointer'
+                          className='min-h-[36px] md:min-h-0 px-3 md:px-2.5 py-1.5 md:py-1 rounded-lg bg-sky-600/30 hover:bg-sky-600/50 text-sky-200 font-semibold flex items-center gap-1 cursor-pointer'
                         >
                           <RefreshCw className='w-3 h-3' /> ICE Restart
                         </button>
@@ -1191,63 +1202,84 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                     }[riskLevel] || 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
 
                     return (
-                      <div className='bg-slate-900/92 text-white p-3 rounded-2xl border border-slate-700/80 backdrop-blur-md shadow-xl w-72 space-y-2'>
-                        <div className='flex items-center justify-between gap-2'>
-                          <span className='text-[10px] text-slate-300 font-extrabold uppercase tracking-wider flex items-center gap-1.5'>
-                            <HeartPulse className='w-3.5 h-3.5 text-rose-400' />
-                            {patientVitals.source === 'rppg_spot_check'
-                              ? '15s POS-rPPG Pulse'
-                              : 'Patient Clinical Vitals'}
+                      <>
+                        {/* Mobile (< 768px): Compact Tap-to-Expand Clinical Vitals Pill (never obscures patient video) */}
+                        <button
+                          type='button'
+                          onClick={() => setShowMobileVitalsSheet((v) => !v)}
+                          className={`md:hidden px-2.5 py-1.5 rounded-xl bg-slate-950/90 backdrop-blur-md border shadow-lg text-white text-[10px] font-bold flex items-center gap-1.5 cursor-pointer max-w-full ${
+                            riskLevel === 'HIGH'
+                              ? 'border-rose-400 animate-pulse'
+                              : riskLevel === 'MEDIUM' || riskLevel === 'LOW_MEDIUM'
+                              ? 'border-amber-400/60'
+                              : 'border-slate-700/80'
+                          }`}
+                          title='Tap to view full RCP NEWS2 clinical vitals'
+                        >
+                          <span className='truncate'>
+                            ❤️ {hrVal ?? '--'} bpm • NEWS2 {scoreVal} ({riskLevel.replace('_', '-')})
                           </span>
-                          <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase ${hudRiskBadge}`}>
-                            NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
-                          </span>
-                        </div>
+                        </button>
 
-                        <div className='grid grid-cols-2 gap-1.5 text-xs'>
-                          {patientVitals.systolicBp && (
-                            <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
-                              <span className='text-[9px] text-slate-400 uppercase block'>BP (mmHg)</span>
-                              <span className='font-mono font-black text-white'>
-                                {patientVitals.systolicBp}/{patientVitals.diastolicBp || '--'}
-                              </span>
-                            </div>
-                          )}
-                          {patientVitals.spo2 && (
-                            <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
-                              <span className='text-[9px] text-slate-400 uppercase block'>SpO₂</span>
-                              <span className='font-mono font-black text-sky-300'>{patientVitals.spo2}%</span>
-                            </div>
-                          )}
-                          {patientVitals.temperatureF && (
-                            <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
-                              <span className='text-[9px] text-slate-400 uppercase block'>Temp</span>
-                              <span className='font-mono font-black text-amber-300'>{patientVitals.temperatureF}°F</span>
-                            </div>
-                          )}
-                          {hrVal && (
-                            <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
-                              <span className='text-[9px] text-slate-400 uppercase block'>Pulse</span>
-                              <span className='font-mono font-black text-emerald-400'>
-                                {hrVal} <span className='text-[9px] text-slate-400 font-sans'>BPM</span>
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {flags.length > 0 && (
-                          <div className='text-[10px] text-rose-300 font-semibold bg-rose-950/60 border border-rose-500/30 rounded-lg px-2 py-1'>
-                            ⚠️ {flags.join(' • ')}
+                        {/* Desktop (>= 768px): Full Floating RCP NEWS2 HUD Card */}
+                        <div className='hidden md:block bg-slate-900/92 text-white p-3 rounded-2xl border border-slate-700/80 backdrop-blur-md shadow-xl w-72 space-y-2'>
+                          <div className='flex items-center justify-between gap-2'>
+                            <span className='text-[10px] text-slate-300 font-extrabold uppercase tracking-wider flex items-center gap-1.5'>
+                              <HeartPulse className='w-3.5 h-3.5 text-rose-400' />
+                              {patientVitals.source === 'rppg_spot_check'
+                                ? '15s POS-rPPG Pulse'
+                                : 'Patient Clinical Vitals'}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase ${hudRiskBadge}`}>
+                              NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
+                            </span>
                           </div>
-                        )}
 
-                        {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
-                          <div className='text-[10px] text-slate-400 flex items-center justify-between'>
-                            <span>Stationary 15s capture...</span>
-                            <span className='font-mono text-emerald-400'>{patientVitals.progressPct}%</span>
+                          <div className='grid grid-cols-2 gap-1.5 text-xs'>
+                            {patientVitals.systolicBp && (
+                              <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
+                                <span className='text-[9px] text-slate-400 uppercase block'>BP (mmHg)</span>
+                                <span className='font-mono font-black text-white'>
+                                  {patientVitals.systolicBp}/{patientVitals.diastolicBp || '--'}
+                                </span>
+                              </div>
+                            )}
+                            {patientVitals.spo2 && (
+                              <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
+                                <span className='text-[9px] text-slate-400 uppercase block'>SpO₂</span>
+                                <span className='font-mono font-black text-sky-300'>{patientVitals.spo2}%</span>
+                              </div>
+                            )}
+                            {patientVitals.temperatureF && (
+                              <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
+                                <span className='text-[9px] text-slate-400 uppercase block'>Temp</span>
+                                <span className='font-mono font-black text-amber-300'>{patientVitals.temperatureF}°F</span>
+                              </div>
+                            )}
+                            {hrVal && (
+                              <div className='bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800'>
+                                <span className='text-[9px] text-slate-400 uppercase block'>Pulse</span>
+                                <span className='font-mono font-black text-emerald-400'>
+                                  {hrVal} <span className='text-[9px] text-slate-400 font-sans'>BPM</span>
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+
+                          {flags.length > 0 && (
+                            <div className='text-[10px] text-rose-300 font-semibold bg-rose-950/60 border border-rose-500/30 rounded-lg px-2 py-1'>
+                              ⚠️ {flags.join(' • ')}
+                            </div>
+                          )}
+
+                          {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
+                            <div className='text-[10px] text-slate-400 flex items-center justify-between'>
+                              <span>Stationary 15s capture...</span>
+                              <span className='font-mono text-emerald-400'>{patientVitals.progressPct}%</span>
+                            </div>
+                          )}
+                        </div>
+                      </>
                     )
                   })()}
                 </div>
@@ -1337,16 +1369,16 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
               className={
                 isMinimized
                   ? 'hidden'
-                  : 'w-full bg-slate-50 border border-slate-200 rounded-2xl p-2.5 sm:p-3.5 mt-4 flex flex-wrap items-center justify-center sm:justify-between gap-1.5 sm:gap-2.5'
+                  : 'w-full bg-slate-50 border border-slate-200 rounded-2xl p-2 sm:p-3.5 mt-3 sm:mt-4'
               }
             >
               {(callStatus === 'idle' || callStatus === 'ended') && (
-                <div className='flex flex-wrap items-center justify-between gap-3 w-full'>
-                  <div className='flex flex-wrap items-center gap-2'>
+                <div className='flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 w-full'>
+                  <div className='flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2'>
                     <button
                       type='button'
                       onClick={() => startCall({ audioOnly: false })}
-                      className='px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer'
+                      className='min-h-[44px] px-5 sm:px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer'
                     >
                       <Video className='w-4 h-4' />
                       <span>{callStatus === 'ended' ? 'Rejoin Video Call' : 'Start Consultation Call'}</span>
@@ -1354,7 +1386,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                     <button
                       type='button'
                       onClick={() => startCall({ audioOnly: true })}
-                      className='px-4 py-3 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-2xl text-xs font-bold flex items-center gap-1.5 cursor-pointer'
+                      className='min-h-[44px] px-4 py-3 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl sm:rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer'
                     >
                       <Mic className='w-3.5 h-3.5 text-sky-600' />
                       <span>Start Audio-Only</span>
@@ -1365,7 +1397,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                       type='button'
                       disabled={completingAppointment}
                       onClick={handleCompleteAndEnd}
-                      className='px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50'
+                      className='min-h-[44px] px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50'
                     >
                       <CheckCircle2 className='w-4 h-4' />
                       <span>{completingAppointment ? 'Completing...' : 'Mark Appointment Completed'}</span>
@@ -1375,226 +1407,264 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
               )}
 
               {isInActiveSession && (
-                <>
-                  <div className='flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2'>
-                    {/* Mute */}
-                    <button
-                      type='button'
-                      onClick={toggleMute}
-                      className={`px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border cursor-pointer ${
-                        isMuted
-                          ? 'bg-rose-50 border-rose-200 text-rose-700'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                      title='Mute / Unmute Mic (M)'
-                    >
-                      {isMuted ? <MicOff className='w-4 h-4' /> : <Mic className='w-4 h-4' />}
-                      <span className='hidden sm:inline'>{isMuted ? 'Unmute' : 'Mic'}</span>
-                    </button>
-
-                    {/* Camera */}
-                    <button
-                      type='button'
-                      onClick={toggleVideo}
-                      className={`px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border cursor-pointer ${
-                        isVideoOff
-                          ? 'bg-rose-50 border-rose-200 text-rose-700'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                      title='Turn Camera On/Off (V)'
-                    >
-                      {isVideoOff ? <VideoOff className='w-4 h-4' /> : <Video className='w-4 h-4' />}
-                      <span className='hidden sm:inline'>{isVideoOff ? 'Cam On' : 'Cam'}</span>
-                    </button>
-
-                    {/* Screen Share (for walking patient through Lab Reports / Imaging) */}
-                    <button
-                      type='button'
-                      onClick={toggleScreenShare}
-                      className={`px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border cursor-pointer ${
-                        isScreenSharing
-                          ? 'bg-sky-600 border-sky-600 text-white'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                      title='Share Lab Reports / Screen with Patient (S)'
-                    >
-                      <Monitor className='w-4 h-4' />
-                      <span className='hidden md:inline'>{isScreenSharing ? 'Stop Share' : 'Share Screen'}</span>
-                    </button>
-
-                    {/* Clinical Exam Frame Snapshot */}
-                    <button
-                      type='button'
-                      onClick={() => captureSnapshot(appointment?.userData?.name || 'Patient')}
-                      className='px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer'
-                      title='Capture High-Res Clinical Exam Frame of Patient Video'
-                    >
-                      <Camera className='w-4 h-4 text-indigo-600' />
-                      <span className='hidden xl:inline'>Exam Snap</span>
-                    </button>
-
-                    {/* Live Speech-to-Text Captions */}
-                    {captionsSupported && (
+                <div className='flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between w-full'>
+                  {/* Row 1 (Primary Controls): Mic, Cam, Exam Snap, Record, Complete & End, End */}
+                  <div className='flex flex-nowrap items-center justify-between sm:justify-start gap-1 sm:gap-2 w-full sm:w-auto sm:order-1'>
+                    <div className='flex flex-nowrap items-center gap-1 sm:gap-2'>
+                      {/* Mute */}
                       <button
                         type='button'
-                        onClick={toggleCaptions}
-                        className={`px-3 py-2.5 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${
-                          captionsEnabled
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
+                        onClick={toggleMute}
+                        className={`min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 px-2 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border cursor-pointer shrink-0 ${
+                          isMuted
+                            ? 'bg-rose-50 border-rose-200 text-rose-700'
                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                         }`}
-                        title='Live Speech-to-Text Consultation Transcript'
+                        title='Mute / Unmute Mic (M)'
                       >
-                        CC
+                        {isMuted ? <MicOff className='w-4 h-4' /> : <Mic className='w-4 h-4' />}
+                        <span className='hidden sm:inline'>{isMuted ? 'Unmute' : 'Mic'}</span>
                       </button>
-                    )}
 
-                    {/* Quick Clinical Cue */}
-                    <div className='relative'>
+                      {/* Camera */}
                       <button
                         type='button'
-                        onClick={() => setShowCueMenu((p) => !p)}
-                        className='p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer'
-                        title='Send Quick Clinical Status Cue'
+                        onClick={toggleVideo}
+                        className={`min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 px-2 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border cursor-pointer shrink-0 ${
+                          isVideoOff
+                            ? 'bg-rose-50 border-rose-200 text-rose-700'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                        title='Turn Camera On/Off (V)'
                       >
-                        <Smile className='w-4 h-4' />
+                        {isVideoOff ? <VideoOff className='w-4 h-4' /> : <Video className='w-4 h-4' />}
+                        <span className='hidden sm:inline'>{isVideoOff ? 'Cam On' : 'Cam'}</span>
                       </button>
-                      {showCueMenu && (
-                        <div className='absolute bottom-12 left-0 z-30 p-1.5 rounded-2xl bg-slate-900 border border-slate-700 shadow-xl flex items-center gap-1'>
-                          {DOCTOR_QUICK_CUES.map((c) => (
-                            <button
-                              key={c.emoji}
-                              type='button'
-                              onClick={() => {
-                                sendReaction(c.emoji, c.label)
-                                setShowCueMenu(false)
-                              }}
-                              title={c.label}
-                              className='w-9 h-9 rounded-xl hover:bg-slate-800 flex items-center justify-center text-base cursor-pointer'
-                            >
-                              {c.emoji}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+
+                      {/* Clinical Exam Frame Snapshot */}
+                      <button
+                        type='button'
+                        onClick={() => captureSnapshot(appointment?.userData?.name || 'Patient')}
+                        className='min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 px-2 sm:px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0'
+                        title='Capture High-Res Clinical Exam Frame of Patient Video'
+                      >
+                        <Camera className='w-4 h-4 text-indigo-600' />
+                        <span className='hidden xl:inline'>Exam Snap</span>
+                      </button>
+
+                      {/* Two-Party Consented Recording */}
+                      <button
+                        type='button'
+                        onClick={recordingState === 'active' ? stopRecording : requestRecording}
+                        disabled={recordingState === 'requesting'}
+                        className={`min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 px-2 sm:px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all cursor-pointer disabled:opacity-50 shrink-0 ${
+                          recordingState === 'active'
+                            ? 'bg-rose-600 border-rose-600 text-white'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                        title='Request Two-Party Consent Consultation Recording'
+                      >
+                        <Radio className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${recordingState === 'active' ? 'text-white' : 'text-rose-500'}`} />
+                        <span className='hidden xl:inline'>
+                          {recordingState === 'active'
+                            ? 'Stop Rec'
+                            : recordingState === 'requesting'
+                            ? 'Consent Pending...'
+                            : 'Record'}
+                        </span>
+                      </button>
                     </div>
 
-                    {/* Two-Party Consented Recording */}
-                    <button
-                      type='button'
-                      onClick={recordingState === 'active' ? stopRecording : requestRecording}
-                      disabled={recordingState === 'requesting'}
-                      className={`px-3 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition-all cursor-pointer disabled:opacity-50 ${
-                        recordingState === 'active'
-                          ? 'bg-rose-600 border-rose-600 text-white'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                      title='Request Two-Party Consent Consultation Recording'
-                    >
-                      <Radio className='w-3.5 h-3.5 text-rose-500' />
-                      <span className='hidden xl:inline'>
-                        {recordingState === 'active'
-                          ? 'Stop Rec'
-                          : recordingState === 'requesting'
-                          ? 'Consent Pending...'
-                          : 'Record'}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Viewport & End / Complete Actions */}
-                  <div className='flex flex-wrap items-center justify-center gap-1.5 sm:gap-2'>
-                    <button
-                      type='button'
-                      onClick={() => setIsSwappedView((v) => !v)}
-                      className='p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer'
-                      title='Swap Patient / Self View'
-                    >
-                      <ArrowLeftRight className='w-4 h-4' />
-                    </button>
-                    <button
-                      type='button'
-                      onClick={togglePiP}
-                      className={`p-2.5 rounded-xl border cursor-pointer ${
-                        isPiP
-                          ? 'bg-sky-600 border-sky-600 text-white'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
-                      title='Picture-in-Picture'
-                    >
-                      <PictureInPicture2 className='w-4 h-4' />
-                    </button>
-                    <button
-                      type='button'
-                      onClick={toggleFullscreen}
-                      className='p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer'
-                      title='Fullscreen Stage (F)'
-                    >
-                      {isFullscreen ? <Minimize2 className='w-4 h-4' /> : <Maximize2 className='w-4 h-4' />}
-                    </button>
-                    {!appointment?.isCompleted && (
+                    {/* Mobile End / Complete Actions on Row 1 right side */}
+                    <div className='flex flex-nowrap items-center gap-1 sm:hidden shrink-0'>
+                      {!appointment?.isCompleted && (
+                        <button
+                          type='button'
+                          disabled={completingAppointment}
+                          onClick={handleCompleteAndEnd}
+                          className='min-h-[44px] min-w-[42px] px-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center cursor-pointer disabled:opacity-50 shrink-0'
+                          title='Mark Appointment Completed & End Call'
+                        >
+                          <CheckCircle2 className='w-4 h-4' />
+                        </button>
+                      )}
                       <button
                         type='button'
-                        disabled={completingAppointment}
-                        onClick={handleCompleteAndEnd}
-                        className='px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50'
-                        title='Mark Appointment Completed & End Call'
+                        onClick={() => endCall(true)}
+                        className='min-h-[44px] px-2.5 sm:px-3.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center justify-center gap-1 shadow-sm cursor-pointer shrink-0'
+                        title='End Consultation'
                       >
-                        <CheckCircle2 className='w-4 h-4' />
-                        <span className='hidden sm:inline'>Complete & End</span>
+                        <PhoneOff className='w-4 h-4 shrink-0' />
+                        <span>End</span>
                       </button>
-                    )}
-                    <button
-                      type='button'
-                      onClick={() => endCall(true)}
-                      className='px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer'
-                    >
-                      <PhoneOff className='w-4 h-4' />
-                      <span>End</span>
-                    </button>
+                    </div>
                   </div>
-                </>
+
+                  {/* Row 2 (Secondary Controls): Share Screen, CC, Quick Cue, Swap, PiP, Fullscreen + Desktop End */}
+                  <div className='flex items-center justify-between sm:justify-end gap-1 sm:gap-2 w-full sm:w-auto sm:order-2 pt-2 border-t border-slate-200/80 sm:pt-0 sm:border-t-0'>
+                    <div className='flex flex-nowrap items-center justify-between sm:justify-start gap-1 sm:gap-2 w-full sm:w-auto overflow-x-auto no-scrollbar sm:overflow-visible'>
+                      {/* Screen Share */}
+                      <button
+                        type='button'
+                        onClick={toggleScreenShare}
+                        className={`min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 px-2 sm:px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all border cursor-pointer shrink-0 ${
+                          isScreenSharing
+                            ? 'bg-sky-600 border-sky-600 text-white'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                        title='Share Lab Reports / Screen with Patient (S)'
+                      >
+                        <Monitor className='w-4 h-4' />
+                        <span className='hidden md:inline'>{isScreenSharing ? 'Stop Share' : 'Share Screen'}</span>
+                      </button>
+
+                      {/* Live Speech-to-Text Captions */}
+                      {captionsSupported && (
+                        <button
+                          type='button'
+                          onClick={toggleCaptions}
+                          className={`min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 px-2 sm:px-3 py-2.5 rounded-xl text-xs font-extrabold border transition-all flex items-center justify-center cursor-pointer shrink-0 ${
+                            captionsEnabled
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                          title='Live Speech-to-Text Consultation Transcript'
+                        >
+                          CC
+                        </button>
+                      )}
+
+                      {/* Quick Clinical Cue */}
+                      <div className='relative shrink-0'>
+                        <button
+                          type='button'
+                          onClick={() => setShowCueMenu((p) => !p)}
+                          className='min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer'
+                          title='Send Quick Clinical Status Cue'
+                        >
+                          <Smile className='w-4 h-4' />
+                        </button>
+                        {showCueMenu && (
+                          <div className='fixed inset-x-3 bottom-24 z-50 sm:absolute sm:inset-auto sm:bottom-12 sm:left-0 p-2 sm:p-1.5 rounded-2xl bg-slate-900 border border-slate-700 shadow-xl flex items-center justify-around sm:justify-start gap-1'>
+                            {DOCTOR_QUICK_CUES.map((c) => (
+                              <button
+                                key={c.emoji}
+                                type='button'
+                                onClick={() => {
+                                  sendReaction(c.emoji, c.label)
+                                  setShowCueMenu(false)
+                                }}
+                                title={c.label}
+                                className='min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:w-9 sm:h-9 rounded-xl hover:bg-slate-800 flex items-center justify-center text-lg sm:text-base cursor-pointer'
+                              >
+                                {c.emoji}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Swap */}
+                      <button
+                        type='button'
+                        onClick={() => setIsSwappedView((v) => !v)}
+                        className='min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer shrink-0'
+                        title='Swap Patient / Self View'
+                      >
+                        <ArrowLeftRight className='w-4 h-4' />
+                      </button>
+
+                      {/* PiP */}
+                      <button
+                        type='button'
+                        onClick={togglePiP}
+                        className={`min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 p-2 sm:p-2.5 rounded-xl border flex items-center justify-center cursor-pointer shrink-0 ${
+                          isPiP
+                            ? 'bg-sky-600 border-sky-600 text-white'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                        title='Picture-in-Picture'
+                      >
+                        <PictureInPicture2 className='w-4 h-4' />
+                      </button>
+
+                      {/* Fullscreen */}
+                      <button
+                        type='button'
+                        onClick={toggleFullscreen}
+                        className='min-h-[44px] min-w-[42px] sm:min-h-0 sm:min-w-0 p-2 sm:p-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer shrink-0'
+                        title='Fullscreen Stage (F)'
+                      >
+                        {isFullscreen ? <Minimize2 className='w-4 h-4' /> : <Maximize2 className='w-4 h-4' />}
+                      </button>
+                    </div>
+
+                    {/* Desktop Complete & End / End */}
+                    <div className='hidden sm:flex items-center gap-2 shrink-0'>
+                      {!appointment?.isCompleted && (
+                        <button
+                          type='button'
+                          disabled={completingAppointment}
+                          onClick={handleCompleteAndEnd}
+                          className='px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50'
+                          title='Mark Appointment Completed & End Call'
+                        >
+                          <CheckCircle2 className='w-4 h-4' />
+                          <span>Complete & End</span>
+                        </button>
+                      )}
+                      <button
+                        type='button'
+                        onClick={() => endCall(true)}
+                        className='px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer'
+                      >
+                        <PhoneOff className='w-4 h-4' />
+                        <span>End</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
 
           {/* Right Column: In-Call Clinical Side Drawer (Chart • Write Rx • Chat & Transcript) */}
           {sidePanelOpen && !isMinimized && (
-            <div className='lg:col-span-5 bg-slate-50/90 border border-slate-200/90 rounded-3xl overflow-hidden flex flex-col max-h-[78vh]'>
+            <div className='lg:col-span-5 bg-slate-50/90 border border-slate-200/90 rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col lg:max-h-[78vh] min-w-0'>
               {/* 3-Tab Clinical Navigation */}
               <div className='p-2 bg-white border-b border-slate-200 grid grid-cols-3 gap-1 shrink-0'>
                 <button
                   type='button'
                   onClick={() => setSideTab('chart')}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`min-h-[42px] sm:min-h-0 py-2 px-1.5 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer ${
                     sideTab === 'chart' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <HeartPulse className='w-3.5 h-3.5' />
+                  <HeartPulse className='w-3.5 h-3.5 shrink-0' />
                   <span className='truncate'>Chart <span className='tabular-nums font-semibold'>({dossier.records.length})</span></span>
                 </button>
                 <button
                   type='button'
                   onClick={() => setSideTab('rx')}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  className={`min-h-[42px] sm:min-h-0 py-2 px-1.5 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer ${
                     sideTab === 'rx' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <FileText className='w-3.5 h-3.5' />
-                  <span>Write e-Rx</span>
-                  {issuedRxSuccess && <CheckCircle2 className='w-3.5 h-3.5 text-emerald-300' />}
+                  <FileText className='w-3.5 h-3.5 shrink-0' />
+                  <span className='truncate'>Write e-Rx</span>
+                  {issuedRxSuccess && <CheckCircle2 className='w-3.5 h-3.5 text-emerald-300 shrink-0' />}
                 </button>
                 <button
                   type='button'
                   onClick={() => setSideTab('chat')}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
+                  className={`min-h-[42px] sm:min-h-0 py-2 px-1.5 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer relative ${
                     sideTab === 'chat' ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <MessageSquare className='w-3.5 h-3.5' />
-                  <span>Chat & CC</span>
+                  <MessageSquare className='w-3.5 h-3.5 shrink-0' />
+                  <span className='truncate'>Chat & CC</span>
                   {unreadChatCount > 0 && (
-                    <span className='px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-bold tabular-nums'>
+                    <span className='px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px] font-bold tabular-nums shrink-0'>
                       {unreadChatCount}
                     </span>
                   )}
@@ -1602,7 +1672,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
               </div>
 
               {/* Tab Content */}
-              <div className='flex-1 overflow-y-auto p-4 space-y-4'>
+              <div className='flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-4 space-y-4'>
                 {sideTab === 'chart' && (
                   <>
                     {/* Reason for Visit */}
@@ -1871,8 +1941,24 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                       </div>
 
                       {medicines.map((med, idx) => (
-                        <div key={idx} className='p-3 rounded-xl bg-white border border-slate-200 space-y-2'>
-                          <div className='flex items-center gap-2'>
+                        <div key={idx} className='p-3 rounded-xl bg-white border border-slate-200 space-y-2.5'>
+                          <div className='flex items-center justify-between gap-2'>
+                            <span className='text-[10px] font-extrabold uppercase tracking-wider text-slate-400'>
+                              Medicine #{idx + 1}
+                            </span>
+                            {medicines.length > 1 && (
+                              <button
+                                type='button'
+                                onClick={() => setMedicines(medicines.filter((_, i) => i !== idx))}
+                                className='p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg cursor-pointer'
+                                aria-label={`Remove medicine ${idx + 1}`}
+                              >
+                                <Trash2 className='w-3.5 h-3.5' />
+                              </button>
+                            )}
+                          </div>
+                          <div>
+                            <label className='block text-[10px] font-semibold text-slate-500 mb-1'>Medicine Name *</label>
                             <input
                               type='text'
                               required
@@ -1882,57 +1968,71 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                                 next[idx].name = e.target.value
                                 setMedicines(next)
                               }}
-                              placeholder='Medicine name (e.g., Paracetamol 500mg)'
-                              className='flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs outline-none focus:border-sky-500'
+                              placeholder='e.g., Paracetamol 500mg'
+                              className='w-full min-h-[40px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-xs outline-none focus:border-sky-500'
                             />
-                            {medicines.length > 1 && (
-                              <button
-                                type='button'
-                                onClick={() => setMedicines(medicines.filter((_, i) => i !== idx))}
-                                className='p-1 text-rose-500 hover:bg-rose-50 rounded cursor-pointer'
-                              >
-                                <Trash2 className='w-3.5 h-3.5' />
-                              </button>
-                            )}
                           </div>
-                          <div className='grid grid-cols-3 gap-1.5'>
+                          <div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
+                            <div>
+                              <label className='block text-[10px] font-semibold text-slate-500 mb-1'>Dosage *</label>
+                              <input
+                                type='text'
+                                required
+                                value={med.dosage}
+                                onChange={(e) => {
+                                  const next = [...medicines]
+                                  next[idx].dosage = e.target.value
+                                  setMedicines(next)
+                                }}
+                                placeholder='1 Tablet'
+                                className='w-full min-h-[40px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-xs sm:text-[11px] outline-none focus:border-sky-500'
+                              />
+                            </div>
+                            <div>
+                              <label className='block text-[10px] font-semibold text-slate-500 mb-1'>Duration</label>
+                              <input
+                                type='text'
+                                value={med.duration}
+                                onChange={(e) => {
+                                  const next = [...medicines]
+                                  next[idx].duration = e.target.value
+                                  setMedicines(next)
+                                }}
+                                placeholder='5 Days'
+                                className='w-full min-h-[40px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-xs sm:text-[11px] outline-none focus:border-sky-500'
+                              />
+                            </div>
+                            <div className='col-span-2 sm:col-span-1'>
+                              <label className='block text-[10px] font-semibold text-slate-500 mb-1'>Frequency</label>
+                              <select
+                                value={med.frequency}
+                                onChange={(e) => {
+                                  const next = [...medicines]
+                                  next[idx].frequency = e.target.value
+                                  setMedicines(next)
+                                }}
+                                className='w-full min-h-[40px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-xs sm:text-[11px] outline-none focus:border-sky-500 bg-white'
+                              >
+                                <option value='1-0-0 (Morning)'>1-0-0 (Morning)</option>
+                                <option value='1-0-1 (Morning & Night)'>1-0-1 (Morning & Night)</option>
+                                <option value='1-1-1 (Thrice a day)'>1-1-1 (Thrice a day)</option>
+                                <option value='0-0-1 (Night)'>0-0-1 (Night)</option>
+                                <option value='SOS (As needed)'>SOS (As needed)</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <label className='block text-[10px] font-semibold text-slate-500 mb-1'>Instructions</label>
                             <input
                               type='text'
-                              required
-                              value={med.dosage}
+                              value={med.instructions || ''}
                               onChange={(e) => {
                                 const next = [...medicines]
-                                next[idx].dosage = e.target.value
+                                next[idx].instructions = e.target.value
                                 setMedicines(next)
                               }}
-                              placeholder='Dosage'
-                              className='px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] outline-none focus:border-sky-500'
-                            />
-                            <select
-                              value={med.frequency}
-                              onChange={(e) => {
-                                const next = [...medicines]
-                                next[idx].frequency = e.target.value
-                                setMedicines(next)
-                              }}
-                              className='px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] outline-none focus:border-sky-500 bg-white'
-                            >
-                              <option value='1-0-0 (Morning)'>1-0-0</option>
-                              <option value='1-0-1 (Morning & Night)'>1-0-1</option>
-                              <option value='1-1-1 (Thrice a day)'>1-1-1</option>
-                              <option value='0-0-1 (Night)'>0-0-1</option>
-                              <option value='SOS (As needed)'>SOS</option>
-                            </select>
-                            <input
-                              type='text'
-                              value={med.duration}
-                              onChange={(e) => {
-                                const next = [...medicines]
-                                next[idx].duration = e.target.value
-                                setMedicines(next)
-                              }}
-                              placeholder='5 Days'
-                              className='px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] outline-none focus:border-sky-500'
+                              placeholder='e.g., After meals'
+                              className='w-full min-h-[40px] sm:min-h-0 px-2.5 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-xs sm:text-[11px] outline-none focus:border-sky-500'
                             />
                           </div>
                         </div>
@@ -2129,40 +2229,144 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
         </div>
       </div>
 
+      {/* Mobile (< 768px) Fixed Bottom Sheet for Full RCP NEWS2 Patient Vitals */}
+      {showMobileVitalsSheet && patientVitals && isInActiveSession && !isMinimized && (() => {
+        const hrVal = patientVitals.heartRate ?? patientVitals.bpm ?? null
+        const liveTriage = computeNEWS2({
+          heartRate: hrVal,
+          systolicBp: patientVitals.systolicBp,
+          diastolicBp: patientVitals.diastolicBp,
+          spo2: patientVitals.spo2,
+          temperatureF: patientVitals.temperatureF,
+          respiratoryRate: patientVitals.respiratoryRate,
+          bloodGlucose: patientVitals.bloodGlucose
+        })
+        const riskLevel = patientVitals.news2Risk || liveTriage.news2Risk || 'LOW'
+        const scoreVal = patientVitals.news2Score ?? liveTriage.news2Score ?? 0
+        const flags = Array.isArray(patientVitals.clinicalFlags) && patientVitals.clinicalFlags.length > 0
+          ? patientVitals.clinicalFlags
+          : liveTriage.clinicalFlags
+        const sheetRiskBadge = {
+          LOW: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+          LOW_MEDIUM: 'bg-amber-500/25 text-amber-200 border-amber-400/50',
+          MEDIUM: 'bg-orange-500/30 text-orange-200 border-orange-400/60',
+          HIGH: 'bg-rose-600/40 text-rose-100 border-rose-400 animate-pulse'
+        }[riskLevel] || 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+
+        return (
+          <div
+            onClick={() => setShowMobileVitalsSheet(false)}
+            className='md:hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end overscroll-contain'
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className='w-full bg-slate-900 text-white rounded-t-3xl border-t border-slate-700/80 shadow-2xl p-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] max-h-[80dvh] overflow-y-auto space-y-3'
+            >
+              <div className='w-10 h-1 rounded-full bg-slate-700 mx-auto mb-1' />
+              <div className='flex items-center justify-between gap-2'>
+                <span className='text-xs text-slate-200 font-extrabold uppercase tracking-wider flex items-center gap-1.5'>
+                  <HeartPulse className='w-4 h-4 text-rose-400' />
+                  {patientVitals.source === 'rppg_spot_check'
+                    ? '15s POS-rPPG Pulse'
+                    : 'Patient Clinical Vitals'}
+                </span>
+                <div className='flex items-center gap-2'>
+                  <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase ${sheetRiskBadge}`}>
+                    NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
+                  </span>
+                  <button
+                    type='button'
+                    onClick={() => setShowMobileVitalsSheet(false)}
+                    className='min-w-[36px] min-h-[36px] p-1.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer'
+                    aria-label='Close patient vitals'
+                  >
+                    <X className='w-4 h-4' />
+                  </button>
+                </div>
+              </div>
+
+              <div className='grid grid-cols-2 gap-2 text-xs'>
+                {patientVitals.systolicBp && (
+                  <div className='bg-slate-950/80 px-3 py-2.5 rounded-xl border border-slate-800'>
+                    <span className='text-[10px] text-slate-400 uppercase block'>BP (mmHg)</span>
+                    <span className='font-mono text-base font-black text-white'>
+                      {patientVitals.systolicBp}/{patientVitals.diastolicBp || '--'}
+                    </span>
+                  </div>
+                )}
+                {patientVitals.spo2 && (
+                  <div className='bg-slate-950/80 px-3 py-2.5 rounded-xl border border-slate-800'>
+                    <span className='text-[10px] text-slate-400 uppercase block'>SpO₂</span>
+                    <span className='font-mono text-base font-black text-sky-300'>{patientVitals.spo2}%</span>
+                  </div>
+                )}
+                {patientVitals.temperatureF && (
+                  <div className='bg-slate-950/80 px-3 py-2.5 rounded-xl border border-slate-800'>
+                    <span className='text-[10px] text-slate-400 uppercase block'>Temp</span>
+                    <span className='font-mono text-base font-black text-amber-300'>{patientVitals.temperatureF}°F</span>
+                  </div>
+                )}
+                {hrVal && (
+                  <div className='bg-slate-950/80 px-3 py-2.5 rounded-xl border border-slate-800'>
+                    <span className='text-[10px] text-slate-400 uppercase block'>Pulse</span>
+                    <span className='font-mono text-base font-black text-emerald-400'>
+                      {hrVal} <span className='text-[10px] text-slate-400 font-sans'>BPM</span>
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {flags.length > 0 && (
+                <div className='text-xs text-rose-300 font-semibold bg-rose-950/60 border border-rose-500/30 rounded-xl px-3 py-2'>
+                  ⚠️ {flags.join(' • ')}
+                </div>
+              )}
+
+              {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
+                <div className='text-xs text-slate-400 flex items-center justify-between'>
+                  <span>Stationary 15s capture...</span>
+                  <span className='font-mono text-emerald-400'>{patientVitals.progressPct}%</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Secure Clinical Snapshot Ephemeral Inspection Modal with Privacy Shield */}
       {activeExamSnapshot && (
         <div
           role='dialog'
           aria-modal='true'
           aria-label='Secure Clinical Exam Snapshot'
-          className='fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 select-none'
+          className='fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 select-none overscroll-contain'
           onContextMenu={(e) => e.preventDefault()}
         >
-          <div className='bg-slate-900 rounded-3xl border border-slate-700 max-w-2xl w-full overflow-hidden shadow-2xl space-y-0'>
+          <div className='bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-700 max-w-2xl w-full max-h-[88dvh] overflow-y-auto shadow-2xl flex flex-col'>
             {/* Modal Header */}
-            <div className='px-5 py-3.5 border-b border-slate-800 flex items-center justify-between text-white'>
-              <div className='flex items-center gap-2'>
-                <Camera className='w-4 h-4 text-indigo-400' />
-                <span className='text-xs font-bold uppercase tracking-wider'>
+            <div className='px-4 sm:px-5 py-3.5 border-b border-slate-800 flex items-center justify-between gap-2 text-white shrink-0'>
+              <div className='flex flex-wrap items-center gap-2 min-w-0'>
+                <Camera className='w-4 h-4 text-indigo-400 shrink-0' />
+                <span className='text-xs font-bold uppercase tracking-wider truncate'>
                   Clinical Exam Frame ({activeExamSnapshot.timestamp})
                 </span>
-                <span className='text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1'>
+                <span className='text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 shrink-0'>
                   <ShieldCheck className='w-3 h-3' /> In-Pixel Watermark
                 </span>
               </div>
               <button
                 type='button'
                 onClick={() => setActiveExamSnapshot(null)}
-                className='text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer transition-colors'
+                className='min-w-[36px] min-h-[36px] text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 flex items-center justify-center cursor-pointer transition-colors shrink-0'
               >
                 <X className='w-5 h-5' />
               </button>
             </div>
 
             {/* Privacy Curtain Screen Shield */}
-            <div className='relative bg-black flex items-center justify-center min-h-[320px] max-h-[60vh] overflow-hidden select-none'>
+            <div className='relative bg-black flex items-center justify-center min-h-[240px] sm:min-h-[320px] max-h-[58dvh] overflow-hidden select-none'>
               {isWindowBlurred ? (
-                <div className='w-full h-80 flex flex-col items-center justify-center p-6 text-center select-none bg-slate-950/95'>
+                <div className='w-full h-72 sm:h-80 flex flex-col items-center justify-center p-6 text-center select-none bg-slate-950/95'>
                   <EyeOff className='w-12 h-12 text-amber-400 mb-3 animate-pulse' />
                   <p className='text-sm font-bold text-white'>Privacy Shield Engaged</p>
                   <p className='text-xs text-slate-400 max-w-sm mt-1.5 leading-relaxed'>
@@ -2175,21 +2379,21 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                   alt='Clinical Exam Frame'
                   draggable={false}
                   onContextMenu={(e) => e.preventDefault()}
-                  className='max-h-[60vh] w-auto object-contain pointer-events-none select-none'
+                  className='max-h-[58dvh] w-auto object-contain pointer-events-none select-none'
                 />
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className='px-5 py-3 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400'>
+            <div className='px-4 sm:px-5 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-slate-950/80 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 shrink-0'>
               <span className='flex items-center gap-1.5 text-[11px]'>
-                <Lock className='w-3.5 h-3.5 text-indigo-400' />
+                <Lock className='w-3.5 h-3.5 text-indigo-400 shrink-0' />
                 Confidential PHI • Forensic ID embedded in pixels • Local download disabled
               </span>
               <button
                 type='button'
                 onClick={() => setActiveExamSnapshot(null)}
-                className='px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-semibold cursor-pointer transition-colors text-xs'
+                className='min-h-[38px] sm:min-h-0 px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-semibold cursor-pointer transition-colors text-xs'
               >
                 Close View
               </button>

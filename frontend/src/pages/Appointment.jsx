@@ -333,48 +333,73 @@ const Appointment = () => {
     }
 
     return (
-        <div className='py-6 space-y-8 max-w-7xl mx-auto'>
+        <div className={`py-3 sm:py-6 space-y-5 sm:space-y-8 max-w-7xl mx-auto ${slotTime ? 'pb-20 lg:pb-6' : ''}`}>
             {/* Top Back Navigation & Breadcrumb */}
-            <div className='flex items-center gap-2 text-xs text-slate-500'>
+            <div className='flex items-center gap-2 text-xs text-slate-500 overflow-x-auto no-scrollbar whitespace-nowrap'>
                 <button
                     onClick={() => navigate('/doctors')}
-                    className='text-slate-600 hover:text-primary transition-colors cursor-pointer'
+                    className='text-slate-600 hover:text-primary transition-colors cursor-pointer shrink-0'
                 >
                     Specialists Directory
                 </button>
-                <span>&bull;</span>
-                <span className='text-slate-400'>{docInfo.speciality}</span>
-                <span>&bull;</span>
-                <span className='font-semibold text-slate-800'>{docInfo.name}</span>
+                <span className='shrink-0'>&bull;</span>
+                <span className='text-slate-400 shrink-0'>{docInfo.speciality}</span>
+                <span className='shrink-0'>&bull;</span>
+                <span className='font-semibold text-slate-800 truncate'>{docInfo.name}</span>
             </div>
 
             {/* Main Booking Two-Column Grid */}
-            <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
+            <div className='grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start'>
                 
                 {/* LEFT COLUMN: Doctor Bio & Slot Picker (approx 65%) */}
-                <div className='lg:col-span-8 space-y-6'>
+                <div className='lg:col-span-8 space-y-5 sm:space-y-6'>
                     {/* Doctor Header Profile Card */}
-                    <div className='bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-8 shadow-xs flex flex-col sm:flex-row gap-5 sm:gap-6 items-start'>
-                        {/* Portrait */}
-                        <div className='w-40 sm:w-52 mx-auto sm:mx-0 shrink-0'>
-                            <div className='relative rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 aspect-[3/4]'>
-                                <img
-                                    className='w-full h-full object-cover object-top'
-                                    src={docInfo.image}
-                                    alt={docInfo.name}
-                                />
-                                <div className='absolute bottom-3 left-3'>
-                                    <span className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/95 text-emerald-800 text-[11px] font-semibold border border-emerald-200/90 backdrop-blur-md shadow-2xs'>
-                                        <BadgeCheck className='w-3.5 h-3.5 text-emerald-600' />
-                                        <span>Verified Doctor</span>
+                    <div className='bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-8 shadow-xs space-y-4 sm:space-y-0 sm:flex sm:flex-row sm:gap-6 sm:items-start'>
+                        {/* Portrait + Mobile Header Row */}
+                        <div className='flex items-start gap-4 sm:block'>
+                            <div className='w-24 sm:w-52 shrink-0'>
+                                <div className='relative rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 aspect-[3/4]'>
+                                    <img
+                                        className='w-full h-full object-cover object-top'
+                                        src={docInfo.image}
+                                        alt={docInfo.name}
+                                    />
+                                    <div className='absolute bottom-2 left-2 sm:bottom-3 sm:left-3'>
+                                        <span className='inline-flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-50/95 text-emerald-800 text-[10px] sm:text-[11px] font-semibold border border-emerald-200/90 backdrop-blur-md shadow-2xs'>
+                                            <BadgeCheck className='w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600' />
+                                            <span className='hidden sm:inline'>Verified Doctor</span>
+                                            <span className='sm:hidden'>Verified</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Mobile-only Title/Badges beside Portrait */}
+                            <div className='flex-1 min-w-0 sm:hidden space-y-1.5'>
+                                <div className='flex flex-wrap items-center gap-1.5'>
+                                    <span className='px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-50 text-primary border border-sky-100'>
+                                        {docInfo.speciality}
+                                    </span>
+                                    <span className='px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200'>
+                                        {docInfo.experience}
                                     </span>
                                 </div>
+                                <h1 className='text-lg font-extrabold text-slate-900 tracking-tight leading-snug'>
+                                    {docInfo.name}
+                                </h1>
+                                <p className='text-[11px] font-medium text-slate-500'>
+                                    <strong className='text-slate-800 font-semibold'>{docInfo.degree || 'MBBS, MD'}</strong>
+                                </p>
+                                <p className='text-[11px] text-slate-400 flex items-center gap-1 truncate'>
+                                    <MapPin className='w-3 h-3 text-slate-400 shrink-0' />
+                                    <span className='truncate'>{docInfo.address?.line1 || 'Online Telehealth'}</span>
+                                </p>
                             </div>
                         </div>
 
                         {/* Credentials & Bio */}
-                        <div className='flex-1 space-y-4'>
-                            <div>
+                        <div className='flex-1 space-y-3.5 sm:space-y-4'>
+                            <div className='hidden sm:block'>
                                 <div className='flex flex-wrap items-center gap-2 mb-2'>
                                     <span className='px-3 py-1 rounded-lg text-xs font-semibold bg-sky-50 text-primary border border-sky-100'>
                                         {docInfo.speciality}
@@ -411,7 +436,7 @@ const Appointment = () => {
                             </div>
 
                             {/* Telemedicine Feature Guarantee */}
-                            <div className='pt-3 border-t border-slate-100 flex flex-wrap items-center gap-4 text-xs text-slate-600 font-medium'>
+                            <div className='pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-slate-600 font-medium'>
                                 <span className='flex items-center gap-1.5'>
                                     <Video className='w-4 h-4 text-emerald-600' />
                                     <span>Encrypted Video Call</span>
@@ -429,7 +454,7 @@ const Appointment = () => {
                     </div>
 
                     {/* Interactive 7-Day Date & Time Slot Selector */}
-                    <div className='bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-xs space-y-6'>
+                    <div className='bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-8 shadow-xs space-y-5 sm:space-y-6'>
                         <div className='space-y-1'>
                             <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 text-xs font-semibold text-primary border border-sky-100'>
                                 <Calendar className='w-3.5 h-3.5 text-primary' />
@@ -449,7 +474,7 @@ const Appointment = () => {
                                 <span>Upcoming 7 Days</span>
                                 <span>Step 1 of 2: Select Date</span>
                             </div>
-                            <div className='flex gap-2.5 overflow-x-auto pb-2 scrollbar-none'>
+                            <div className='flex gap-2 sm:gap-2.5 overflow-x-auto pb-2 no-scrollbar'>
                                 {docSlots.map((daySlots, index) => {
                                     const dateObj = daySlots[0]?.datetime
                                     if (!dateObj) return null
@@ -463,7 +488,7 @@ const Appointment = () => {
                                                 setSlotIndex(index)
                                                 setSlotTime('')
                                             }}
-                                            className={`flex flex-col items-center justify-center min-w-[85px] py-3.5 px-3 rounded-2xl border text-xs transition-all cursor-pointer ${
+                                            className={`flex flex-col items-center justify-center min-w-[72px] sm:min-w-[85px] py-2.5 sm:py-3.5 px-2.5 sm:px-3 rounded-2xl border text-xs transition-all active:scale-95 cursor-pointer shrink-0 ${
                                                 isSelected
                                                     ? 'bg-slate-900 text-white border-slate-900 shadow-md font-semibold'
                                                     : hasOpenSlots
@@ -620,7 +645,7 @@ const Appointment = () => {
                             </span>
 
                             {/* Quick Reason Chips */}
-                            <div className='flex flex-wrap gap-2'>
+                            <div className='flex sm:flex-wrap gap-2 overflow-x-auto no-scrollbar pb-1'>
                                 {QUICK_REASONS.map((chip) => {
                                     const active = reasonForVisit === chip
                                     return (
@@ -628,7 +653,7 @@ const Appointment = () => {
                                             key={chip}
                                             type='button'
                                             onClick={() => setReasonForVisit(active ? '' : chip)}
-                                            className={`px-3 py-1 rounded-full text-xs font-medium border transition-all cursor-pointer ${
+                                            className={`px-3 py-1.5 sm:py-1 rounded-full text-xs font-medium border transition-all active:scale-95 whitespace-nowrap shrink-0 cursor-pointer ${
                                                 active
                                                     ? 'bg-sky-50 text-primary border-primary font-semibold'
                                                     : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300'
@@ -841,6 +866,31 @@ const Appointment = () => {
                 <ReviewSection docId={docId} />
                 <RelatedDoctors speciality={docInfo.speciality} docId={docId} />
             </div>
+
+            {/* Sticky Mobile Booking Bar (above bottom navigation when date & slot are selected) */}
+            {slotTime && selectedDateObj && (
+                <div className='lg:hidden fixed bottom-16 inset-x-0 z-30 mb-[env(safe-area-inset-bottom)] bg-white/95 backdrop-blur-lg border-t border-slate-200/90 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] px-4 py-3'>
+                    <div className='max-w-md mx-auto flex items-center justify-between gap-3'>
+                        <div className='min-w-0'>
+                            <p className='text-[11px] font-semibold text-slate-500 truncate'>
+                                {selectedDateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} &bull; <span className='text-sky-700 font-mono'>{slotTime}</span>
+                            </p>
+                            <p className='text-sm font-extrabold text-slate-900 font-mono tabular-nums'>
+                                {currencySymbol}{docInfo.fees} <span className='text-[11px] font-sans font-medium text-slate-400'>Total</span>
+                            </p>
+                        </div>
+                        <button
+                            type='button'
+                            onClick={handleBookAndPay}
+                            disabled={booking}
+                            className='px-5 py-2.5 bg-primary hover:bg-sky-600 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-600/25 transition-all disabled:opacity-50 inline-flex items-center gap-1.5 shrink-0 cursor-pointer'
+                        >
+                            <span>{booking ? 'Booking...' : 'Confirm & Book'}</span>
+                            <ArrowRight className='w-3.5 h-3.5' />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

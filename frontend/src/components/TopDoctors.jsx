@@ -8,18 +8,18 @@ const TopDoctors = () => {
     const { doctors, currencySymbol } = useContext(AppContext)
 
     return (
-        <section className='py-10 md:py-14'>
+        <section className='py-6 sm:py-10 md:py-14'>
             {/* Section Header */}
-            <div className='flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10'>
-                <div className='space-y-2'>
+            <div className='flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-6 sm:mb-10'>
+                <div className='space-y-1.5 sm:space-y-2'>
                     <div className='inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-xs font-semibold text-emerald-700'>
                         <CheckCircle2 className='w-3.5 h-3.5' />
                         <span>Top Rated Doctors</span>
                     </div>
-                    <h2 className='text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight'>
+                    <h2 className='text-xl sm:text-3xl font-extrabold text-slate-900 tracking-tight'>
                         Doctors Available to Book
                     </h2>
-                    <p className='text-sm text-slate-500 max-w-xl'>
+                    <p className='text-xs sm:text-sm text-slate-500 max-w-xl'>
                         Book an online video teleconsultation with our trusted doctors in just a few clicks and skip long hospital queues.
                     </p>
                 </div>
@@ -35,7 +35,7 @@ const TopDoctors = () => {
             </div>
 
             {/* Doctors Grid */}
-            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6'>
                 {doctors.slice(0, 8).map((item, index) => (
                     <div
                         key={index}

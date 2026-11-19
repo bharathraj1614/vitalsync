@@ -76,24 +76,26 @@ const PatientsList = () => {
 
       {/* Filter & Search Bar */}
       <div className='bg-white border border-slate-200/90 rounded-2xl p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs'>
-        <div className='inline-flex flex-wrap items-center gap-1 p-1 bg-slate-100/80 border border-slate-200/60 rounded-xl'>
-          {[
-            { id: 'all', label: `All Patients (${patients.length})` },
-            { id: 'active', label: `With Bookings (${patientsWithVisits})` },
-            { id: 'allergies', label: `Has Allergies (${patientsWithAllergies})` }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setFilterMode(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                filterMode === tab.id
-                  ? 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200/70'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className='overflow-x-auto no-scrollbar -mx-1 px-1'>
+          <div className='inline-flex flex-nowrap items-center gap-1 p-1 bg-slate-100/80 border border-slate-200/60 rounded-xl whitespace-nowrap'>
+            {[
+              { id: 'all', label: `All Patients (${patients.length})` },
+              { id: 'active', label: `With Bookings (${patientsWithVisits})` },
+              { id: 'allergies', label: `Has Allergies (${patientsWithAllergies})` }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setFilterMode(tab.id)}
+                className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+                  filterMode === tab.id
+                    ? 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200/70'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className='relative w-full md:w-80'>
@@ -103,14 +105,14 @@ const PatientsList = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder='Search name, email, phone, or allergy...'
-            className='w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-sky-500 text-slate-800'
+            className='w-full min-h-[44px] sm:min-h-[38px] pl-9 pr-9 py-2 text-base sm:text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-sky-500 text-slate-800'
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className='absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer'
+              className='absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-1.5'
             >
-              <X className='w-3.5 h-3.5' />
+              <X className='w-4 h-4' />
             </button>
           )}
         </div>
@@ -208,22 +210,22 @@ const PatientsList = () => {
       {/* PATIENT CLINICAL DOSSIER MODAL */}
       {selectedPatient && (
         <div
-          className='fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto'
+          className='fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto'
           onClick={() => setSelectedPatient(null)}
         >
           <div
-            className='bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 sm:p-8 space-y-6 my-8'
+            className='bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-5 sm:p-8 space-y-5 sm:space-y-6 max-h-[90dvh] overflow-y-auto overscroll-contain sm:my-8'
             onClick={(e) => e.stopPropagation()}
           >
             <div className='flex items-start justify-between gap-4 pb-4 border-b border-slate-200'>
-              <div className='flex items-center gap-4'>
+              <div className='flex items-center gap-3.5 sm:gap-4 min-w-0'>
                 <img
                   src={selectedPatient.image}
                   alt={selectedPatient.name}
-                  className='w-16 h-16 rounded-2xl object-cover border border-slate-200 bg-slate-100'
+                  className='w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border border-slate-200 bg-slate-100 shrink-0'
                 />
-                <div>
-                  <h2 className='text-lg sm:text-xl font-extrabold text-slate-900'>
+                <div className='min-w-0'>
+                  <h2 className='text-lg sm:text-xl font-extrabold text-slate-900 truncate'>
                     {selectedPatient.name}
                   </h2>
                   <p className='text-xs text-slate-500'>
@@ -234,7 +236,8 @@ const PatientsList = () => {
               <button
                 type='button'
                 onClick={() => setSelectedPatient(null)}
-                className='p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer'
+                className='min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0'
+                aria-label='Close dossier'
               >
                 <X className='w-5 h-5' />
               </button>

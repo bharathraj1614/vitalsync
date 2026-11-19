@@ -54,36 +54,38 @@ const App = () => {
     <div className='bg-[#F8F9FD] min-h-screen'>
       <ToastContainer position="top-right" autoClose={3500} />
       <Navbar />
-      <div className='flex items-start pb-16 md:pb-0'>
+      <div className='flex items-start'>
         <Sidebar />
-        {mountedDocVideoId && (
-          <DoctorVideoCall
-            key={mountedDocVideoId}
-            appointmentIdProp={mountedDocVideoId}
-            isMinimized={isMinimizedDocCall}
-            onActiveSessionChange={setIsDocCallLive}
-          />
-        )}
-        <Routes>
-          <Route path='/' element={
-            aToken ? <Dashboard /> : dToken ? <DoctorDashboard /> : <></>
-          } />
-          <Route path='/login' element={<Navigate to='/' replace />} />
-          <Route path='/admin-dashboard' element={<AdminRoute><Dashboard /></AdminRoute>} />
-          <Route path='/all-appointments' element={<AdminRoute><AllAppointments /></AdminRoute>} />
-          <Route path='/add-doctor' element={<AdminRoute><AddDoctor /></AdminRoute>} />
-          <Route path='/doctor-list' element={<AdminRoute><DoctorsList /></AdminRoute>} />
-          <Route path='/patients-list' element={<AdminRoute><PatientsList /></AdminRoute>} />
-          <Route path='/doctor-dashboard' element={<DoctorRoute><DoctorDashboard /></DoctorRoute>} />
-          <Route path='/doctor-appointments' element={<DoctorRoute><DoctorAppointments /></DoctorRoute>} />
-          <Route path='/doctor-chat' element={<DoctorRoute><DoctorChatPage /></DoctorRoute>} />
-          <Route path='/doctor-chat/:appointmentId' element={<DoctorRoute><DoctorChatPage /></DoctorRoute>} />
-          <Route path='/doctor-profile' element={<DoctorRoute><DoctorProfile /></DoctorRoute>} />
-          <Route path='/doctor-video-call' element={<DoctorRoute><Navigate to='/doctor-appointments' replace /></DoctorRoute>} />
-          <Route path='/doctor-video-call/:appointmentId' element={<DoctorRoute>{null}</DoctorRoute>} />
-          <Route path='/doctor-prescription/:appointmentId' element={<DoctorRoute><PrescriptionForm /></DoctorRoute>} />
-          <Route path='*' element={<Navigate to='/' replace />} />
-        </Routes>
+        <main className='flex-1 min-w-0 w-full pb-24 md:pb-8 overflow-x-hidden'>
+          {mountedDocVideoId && (
+            <DoctorVideoCall
+              key={mountedDocVideoId}
+              appointmentIdProp={mountedDocVideoId}
+              isMinimized={isMinimizedDocCall}
+              onActiveSessionChange={setIsDocCallLive}
+            />
+          )}
+          <Routes>
+            <Route path='/' element={
+              aToken ? <Dashboard /> : dToken ? <DoctorDashboard /> : <></>
+            } />
+            <Route path='/login' element={<Navigate to='/' replace />} />
+            <Route path='/admin-dashboard' element={<AdminRoute><Dashboard /></AdminRoute>} />
+            <Route path='/all-appointments' element={<AdminRoute><AllAppointments /></AdminRoute>} />
+            <Route path='/add-doctor' element={<AdminRoute><AddDoctor /></AdminRoute>} />
+            <Route path='/doctor-list' element={<AdminRoute><DoctorsList /></AdminRoute>} />
+            <Route path='/patients-list' element={<AdminRoute><PatientsList /></AdminRoute>} />
+            <Route path='/doctor-dashboard' element={<DoctorRoute><DoctorDashboard /></DoctorRoute>} />
+            <Route path='/doctor-appointments' element={<DoctorRoute><DoctorAppointments /></DoctorRoute>} />
+            <Route path='/doctor-chat' element={<DoctorRoute><DoctorChatPage /></DoctorRoute>} />
+            <Route path='/doctor-chat/:appointmentId' element={<DoctorRoute><DoctorChatPage /></DoctorRoute>} />
+            <Route path='/doctor-profile' element={<DoctorRoute><DoctorProfile /></DoctorRoute>} />
+            <Route path='/doctor-video-call' element={<DoctorRoute><Navigate to='/doctor-appointments' replace /></DoctorRoute>} />
+            <Route path='/doctor-video-call/:appointmentId' element={<DoctorRoute>{null}</DoctorRoute>} />
+            <Route path='/doctor-prescription/:appointmentId' element={<DoctorRoute><PrescriptionForm /></DoctorRoute>} />
+            <Route path='*' element={<Navigate to='/' replace />} />
+          </Routes>
+        </main>
       </div>
     </div>
   ) : (

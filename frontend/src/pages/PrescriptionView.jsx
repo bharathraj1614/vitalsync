@@ -164,18 +164,18 @@ const PrescriptionView = () => {
                     </button>
                 </div>
 
-                <div className='flex items-center gap-2'>
+                <div className='flex flex-wrap items-center gap-2'>
                     <button
                         onClick={() => setShowReviewModal(true)}
-                        className='inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer'
+                        className='min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer'
                     >
                         <Star className='w-3.5 h-3.5 text-amber-500 fill-amber-400' /> Rate Doctor
                     </button>
                     <button 
                         onClick={handlePrint}
-                        className='inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-sky-600 text-white text-xs rounded-xl font-bold shadow-xs transition-colors cursor-pointer'
+                        className='min-h-[44px] inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-sky-600 text-white text-xs rounded-xl font-bold shadow-xs transition-colors cursor-pointer'
                     >
-                        <Printer className='w-3.5 h-3.5' /> Print / Download PDF
+                        <Printer className='w-3.5 h-3.5' /> Print / PDF
                     </button>
                 </div>
             </div>
@@ -283,7 +283,35 @@ const PrescriptionView = () => {
                             </span>
                         </div>
 
-                        <div className='border border-slate-200 rounded-2xl overflow-hidden overflow-x-auto'>
+                        {/* Mobile Medication Cards (< 640px) */}
+                        <div className='sm:hidden space-y-2.5'>
+                            {prescription.medicines.map((med, i) => (
+                                <div key={i} className='p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-2'>
+                                    <div className='flex items-start justify-between gap-2'>
+                                        <p className='font-bold text-slate-900 text-sm leading-snug'>{med.name}</p>
+                                        <span className='px-2 py-0.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 text-[11px] font-mono font-bold shrink-0'>
+                                            {med.dosage}
+                                        </span>
+                                    </div>
+                                    <div className='flex flex-wrap items-center gap-2 text-xs text-slate-600'>
+                                        <span className='px-2 py-0.5 rounded-md bg-white border border-slate-200 font-medium'>
+                                            {med.frequency}
+                                        </span>
+                                        <span className='px-2 py-0.5 rounded-md bg-white border border-slate-200 font-mono'>
+                                            {med.duration}
+                                        </span>
+                                    </div>
+                                    {med.instructions && (
+                                        <p className='text-[11px] text-slate-500 pt-0.5'>
+                                            <strong className='text-slate-700'>Instruction:</strong> {med.instructions}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop Medication Table (>= 640px) */}
+                        <div className='hidden sm:block border border-slate-200 rounded-2xl overflow-hidden overflow-x-auto'>
                             <table className='w-full text-left text-xs'>
                                 <thead className='bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] uppercase tracking-wider font-semibold'>
                                     <tr>

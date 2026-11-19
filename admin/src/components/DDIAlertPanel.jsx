@@ -128,38 +128,39 @@ const DDIAlertPanel = ({ report, onClose, onProceed }) => {
       ref={dialogRef}
       {...{ closedby: 'any' }}
       aria-labelledby={titleId}
-      className='m-auto rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl max-w-3xl w-[calc(100%-2rem)] overflow-hidden backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs overscroll-contain'
+      className='m-auto rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl max-w-3xl w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-h-[88dvh] overflow-hidden backdrop:bg-slate-950/60 backdrop:backdrop-blur-xs overscroll-contain'
     >
-      <div className='flex flex-col max-h-[88vh] overflow-hidden'>
+      <div className='flex flex-col max-h-[88dvh] overflow-hidden'>
         {/* Header */}
-        <div className={`${badge.bg} ${badge.text} p-6 relative shrink-0`}>
+        <div className={`${badge.bg} ${badge.text} p-4 sm:p-6 relative shrink-0`}>
           <button
             type='button'
             onClick={onClose}
-            className='absolute top-4 right-4 p-1.5 rounded-lg bg-black/15 hover:bg-black/25 text-white transition-colors cursor-pointer'
+            aria-label='Close clinical safety alert'
+            className='absolute top-3 right-3 sm:top-4 sm:right-4 min-w-[36px] min-h-[36px] p-1.5 rounded-lg bg-black/15 hover:bg-black/25 text-white flex items-center justify-center transition-colors cursor-pointer'
           >
             <X className='w-4 h-4' />
           </button>
-          <div className='flex items-start gap-3.5 pr-8'>
-            <div className='p-2.5 rounded-xl bg-black/15 shrink-0'>
-              <BadgeIcon className='w-6 h-6' />
+          <div className='flex items-start gap-3 sm:gap-3.5 pr-10'>
+            <div className='p-2 sm:p-2.5 rounded-xl bg-black/15 shrink-0'>
+              <BadgeIcon className='w-5 h-5 sm:w-6 sm:h-6' />
             </div>
-            <div>
-              <h3 id={titleId} className='text-lg font-bold tracking-tight'>{badge.title}</h3>
+            <div className='min-w-0'>
+              <h3 id={titleId} className='text-base sm:text-lg font-bold tracking-tight leading-snug'>{badge.title}</h3>
               <p className='text-xs opacity-90 mt-0.5'>{badge.desc}</p>
             </div>
           </div>
-          <div className='flex flex-wrap gap-2.5 mt-4 text-xs font-semibold'>
-            <span className='inline-flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-md'>
-              <Pill className='w-3.5 h-3.5' />
+          <div className='flex flex-wrap gap-2 mt-3.5 sm:mt-4 text-[11px] sm:text-xs font-semibold'>
+            <span className='inline-flex items-center gap-1.5 bg-black/20 px-2.5 sm:px-3 py-1 rounded-md'>
+              <Pill className='w-3.5 h-3.5 shrink-0' />
               <span>Medicine Interactions: {totalInteractions}</span>
             </span>
-            <span className='inline-flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-md'>
-              <Zap className='w-3.5 h-3.5' />
+            <span className='inline-flex items-center gap-1.5 bg-black/20 px-2.5 sm:px-3 py-1 rounded-md'>
+              <Zap className='w-3.5 h-3.5 shrink-0' />
               <span>Allergy Conflicts: {totalAllergyAlerts}</span>
             </span>
-            <span className='inline-flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-md'>
-              <ShieldCheck className='w-3.5 h-3.5' />
+            <span className='inline-flex items-center gap-1.5 bg-black/20 px-2.5 sm:px-3 py-1 rounded-md'>
+              <ShieldCheck className='w-3.5 h-3.5 shrink-0' />
               <span>
                 Dual-Layer CDSS {typeof layer1LatencyMs === 'number' ? `(O(1) Hash: ${layer1LatencyMs}ms)` : ''}
               </span>
@@ -168,7 +169,7 @@ const DDIAlertPanel = ({ report, onClose, onProceed }) => {
         </div>
 
         {/* Content Body */}
-        <div className='p-6 overflow-y-auto overscroll-contain space-y-6 flex-1 min-h-0 text-sm'>
+        <div className='p-4 sm:p-6 overflow-y-auto overflow-x-hidden overscroll-contain space-y-5 sm:space-y-6 flex-1 min-h-0 text-sm'>
           {/* Allergy Alerts First */}
           {allergyAlerts.length > 0 && (
             <div>
@@ -182,12 +183,12 @@ const DDIAlertPanel = ({ report, onClose, onProceed }) => {
                     key={idx}
                     className='border-l-4 border-rose-500 bg-rose-50/70 p-4 rounded-r-xl space-y-2'
                   >
-                    <div className='flex items-center justify-between gap-2'>
-                      <span className='font-bold text-rose-950 text-xs sm:text-sm'>
+                    <div className='flex flex-wrap items-center justify-between gap-2'>
+                      <span className='font-bold text-rose-950 text-xs sm:text-sm break-words'>
                         Allergen: <span className='underline uppercase'>{alert.allergen}</span> →
                         Prescribed: <span className='underline uppercase'>{alert.drug}</span>
                       </span>
-                      <span className='bg-rose-600 text-white text-[11px] px-2 py-0.5 rounded font-semibold uppercase'>
+                      <span className='bg-rose-600 text-white text-[11px] px-2 py-0.5 rounded font-semibold uppercase shrink-0'>
                         {alert.severity}
                       </span>
                     </div>
@@ -302,7 +303,7 @@ const DDIAlertPanel = ({ report, onClose, onProceed }) => {
                     key={idx}
                     type='button'
                     onClick={() => setOverrideReason(preset)}
-                    className='text-[11px] px-2.5 py-1 rounded-lg bg-white hover:bg-rose-100 text-rose-800 border border-rose-200 font-semibold transition-colors cursor-pointer text-left'
+                    className='text-[11px] px-2.5 py-1.5 rounded-lg bg-white hover:bg-rose-100 text-rose-800 border border-rose-200 font-semibold transition-colors cursor-pointer text-left break-words whitespace-normal'
                   >
                     + {preset}
                   </button>
@@ -326,11 +327,11 @@ const DDIAlertPanel = ({ report, onClose, onProceed }) => {
         </div>
 
         {/* Footer Buttons */}
-        <div className='bg-slate-50/80 px-6 py-3.5 border-t border-slate-200/80 flex items-center justify-between gap-3 shrink-0'>
+        <div className='bg-slate-50/80 px-4 sm:px-6 py-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] border-t border-slate-200/80 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 shrink-0'>
           <button
             type='button'
             onClick={onClose}
-            className='h-9 px-3.5 border border-slate-200/90 bg-white rounded-lg text-slate-700 hover:bg-slate-50 font-medium text-xs transition-colors cursor-pointer'
+            className='w-full sm:w-auto min-h-[44px] sm:min-h-0 sm:h-9 px-3.5 border border-slate-200/90 bg-white rounded-xl sm:rounded-lg text-slate-700 hover:bg-slate-50 font-medium text-xs transition-colors cursor-pointer'
           >
             Modify Prescription
           </button>
@@ -339,7 +340,7 @@ const DDIAlertPanel = ({ report, onClose, onProceed }) => {
               type='button'
               disabled={!canOverrideSevere}
               onClick={() => onProceed(overrideReason.trim())}
-              className={`h-9 px-4 rounded-lg font-semibold text-xs text-white transition-all ${
+              className={`w-full sm:w-auto min-h-[44px] sm:min-h-0 sm:h-9 px-4 rounded-xl sm:rounded-lg font-semibold text-xs text-white transition-all ${
                 !canOverrideSevere
                   ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                   : overallRisk === 'SEVERE'
