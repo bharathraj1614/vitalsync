@@ -16,8 +16,10 @@ const vitalReadingSchema = new mongoose.Schema({
     news2Risk: { type: String, default: 'LOW' },        // 'LOW' | 'LOW_MEDIUM' | 'MEDIUM' | 'HIGH'
     clinicalFlags: { type: [String], default: [] },
     // Measurement Provenance & Optical Adjunct Telemetry
-    source: { type: String, default: 'manual' },        // 'manual' | 'rppg_spot_check' | 'hybrid'
+    source: { type: String, default: 'manual' },        // 'manual' | 'rppg_spot_check' | 'fingertip_cppg' | 'ble_heart_rate' | 'tap_cadence' | 'hybrid'
     confidence: { type: Number, default: 1.0 },         // 0.0 - 1.0
+    roiCoherence: { type: Number, default: null },      // 0.0 - 1.0 Multi-ROI spatial coherence
+    perfusionIndex: { type: Number, default: null },    // % Contact PPG AC/DC Perfusion Index
     signalQuality: { type: String, default: 'CLINICAL_DEVICE' },
     method: { type: String, default: 'Clinical Home Vitals (BP / SpO2 / Temp / Pulse)' },
     timestamp: { type: Date, default: Date.now },

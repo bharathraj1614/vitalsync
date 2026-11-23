@@ -81,7 +81,13 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
     progressPct: 0,
     motionWarning: false,
     isLocked: false,
-    waveform: []
+    waveform: [],
+    sensorMode: 'facial_rppg',
+    roiCoherence: 0,
+    activeRois: 0,
+    perfusionIndex: 0,
+    guidanceHint: '',
+    torchActive: false
   })
   const [isSavingVitals, setIsSavingVitals] = useState(false)
   const [notification, setNotification] = useState(null)
@@ -413,59 +419,98 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
     setIsSpotCheckRunning(false)
   }, [])
 
-  const startSpotCheck = useCallback(() => {
-    if (isScreenSharing) {
-      triggerNotification('Stop screen sharing first so your camera can measure facial pulse.', 'error')
-      return
-    }
-    if (!hasCamera || isVideoOff || !localVideoRef.current) {
-      triggerNotification('Turn on your camera first to run the 15-second stationary pulse spot-check.', 'error')
-      return
-    }
-    stopSpotCheck()
-    setVitalsData({
-      bpm: null,
-      confidence: 0,
-      signalQuality: 'CALIBRATING',
-      progressPct: 0,
-      motionWarning: false,
-      isLocked: false,
-      waveform: []
-    })
+  const startSpotCheck = useCallback(
+    (options = {}) => {
+      const resolvedOptions =
+        options && typeof options === 'object' && !options.nativeEvent ? options : {}
+      const { sensorMode = 'facial_rppg', enableTorch = false } = resolvedOptions
 
-    const engine = new RPPGEngine(
-      localVideoRef.current,
-      (data) => {
-        setVitalsData(data)
-        if (data.bpm) {
-          emitVitalsUpdate({
+      if (isScreenSharing) {
+        triggerNotification('Stop screen sharing first so your camera can measure pulse.', 'error')
+        return
+      }
+      if (!hasCamera || isVideoOff || !localVideoRef.current) {
+        triggerNotification('Turn on your camera first to run the 15-second optical pulse spot-check.', 'error')
+        return
+      }
+      stopSpotCheck()
+      setVitalsData({
+        bpm: null,
+        confidence: 0,
+        signalQuality: 'CALIBRATING',
+        progressPct: 0,
+        motionWarning: false,
+        isLocked: false,
+        waveform: [],
+        sensorMode,
+        roiCoherence: 0,
+        activeRois: 0,
+        perfusionIndex: 0,
+        guidanceHint:
+          sensorMode === 'fingertip_cppg'
+            ? 'Gently cover your camera lens with your index fingertip'
+            : 'Sit facing soft light and hold your head still',
+        torchActive: false
+      })
+
+      const engine = new RPPGEngine(
+        localVideoRef.current,
+        (data) => {
+          const activeMode = data.sensorMode || sensorMode
+          setVitalsData((prev) => ({
+            ...prev,
             ...data,
-            heartRate: data.bpm,
-            source: 'rppg_spot_check'
-          })
-        }
-      },
-      {
-        spotCheckMode: true,
-        spotCheckTargetSec: 15,
-        onComplete: (finalData) => {
-          rppgEngineRef.current = null
-          setIsSpotCheckRunning(false)
-          if (finalData?.bpm) {
+            sensorMode: activeMode
+          }))
+          if (data.bpm) {
+            const resolvedSource = activeMode === 'fingertip_cppg' ? 'fingertip_cppg' : 'rppg_spot_check'
             emitVitalsUpdate({
-              ...finalData,
-              heartRate: finalData.bpm,
-              source: 'rppg_spot_check'
+              ...data,
+              sensorMode: activeMode,
+              heartRate: data.bpm,
+              source: data.source || resolvedSource,
+              signalQuality: data.signalQuality || 'CALIBRATING'
             })
-            triggerNotification(`15s stationary spot-check locked at ${finalData.bpm} BPM!`)
+          }
+        },
+        {
+          spotCheckMode: true,
+          spotCheckTargetSec: 15,
+          sensorMode,
+          enableTorch,
+          onComplete: (finalData) => {
+            rppgEngineRef.current = null
+            setIsSpotCheckRunning(false)
+            if (finalData?.bpm) {
+              const activeMode = finalData.sensorMode || sensorMode
+              const resolvedSource = activeMode === 'fingertip_cppg' ? 'fingertip_cppg' : 'rppg_spot_check'
+              const resolvedQuality =
+                finalData.signalQuality ||
+                (activeMode === 'fingertip_cppg' ? 'CPPG_LOCKED_15S' : 'POS_LOCKED_15S')
+              emitVitalsUpdate({
+                ...finalData,
+                sensorMode: activeMode,
+                heartRate: finalData.bpm,
+                source: finalData.source || resolvedSource,
+                signalQuality: resolvedQuality
+              })
+              triggerNotification(
+                `${
+                  activeMode === 'fingertip_cppg'
+                    ? '15s Contact Fingertip PPG'
+                    : '15s Multi-ROI Facial Spot-Check'
+                } locked at ${finalData.bpm} BPM!`
+              )
+            }
           }
         }
-      }
-    )
-    rppgEngineRef.current = engine
-    engine.start()
-    setIsSpotCheckRunning(true)
-  }, [isScreenSharing, hasCamera, isVideoOff, localVideoRef, stopSpotCheck, emitVitalsUpdate, triggerNotification])
+      )
+      rppgEngineRef.current = engine
+      engine.start()
+      setIsSpotCheckRunning(true)
+    },
+    [isScreenSharing, hasCamera, isVideoOff, localVideoRef, stopSpotCheck, emitVitalsUpdate, triggerNotification]
+  )
 
   const toggleVitals = () => {
     if (showVitals) {
@@ -492,6 +537,8 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
         emitVitalsUpdate({
           ...payload,
           ...saved,
+          source: payload.source || saved.source || 'manual',
+          signalQuality: payload.signalQuality || saved.signalQuality || 'CLINICAL_DEVICE',
           bpm: saved.heartRate || payload.heartRate || null
         })
         triggerNotification('Clinical vitals & NEWS2 triage recorded to Electronic Health Record.')

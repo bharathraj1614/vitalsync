@@ -66,6 +66,17 @@ const DOCTOR_QUICK_CUES = [
   { emoji: '✅', label: 'All vitals look stable' }
 ]
 
+const VITALS_PROVENANCE_LABELS = {
+  rppg_spot_check: 'Multi-ROI POS-rPPG Pulse',
+  fingertip_cppg: 'Contact Fingertip PPG',
+  ble_heart_rate: 'Bluetooth GATT HR Sensor',
+  tap_cadence: 'Clinician Tap-to-Pulse',
+  hybrid: 'Hybrid Device + Biometric Pulse'
+}
+
+const getVitalsProvenanceLabel = (source, fallback = 'Patient Clinical Vitals') =>
+  VITALS_PROVENANCE_LABELS[source] || fallback
+
 const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChange }) => {
   const params = useParams()
   const appointmentId = appointmentIdProp || params.appointmentId
@@ -1220,6 +1231,23 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                       MEDIUM: 'bg-orange-500/30 text-orange-200 border-orange-400/60',
                       HIGH: 'bg-rose-600/40 text-rose-100 border-rose-400 animate-pulse'
                     }[riskLevel] || 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    const isOpticalReading =
+                      patientVitals.source === 'rppg_spot_check' || patientVitals.source === 'fingertip_cppg'
+                    const rawConf = patientVitals.confidence
+                    const confVal =
+                      rawConf !== undefined && rawConf !== null && rawConf !== '' && Number.isFinite(Number(rawConf))
+                        ? Number(rawConf)
+                        : null
+                    const rawCoh = patientVitals.roiCoherence ?? patientVitals.roiCoherenceScore
+                    const cohVal =
+                      rawCoh !== undefined && rawCoh !== null && rawCoh !== '' && Number.isFinite(Number(rawCoh))
+                        ? Number(rawCoh)
+                        : null
+                    const rawPi = patientVitals.perfusionIndex ?? patientVitals.perfusionIndexPct
+                    const piVal =
+                      rawPi !== undefined && rawPi !== null && rawPi !== '' && Number.isFinite(Number(rawPi))
+                        ? Number(rawPi)
+                        : null
 
                     return (
                       <>
@@ -1246,12 +1274,10 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                           <div className='hidden md:block bg-slate-950/95 text-white p-3.5 rounded-2xl border border-slate-700/80 backdrop-blur-md shadow-2xl w-72 space-y-2.5'>
                             <div className='flex items-center justify-between gap-2'>
                               <span className='text-[10px] text-slate-300 font-extrabold uppercase tracking-wider flex items-center gap-1.5'>
-                                <HeartPulse className='w-3.5 h-3.5 text-rose-400' />
-                                {patientVitals.source === 'rppg_spot_check'
-                                  ? '15s POS-rPPG Pulse'
-                                  : 'Patient Clinical Vitals'}
+                                <HeartPulse className='w-3.5 h-3.5 text-rose-400 shrink-0' />
+                                <span className='truncate'>{getVitalsProvenanceLabel(patientVitals.source)}</span>
                               </span>
-                              <div className='flex items-center gap-1.5'>
+                              <div className='flex items-center gap-1.5 shrink-0'>
                                 <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase ${hudRiskBadge}`}>
                                   NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
                                 </span>
@@ -1265,6 +1291,26 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                                 </button>
                               </div>
                             </div>
+
+                            {isOpticalReading && (confVal !== null || cohVal !== null || piVal !== null) && (
+                              <div className='flex flex-wrap items-center gap-1.5 text-[10px]'>
+                                {confVal !== null && (
+                                  <span className='px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold'>
+                                    Confidence {Math.round(confVal * 100)}%
+                                  </span>
+                                )}
+                                {cohVal !== null && (
+                                  <span className='px-2 py-0.5 rounded-md bg-sky-500/15 border border-sky-500/30 text-sky-300 font-bold'>
+                                    Coherence {Math.round(cohVal * 100)}%
+                                  </span>
+                                )}
+                                {piVal !== null && (
+                                  <span className='px-2 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-bold'>
+                                    PI {piVal.toFixed(2)}%
+                                  </span>
+                                )}
+                              </div>
+                            )}
 
                             <div className='grid grid-cols-2 gap-1.5 text-xs'>
                               {patientVitals.systolicBp && (
@@ -1303,9 +1349,13 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                               </div>
                             )}
 
-                            {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
+                            {isOpticalReading && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
                               <div className='text-[10px] text-slate-400 flex items-center justify-between'>
-                                <span>Stationary 15s capture...</span>
+                                <span>
+                                  {patientVitals.source === 'fingertip_cppg'
+                                    ? 'Contact fingertip 15s capture...'
+                                    : 'Stationary 15s capture...'}
+                                </span>
                                 <span className='font-mono text-emerald-400'>{patientVitals.progressPct}%</span>
                               </div>
                             )}
@@ -1730,20 +1780,54 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                           : riskLevel === 'MEDIUM' || riskLevel === 'LOW_MEDIUM'
                           ? 'bg-amber-100 text-amber-800 border-amber-300'
                           : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      const isOpticalReading =
+                        patientVitals.source === 'rppg_spot_check' || patientVitals.source === 'fingertip_cppg'
+                      const rawConf = patientVitals.confidence
+                      const confVal =
+                        rawConf !== undefined && rawConf !== null && rawConf !== '' && Number.isFinite(Number(rawConf))
+                          ? Number(rawConf)
+                          : null
+                      const rawCoh = patientVitals.roiCoherence ?? patientVitals.roiCoherenceScore
+                      const cohVal =
+                        rawCoh !== undefined && rawCoh !== null && rawCoh !== '' && Number.isFinite(Number(rawCoh))
+                          ? Number(rawCoh)
+                          : null
+                      const rawPi = patientVitals.perfusionIndex ?? patientVitals.perfusionIndexPct
+                      const piVal =
+                        rawPi !== undefined && rawPi !== null && rawPi !== '' && Number.isFinite(Number(rawPi))
+                          ? Number(rawPi)
+                          : null
 
                       return (
                         <div className='bg-white rounded-2xl border border-slate-200 p-3.5 space-y-2.5 shadow-2xs'>
                           <div className='flex items-center justify-between gap-2'>
                             <span className='text-[11px] font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5'>
-                              <HeartPulse className='w-3.5 h-3.5 text-rose-500' />
-                              {patientVitals.source === 'rppg_spot_check'
-                                ? 'Live 15s POS-rPPG Pulse'
-                                : 'Live Patient Vitals'}
+                              <HeartPulse className='w-3.5 h-3.5 text-rose-500 shrink-0' />
+                              <span className='truncate'>{getVitalsProvenanceLabel(patientVitals.source)}</span>
                             </span>
                             <span className={`px-2 py-0.5 rounded-full border text-[10px] font-extrabold uppercase shrink-0 ${sidebarRiskBadge}`}>
                               NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
                             </span>
                           </div>
+                          {isOpticalReading && (confVal !== null || cohVal !== null || piVal !== null) && (
+                            <div className='flex flex-wrap items-center gap-1.5 text-[10px]'>
+                              {confVal !== null && (
+                                <span className='px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 font-bold'>
+                                  Confidence {Math.round(confVal * 100)}%
+                                </span>
+                              )}
+                              {cohVal !== null && (
+                                <span className='px-2 py-0.5 rounded-md bg-sky-50 border border-sky-200 text-sky-700 font-bold'>
+                                  Coherence {Math.round(cohVal * 100)}%
+                                </span>
+                              )}
+                              {piVal !== null && (
+                                <span className='px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold'>
+                                  PI {piVal.toFixed(2)}%
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <div className='grid grid-cols-2 gap-2 text-xs'>
                             {patientVitals.systolicBp && (
                               <div className='bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200/80'>
@@ -1779,9 +1863,13 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                               ⚠️ {flags.join(' • ')}
                             </p>
                           )}
-                          {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
+                          {isOpticalReading && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
                             <div className='text-[11px] text-slate-500 flex items-center justify-between'>
-                              <span>Stationary 15s capture...</span>
+                              <span>
+                                {patientVitals.source === 'fingertip_cppg'
+                                  ? 'Contact fingertip 15s capture...'
+                                  : 'Stationary 15s capture...'}
+                              </span>
                               <span className='font-mono font-bold text-emerald-600'>{patientVitals.progressPct}%</span>
                             </div>
                           )}
@@ -1964,7 +2052,7 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                                   <p className='text-[10px] text-rose-600 font-semibold'>{v.clinicalFlags.join(' • ')}</p>
                                 )}
                                 <p className='text-[10px] text-slate-400 flex items-center justify-between'>
-                                  <span>{v.source === 'rppg_spot_check' ? '15s POS-rPPG' : 'Home Clinical Devices'}</span>
+                                  <span>{getVitalsProvenanceLabel(v.source, 'Patient Clinical Vitals')}</span>
                                   <span>{v.timestamp ? new Date(v.timestamp).toLocaleDateString() : ''}</span>
                                 </p>
                               </div>
@@ -2366,6 +2454,23 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
           MEDIUM: 'bg-orange-500/30 text-orange-200 border-orange-400/60',
           HIGH: 'bg-rose-600/40 text-rose-100 border-rose-400 animate-pulse'
         }[riskLevel] || 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+        const isOpticalReading =
+          patientVitals.source === 'rppg_spot_check' || patientVitals.source === 'fingertip_cppg'
+        const rawConf = patientVitals.confidence
+        const confVal =
+          rawConf !== undefined && rawConf !== null && rawConf !== '' && Number.isFinite(Number(rawConf))
+            ? Number(rawConf)
+            : null
+        const rawCoh = patientVitals.roiCoherence ?? patientVitals.roiCoherenceScore
+        const cohVal =
+          rawCoh !== undefined && rawCoh !== null && rawCoh !== '' && Number.isFinite(Number(rawCoh))
+            ? Number(rawCoh)
+            : null
+        const rawPi = patientVitals.perfusionIndex ?? patientVitals.perfusionIndexPct
+        const piVal =
+          rawPi !== undefined && rawPi !== null && rawPi !== '' && Number.isFinite(Number(rawPi))
+            ? Number(rawPi)
+            : null
 
         return (
           <div
@@ -2379,12 +2484,10 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
               <div className='w-10 h-1 rounded-full bg-slate-700 mx-auto mb-1' />
               <div className='flex items-center justify-between gap-2'>
                 <span className='text-xs text-slate-200 font-extrabold uppercase tracking-wider flex items-center gap-1.5'>
-                  <HeartPulse className='w-4 h-4 text-rose-400' />
-                  {patientVitals.source === 'rppg_spot_check'
-                    ? '15s POS-rPPG Pulse'
-                    : 'Patient Clinical Vitals'}
+                  <HeartPulse className='w-4 h-4 text-rose-400 shrink-0' />
+                  <span className='truncate'>{getVitalsProvenanceLabel(patientVitals.source)}</span>
                 </span>
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-2 shrink-0'>
                   <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase ${sheetRiskBadge}`}>
                     NEWS2 {scoreVal} • {riskLevel.replace('_', '-')}
                   </span>
@@ -2398,6 +2501,26 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                   </button>
                 </div>
               </div>
+
+              {isOpticalReading && (confVal !== null || cohVal !== null || piVal !== null) && (
+                <div className='flex flex-wrap items-center gap-1.5 text-[11px]'>
+                  {confVal !== null && (
+                    <span className='px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold'>
+                      Confidence {Math.round(confVal * 100)}%
+                    </span>
+                  )}
+                  {cohVal !== null && (
+                    <span className='px-2 py-0.5 rounded-md bg-sky-500/15 border border-sky-500/30 text-sky-300 font-bold'>
+                      Coherence {Math.round(cohVal * 100)}%
+                    </span>
+                  )}
+                  {piVal !== null && (
+                    <span className='px-2 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 font-bold'>
+                      PI {piVal.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
+              )}
 
               <div className='grid grid-cols-2 gap-2 text-xs'>
                 {patientVitals.systolicBp && (
@@ -2436,9 +2559,13 @@ const DoctorVideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessi
                 </div>
               )}
 
-              {patientVitals.source === 'rppg_spot_check' && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
+              {isOpticalReading && patientVitals.progressPct !== undefined && !patientVitals.isLocked && (
                 <div className='text-xs text-slate-400 flex items-center justify-between'>
-                  <span>Stationary 15s capture...</span>
+                  <span>
+                    {patientVitals.source === 'fingertip_cppg'
+                      ? 'Contact fingertip 15s capture...'
+                      : 'Stationary 15s capture...'}
+                  </span>
                   <span className='font-mono text-emerald-400'>{patientVitals.progressPct}%</span>
                 </div>
               )}

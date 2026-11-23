@@ -24,6 +24,8 @@ export const saveVitalReading = async (req, res) => {
             bloodGlucose,
             source,
             confidence,
+            roiCoherence,
+            perfusionIndex,
             signalQuality,
             method,
             notes
@@ -55,19 +57,46 @@ export const saveVitalReading = async (req, res) => {
             bloodGlucose: glu
         });
 
-        const resolvedSource = ['manual', 'rppg_spot_check', 'hybrid'].includes(source)
+        const allowedSources = [
+            'manual',
+            'rppg_spot_check',
+            'fingertip_cppg',
+            'ble_heart_rate',
+            'tap_cadence',
+            'hybrid'
+        ];
+        const resolvedSource = allowedSources.includes(source)
             ? source
+            : signalQuality === 'BLE_GATT_VERIFIED'
+            ? 'ble_heart_rate'
+            : signalQuality === 'CLINICIAN_TAP_LOCKED'
+            ? 'tap_cadence'
             : signalQuality && signalQuality !== 'CLINICAL_DEVICE'
             ? 'rppg_spot_check'
             : 'manual';
 
-        const resolvedMethod =
-            method ||
-            (resolvedSource === 'rppg_spot_check'
-                ? '15s Guided POS-rPPG Optical Spot-Check'
-                : resolvedSource === 'hybrid'
-                ? 'Home Clinical Devices + POS-rPPG Pulse'
-                : 'Validated Home Clinical Devices');
+        const methodMap = {
+            rppg_spot_check: '15s Multi-ROI Facial POS-rPPG Spot-Check',
+            fingertip_cppg: '15s Contact Fingertip Optical PPG',
+            ble_heart_rate: 'Web Bluetooth GATT Heart Rate Sensor',
+            tap_cadence: 'Guided Radial/Carotid Tap-to-Pulse Cadence',
+            hybrid: 'Home Clinical Devices + Biometric Pulse Adjunct',
+            manual: 'Validated Home Clinical Devices'
+        };
+
+        const resolvedMethod = method || methodMap[resolvedSource] || methodMap.manual;
+
+        const rawRoiCoherence = roiCoherence ?? req.body.roiCoherenceScore;
+        const parsedRoiCoherence =
+            rawRoiCoherence !== undefined && rawRoiCoherence !== null && rawRoiCoherence !== '' && Number.isFinite(Number(rawRoiCoherence))
+                ? Number(Number(rawRoiCoherence).toFixed(3))
+                : null;
+
+        const rawPerfusionIndex = perfusionIndex ?? req.body.perfusionIndexPct;
+        const parsedPerfusionIndex =
+            rawPerfusionIndex !== undefined && rawPerfusionIndex !== null && rawPerfusionIndex !== '' && Number.isFinite(Number(rawPerfusionIndex))
+                ? Number(Number(rawPerfusionIndex).toFixed(2))
+                : null;
 
         const reading = new vitalReadingModel({
             userId,
@@ -83,7 +112,9 @@ export const saveVitalReading = async (req, res) => {
             news2Risk: triage.news2Risk,
             clinicalFlags: triage.clinicalFlags,
             source: resolvedSource,
-            confidence: confidence !== undefined ? Number(confidence) : 1.0,
+            confidence: confidence !== undefined && Number.isFinite(Number(confidence)) ? Number(confidence) : 1.0,
+            roiCoherence: parsedRoiCoherence,
+            perfusionIndex: parsedPerfusionIndex,
             signalQuality: signalQuality || 'CLINICAL_DEVICE',
             method: resolvedMethod,
             notes: notes || '',
