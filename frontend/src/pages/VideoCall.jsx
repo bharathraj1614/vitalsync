@@ -65,6 +65,8 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
   const settingsDialogRef = useRef(null)
   const consentDialogRef = useRef(null)
   const rppgEngineRef = useRef(null)
+  const previousCameraIdRef = useRef(null)
+  const switchedToRearForPpgRef = useRef(false)
   const chatEndRef = useRef(null)
 
   const [appointment, setAppointment] = useState(null)
@@ -410,17 +412,26 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
     await startCall({ audioOnly })
   }
 
-  // Hybrid Clinical Vitals Panel & 15s Guided POS-rPPG Optical Spot-Check
+  // Hybrid Clinical Vitals Panel & 15s Guided POS-rPPG / Fingertip cPPG Spot-Check
+  const restoreCameraAfterSpotCheck = useCallback(() => {
+    if (!switchedToRearForPpgRef.current) return
+    switchedToRearForPpgRef.current = false
+    const prevCamId = previousCameraIdRef.current
+    previousCameraIdRef.current = null
+    switchCamera(prevCamId || '', { silent: true, facingMode: 'user' }).catch(() => {})
+  }, [switchCamera])
+
   const stopSpotCheck = useCallback(() => {
     if (rppgEngineRef.current) {
       rppgEngineRef.current.stop()
       rppgEngineRef.current = null
     }
     setIsSpotCheckRunning(false)
-  }, [])
+    restoreCameraAfterSpotCheck()
+  }, [restoreCameraAfterSpotCheck])
 
   const startSpotCheck = useCallback(
-    (options = {}) => {
+    async (options = {}) => {
       const resolvedOptions =
         options && typeof options === 'object' && !options.nativeEvent ? options : {}
       const { sensorMode = 'facial_rppg', enableTorch = false } = resolvedOptions
@@ -434,6 +445,25 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
         return
       }
       stopSpotCheck()
+
+      if (sensorMode === 'fingertip_cppg') {
+        const currentTrack = localVideoRef.current?.srcObject?.getVideoTracks?.()[0]
+        const currentFacing = currentTrack?.getSettings?.()?.facingMode
+        const rearCam =
+          devices.cameras.find(
+            (c) => /back|rear|environment/i.test(c.label || '') && !/ultra|macro|depth|tele/i.test(c.label || '')
+          ) || devices.cameras.find((c) => /back|rear|environment/i.test(c.label || ''))
+
+        if (currentFacing !== 'environment' && (rearCam || devices.cameras.length > 1)) {
+          previousCameraIdRef.current = selectedCameraId || currentTrack?.getSettings?.()?.deviceId || null
+          const switched = await switchCamera(rearCam?.deviceId || '', {
+            silent: true,
+            facingMode: 'environment'
+          })
+          switchedToRearForPpgRef.current = Boolean(switched)
+        }
+      }
+
       setVitalsData({
         bpm: null,
         confidence: 0,
@@ -448,7 +478,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
         perfusionIndex: 0,
         guidanceHint:
           sensorMode === 'fingertip_cppg'
-            ? 'Gently cover your camera lens with your index fingertip'
+            ? 'Gently cover your back camera lens & flash with your index fingertip'
             : 'Sit facing soft light and hold your head still',
         torchActive: false
       })
@@ -481,6 +511,7 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
           onComplete: (finalData) => {
             rppgEngineRef.current = null
             setIsSpotCheckRunning(false)
+            restoreCameraAfterSpotCheck()
             if (finalData?.bpm) {
               const activeMode = finalData.sensorMode || sensorMode
               const resolvedSource = activeMode === 'fingertip_cppg' ? 'fingertip_cppg' : 'rppg_spot_check'
@@ -509,7 +540,19 @@ const VideoCall = ({ appointmentIdProp, isMinimized = false, onActiveSessionChan
       engine.start()
       setIsSpotCheckRunning(true)
     },
-    [isScreenSharing, hasCamera, isVideoOff, localVideoRef, stopSpotCheck, emitVitalsUpdate, triggerNotification]
+    [
+      isScreenSharing,
+      hasCamera,
+      isVideoOff,
+      localVideoRef,
+      devices.cameras,
+      selectedCameraId,
+      switchCamera,
+      stopSpotCheck,
+      restoreCameraAfterSpotCheck,
+      emitVitalsUpdate,
+      triggerNotification
+    ]
   )
 
   const toggleVitals = () => {

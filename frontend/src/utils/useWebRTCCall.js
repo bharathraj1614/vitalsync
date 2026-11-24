@@ -30,7 +30,7 @@ const buildDefaultIceServers = () => {
 
 const DEFAULT_ICE_SERVERS = buildDefaultIceServers()
 
-const buildVideoConstraints = ({ camId = '', exactDeviceId = false, includeFrameRate = false } = {}) => {
+const buildVideoConstraints = ({ camId = '', exactDeviceId = false, includeFrameRate = false, facingMode = 'user' } = {}) => {
   const isMobileOrPortrait =
     typeof window !== 'undefined' &&
     (window.innerHeight > window.innerWidth ||
@@ -51,7 +51,7 @@ const buildVideoConstraints = ({ camId = '', exactDeviceId = false, includeFrame
   if (camId) {
     constraints.deviceId = exactDeviceId ? { exact: camId } : { ideal: camId }
   } else {
-    constraints.facingMode = 'user'
+    constraints.facingMode = facingMode || 'user'
   }
   return constraints
 }
@@ -1857,15 +1857,21 @@ export function useWebRTCCall({
 
   // Hot-swap Camera mid-call or in lobby
   const switchCamera = useCallback(
-    async (deviceId) => {
-      setSelectedCameraId(deviceId)
-      if (!cameraStreamRef.current) return
+    async (deviceId, options = {}) => {
+      const { silent = false, facingMode } = options || {}
+      if (deviceId) setSelectedCameraId(deviceId)
+      if (!cameraStreamRef.current) return false
       try {
+        const videoConstraints = deviceId
+          ? buildVideoConstraints({ camId: deviceId, exactDeviceId: true })
+          : buildVideoConstraints({ facingMode: facingMode || 'user' })
         const nextStream = await navigator.mediaDevices.getUserMedia({
-          video: buildVideoConstraints({ camId: deviceId, exactDeviceId: true })
+          video: videoConstraints
         })
         const nextVideoTrack = nextStream.getVideoTracks()[0]
-        if (!nextVideoTrack) return
+        if (!nextVideoTrack) return false
+        const resolvedId = nextVideoTrack.getSettings?.().deviceId || deviceId || ''
+        if (resolvedId) setSelectedCameraId(resolvedId)
         if ('contentHint' in nextVideoTrack) {
           nextVideoTrack.contentHint = 'motion'
         }
@@ -1886,9 +1892,11 @@ export function useWebRTCCall({
           }
         }
         setHasCamera(true)
-        notify('Switched camera device.', 'success')
+        if (!silent) notify('Switched camera device.', 'success')
+        return true
       } catch (e) {
-        notify('Unable to switch to selected camera.', 'error')
+        if (!silent) notify('Unable to switch to selected camera.', 'error')
+        return false
       }
     },
     [isVideoOff, notify]
